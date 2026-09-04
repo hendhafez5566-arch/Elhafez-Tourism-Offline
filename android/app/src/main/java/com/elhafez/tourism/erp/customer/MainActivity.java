@@ -4,17 +4,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.CancellationSignal;
-import android.os.ParcelFileDescriptor;
 import android.print.PrintAttributes;
-import android.print.PageRange;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.view.View;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.core.content.FileProvider;
@@ -22,7 +23,7 @@ import androidx.core.content.FileProvider;
 import com.getcapacitor.BridgeActivity;
 
 import java.io.File;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.io.FileOutputStream;
 
 import org.json.JSONObject;
 
@@ -121,114 +122,67 @@ public class MainActivity extends BridgeActivity {
         } catch (Exception ignored) { }
     }
 
-    private void finishPdfAdapter(PrintDocumentAdapter adapter, WebView view) {
-        try { adapter.onFinish(); } catch (Exception ignored) { }
+    private void destroyPrintView(WebView view) {
         try { view.destroy(); } catch (Exception ignored) { }
     }
 
-    private void sharePdfFile(File file, String phone, String message) throws Exception {
-        if (file == null || !file.isFile() || file.length() <= 0) throw new IllegalStateException("pdf_file_empty");
-        Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", file);
-        Intent base = new Intent(Intent.ACTION_SEND);
-        base.setType("application/pdf");
-        base.putExtra(Intent.EXTRA_STREAM, uri);
-        base.putExtra(Intent.EXTRA_TEXT, message == null ? "" : message);
-        base.setClipData(ClipData.newRawUri("Elhafez Tourism PDF", uri));
-        base.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        String digits = phone == null ? "" : phone.replaceAll("\\D", "");
-        if (!digits.isEmpty()) base.putExtra("jid", digits + "@s.whatsapp.net");
-
-        try {
-            Intent wa = new Intent(base);
-            wa.setPackage("com.whatsapp");
-            startActivity(wa);
-            notifyPdfShare("success", "تم تجهيز ملف PDF وفتح واتساب");
-            return;
-        } catch (Exception ignored) { }
-        try {
-            Intent biz = new Intent(base);
-            biz.setPackage("com.whatsapp.w4b");
-            startActivity(biz);
-            notifyPdfShare("success", "تم تجهيز ملف PDF وفتح واتساب Business");
-            return;
-        } catch (Exception ignored) { }
-
-        startActivity(Intent.createChooser(base, "مشاركة PDF"));
-        notifyPdfShare("success", "تم تجهيز ملف PDF وفتح قائمة المشاركة");
-    }
-
     private void shareHtmlAsPdf(WebView view, String jobName, String phone, String message) {
-        String safe = (jobName == null || jobName.trim().isEmpty()) ? "document" : jobName.replaceAll("[^\\p{L}\\p{N}._-]+", "_");
+        String safe = (jobName == null || jobName.trim().isEmpty())
+                ? "document"
+                : jobName.replaceAll("[^\\p{L}\\p{N}._-]+", "_");
         File file = new File(getCacheDir(), safe + "_" + System.currentTimeMillis() + ".pdf");
-        PrintDocumentAdapter adapter = view.createPrintDocumentAdapter(jobName == null ? "Elhafez ERP" : jobName);
-        PrintAttributes attrs = new PrintAttributes.Builder().setMediaSize(PrintAttributes.MediaSize.ISO_A4).setColorMode(PrintAttributes.COLOR_MODE_COLOR).setMinMargins(PrintAttributes.Margins.NO_MARGINS).build();
-        CancellationSignal cancel = new CancellationSignal();
-        AtomicBoolean completed = new AtomicBoolean(false);
-        Runnable failTimeout = () -> {
-            if (!completed.compareAndSet(false, true)) return;
-            finishPdfAdapter(adapter, view);
-            notifyPdfShare("error", "تعذر تجهيز ملف PDF داخل التطبيق. حاول مرة أخرى.");
-        };
+
+        final int pageWidth = 595;
+        final int pageHeight = 842;
+        final int margin = 24;
+        final int renderWidth = 794;
+        PdfDocument pdf = new PdfDocument();
 
         try {
-            adapter.onStart();
-            view.postDelayed(failTimeout, 12000);
-            Bundle extras = new Bundle();
-            extras.putBoolean(PrintDocumentAdapter.EXTRA_PRINT_PREVIEW, false);
-            adapter.onLayout(attrs, attrs, cancel, new PrintDocumentAdapter.LayoutResultCallback() {
-                @Override public void onLayoutFinished(android.print.PrintDocumentInfo info, boolean changed) {
-                    if (completed.get()) return;
-                    try {
-                        ParcelFileDescriptor fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_CREATE | ParcelFileDescriptor.MODE_TRUNCATE | ParcelFileDescriptor.MODE_READ_WRITE);
-                        adapter.onWrite(new PageRange[]{PageRange.ALL_PAGES}, fd, cancel, new PrintDocumentAdapter.WriteResultCallback() {
-                            private void closeFd() { try { fd.close(); } catch (Exception ignored) { } }
-                            @Override public void onWriteFinished(PageRange[] pages) {
-                                closeFd();
-                                if (!completed.compareAndSet(false, true)) return;
-                                try {
-                                    if (!file.isFile() || file.length() <= 0) throw new IllegalStateException("pdf_file_empty");
-                                    finishPdfAdapter(adapter, view);
-                                    sharePdfFile(file, phone, message);
-                                } catch (Exception e) {
-                                    finishPdfAdapter(adapter, view);
-                                    notifyPdfShare("error", "تم تجهيز المستند لكن تعذر فتح واتساب للمشاركة");
-                                }
-                            }
-                            @Override public void onWriteFailed(CharSequence error) {
-                                closeFd();
-                                if (!completed.compareAndSet(false, true)) return;
-                                finishPdfAdapter(adapter, view);
-                                notifyPdfShare("error", "تعذر إنشاء ملف PDF: " + (error == null ? "خطأ غير معروف" : error));
-                            }
-                            @Override public void onWriteCancelled() {
-                                closeFd();
-                                if (!completed.compareAndSet(false, true)) return;
-                                finishPdfAdapter(adapter, view);
-                                notifyPdfShare("error", "تم إلغاء تجهيز ملف PDF");
-                            }
-                        });
-                    } catch (Exception e) {
-                        if (!completed.compareAndSet(false, true)) return;
-                        finishPdfAdapter(adapter, view);
-                        notifyPdfShare("error", "تعذر إنشاء ملف PDF للمشاركة");
-                    }
-                }
-                @Override public void onLayoutFailed(CharSequence error) {
-                    if (!completed.compareAndSet(false, true)) return;
-                    finishPdfAdapter(adapter, view);
-                    notifyPdfShare("error", "تعذر تجهيز صفحات PDF: " + (error == null ? "خطأ غير معروف" : error));
-                }
-                @Override public void onLayoutCancelled() {
-                    if (!completed.compareAndSet(false, true)) return;
-                    finishPdfAdapter(adapter, view);
-                    notifyPdfShare("error", "تم إلغاء تجهيز صفحات PDF");
-                }
-            }, extras);
-        } catch (Exception e) {
-            if (completed.compareAndSet(false, true)) {
-                finishPdfAdapter(adapter, view);
-                notifyPdfShare("error", "تعذر بدء تجهيز ملف PDF");
+            // Render the dedicated print WebView at a stable A4-like width, then
+            // split the full document over as many PDF pages as required.
+            int widthSpec = View.MeasureSpec.makeMeasureSpec(renderWidth, View.MeasureSpec.EXACTLY);
+            int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+            view.measure(widthSpec, heightSpec);
+            int measuredHeight = Math.max(1, view.getMeasuredHeight());
+            int contentHeight = Math.max(measuredHeight, Math.round(view.getContentHeight() * view.getScale()));
+            view.measure(widthSpec, View.MeasureSpec.makeMeasureSpec(contentHeight, View.MeasureSpec.EXACTLY));
+            view.layout(0, 0, renderWidth, contentHeight);
+
+            float scale = (pageWidth - (margin * 2f)) / renderWidth;
+            float sourcePageHeight = (pageHeight - (margin * 2f)) / scale;
+            int pageCount = Math.max(1, (int) Math.ceil(contentHeight / sourcePageHeight));
+
+            for (int i = 0; i < pageCount; i++) {
+                PdfDocument.PageInfo info = new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, i + 1).create();
+                PdfDocument.Page page = pdf.startPage(info);
+                Canvas canvas = page.getCanvas();
+                canvas.drawColor(Color.WHITE);
+                canvas.save();
+                canvas.clipRect(margin, margin, pageWidth - margin, pageHeight - margin);
+                canvas.translate(margin, margin);
+                canvas.scale(scale, scale);
+                canvas.translate(0, -(i * sourcePageHeight));
+                view.draw(canvas);
+                canvas.restore();
+                pdf.finishPage(page);
             }
+
+            try (FileOutputStream out = new FileOutputStream(file)) {
+                pdf.writeTo(out);
+                out.flush();
+            }
+            pdf.close();
+            destroyPrintView(view);
+
+            if (!file.isFile() || file.length() <= 0) {
+                throw new IllegalStateException("pdf_file_empty");
+            }
+            sharePdfFile(file, phone, message);
+        } catch (Exception e) {
+            try { pdf.close(); } catch (Exception ignored) { }
+            destroyPrintView(view);
+            notifyPdfShare("error", "تعذر إنشاء ملف PDF للمشاركة");
         }
     }
 
