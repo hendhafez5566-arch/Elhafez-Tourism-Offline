@@ -186,6 +186,61 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    private Intent buildPdfShareIntent(File file, Uri uri, String phone, String message, String packageName) {
+        Intent share = new Intent(Intent.ACTION_SEND);
+        share.setType("application/pdf");
+        share.putExtra(Intent.EXTRA_STREAM, uri);
+        if (message != null && !message.trim().isEmpty()) {
+            share.putExtra(Intent.EXTRA_TEXT, message.trim());
+        }
+        String digits = phone == null ? "" : phone.replaceAll("[^0-9]+", "");
+        if (!digits.isEmpty()) {
+            share.putExtra("jid", digits + "@s.whatsapp.net");
+        }
+        share.setClipData(ClipData.newRawUri("Elhafez PDF", uri));
+        share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        if (packageName != null && !packageName.trim().isEmpty()) {
+            share.setPackage(packageName.trim());
+        }
+        return share;
+    }
+
+    private void sharePdfFile(File file, String phone, String message) {
+        try {
+            if (file == null || !file.isFile() || file.length() <= 0) {
+                notifyPdfShare("error", "ملف PDF غير صالح للمشاركة");
+                return;
+            }
+
+            Uri uri = FileProvider.getUriForFile(
+                    MainActivity.this,
+                    getPackageName() + ".fileprovider",
+                    file);
+
+            Intent whatsapp = buildPdfShareIntent(file, uri, phone, message, "com.whatsapp");
+            try {
+                startActivity(whatsapp);
+                notifyPdfShare("success", "تم تجهيز ملف PDF وفتح واتساب");
+                return;
+            } catch (ActivityNotFoundException ignored) { }
+
+            Intent business = buildPdfShareIntent(file, uri, phone, message, "com.whatsapp.w4b");
+            try {
+                startActivity(business);
+                notifyPdfShare("success", "تم تجهيز ملف PDF وفتح واتساب Business");
+                return;
+            } catch (ActivityNotFoundException ignored) { }
+
+            Intent generic = buildPdfShareIntent(file, uri, phone, message, null);
+            startActivity(Intent.createChooser(generic, "مشاركة ملف PDF"));
+            notifyPdfShare("success", "تم تجهيز ملف PDF وفتح قائمة المشاركة");
+        } catch (ActivityNotFoundException e) {
+            notifyPdfShare("error", "لا يوجد تطبيق متاح لمشاركة ملف PDF");
+        } catch (Exception e) {
+            notifyPdfShare("error", "تعذر فتح مشاركة ملف PDF");
+        }
+    }
+
     private class NativePrintBridge {
         @JavascriptInterface
         public void printCurrent(String jobName) {
