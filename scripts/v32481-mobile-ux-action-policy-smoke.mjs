@@ -1,0 +1,36 @@
+import fs from 'node:fs';
+const read=p=>fs.readFileSync(p,'utf8');
+const policy=read('src/core/action-policy.ts');
+const pages=read('src/ui/pages.ts');
+const cleanPages=read('src/ui/clean-pages.ts');
+const forms=read('src/ui/forms.ts');
+const crm=read('src/crm/crm.ts');
+const party=read('src/crm/party360.ts');
+const mobile=read('src/mobile.ts');
+const umrahUi=(read('src/core/umrah/ui.ts')+read('src/core/umrah/ui-pages.ts'));
+const umrahForms=read('src/core/umrah/forms.ts');
+const styles=read('src/styles.css');
+const server=read('server/src/authz.ts');
+const packageVersion=JSON.parse(read('package.json')).version;
+let failed=0;
+function check(name,ok){console.log(`${ok?'✓':'✗'} ${name}`);if(!ok)failed++}
+check('PO edit is draft-only in central policy',policy.includes("case 'purchaseOrder': return s==='draft'"));
+check('Quotation accepted/converted/void/cancelled are locked',policy.includes("['accepted','converted','void','cancelled'].includes(s)"));
+check('Umrah program edit states match server lifecycle',policy.includes("['planning','contracting','pricing'].includes(s)")&&server.includes("compare('umrahPrograms'")&&server.includes("!['planning','contracting','pricing'].includes"));
+check('Umrah booking edit states match server lifecycle',policy.includes("['inquiry','quotation','hold','waitlist'].includes(s)")&&server.includes("compare('umrahBookings'")&&server.includes("!['inquiry','quotation','hold','waitlist'].includes"));
+check('Purchase-order page hides invalid edit action',cleanPages.includes("ActionPolicy.canEdit('purchaseOrder',po)"));
+check('Quotation page hides invalid edit action',cleanPages.includes("ActionPolicy.canEdit('quotation',q)"));
+check('Commercial edit form has lifecycle guard',forms.includes("ActionPolicy.requireEditable(type,doc)"));
+check('Commercial domain update has lifecycle guard',crm.includes("ActionPolicy.requireEditable('purchaseOrder',po)")&&crm.includes("ActionPolicy.requireEditable('quotation',q)"));
+check('Accepted/cancelled quotation does not expose permanent delete',cleanPages.includes("['draft','sent'].includes(q.status)&&Auth.can('quotations','delete')"));
+check('Umrah programs hide edit outside editable states',umrahUi.includes("ActionPolicy.canEdit('umrahProgram',p)"));
+check('Umrah forms defend direct calls',umrahForms.includes("!ActionPolicy.canEdit('umrahProgram',p)")&&umrahForms.includes("!ActionPolicy.canEdit('umrahBooking',b)"));
+check('Locked normal booking is labelled operational, not generic edit',pages.includes('المسافرون / ملاحظات'));
+check('Locked normal service is labelled operational, not generic edit',pages.includes('تفاصيل تشغيلية'));
+check('Party360 dynamic tabs re-enhance responsive tables',party.includes('UI.enhanceResponsiveTables?.(target)'));
+check('Party360 tabs use icon/label wrappers',party.includes('party360-tab-icon')&&party.includes('party360-tab-label'));
+check('Party360 mobile layout is bounded',styles.includes('#modalBody .party360-v3 .party360-tabs')&&styles.includes('#modalBody:has(.party360-v3){overflow-x:hidden}'));
+check('Pull-to-refresh has no persistent visible instruction text',!mobile.includes('اسحب للتحديث')&&!mobile.includes('اترك للتحديث')&&mobile.includes('native-pull-refresh-icon'));
+check('Web/mobile live version header matches package release',mobile.includes(`X-ERP-Mobile-Version','${packageVersion}'`)&&mobile.includes(`'X-ERP-Mobile-Version':'${packageVersion}'`));
+if(failed){console.error(`FAILED: ${failed} checks`);process.exit(1)}
+console.log('v32.4.83 mobile UX/action policy smoke: OK');

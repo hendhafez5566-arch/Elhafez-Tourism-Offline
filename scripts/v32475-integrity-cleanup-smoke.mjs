@@ -1,0 +1,14 @@
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL(`../${p}`,import.meta.url),'utf8');
+const engine=read('src/accounting/engine.ts'),pages=read('src/ui/pages.ts'),store=read('src/persistence/browser-store.ts'),seed=read('src/core/seed.ts'),auth=read('src/security/auth.ts'),product=read('src/commercial/product.ts'),umrah=read('src/core/umrah/data.ts'),actions=read('src/ui/actions.ts');
+const checks=[];const check=(name,pass)=>checks.push({name,pass:!!pass});
+check('existing financial control center owns the integrity checker',pages.includes("audit(){const report=Accounting.lastIntegrityReport()")&&pages.includes('فحص سلامة الدورة الآن'));
+check('integrity report covers accounting lifecycle summaries',engine.includes('integrityReport()')&&engine.includes('PO_STALE_CONVERTED')&&engine.includes('RECEIVED_NOT_INVOICED')&&engine.includes('VOID_INVOICE_BALANCE')&&engine.includes('PROGRAM_INVOICE_NO_COST_CENTER')&&engine.includes('MISSING_COST_CENTER'));
+check('issues can open their source page',pages.includes('فتح السجل')&&engine.includes("openIssue(page,refId='')"));
+check('legacy settings are absent from new data',!seed.includes('autoPostExpenses')&&!seed.includes('allowMasterDelete')&&!seed.includes('flexibleNonFinancial'));
+check('legacy client data is migrated before cleanup',store.includes('v32475SafeCleanup')&&store.includes("['executive','sand','graphite'].includes(legacyAppearance)")&&store.includes("delete this.data.settings[key]"));
+for(const route of ['umrah-suite','umrah-contracts-link','umrah-management-link'])check(`legacy route ${route} removed from runtime maps`,!auth.includes(route)&&!product.includes(route));
+check('dead custom workspace edit/delete handlers removed',!actions.includes('editWorkspace(id=')&&!actions.includes('removeWorkspace(id)'));
+check('Umrah activity follows configured retention period',umrah.includes('activityRetentionDays')&&umrah.includes('Date.parse(x.at) >= cut'));
+check('duplicate report header shortcuts removed',!pages.includes("this.can('reports','print','<button class=\"btn primary\""));
+const failed=checks.filter(x=>!x.pass);console.log(JSON.stringify({ok:!failed.length,checks},null,2));if(failed.length)process.exit(1);

@@ -1,0 +1,81 @@
+Elhafez Tourism v32.5.34 — تقرير Checkpoint آمن
+=================================================
+
+المرجع السابق الآمن: v32.5.33
+نطاق هذه الدفعة: Mobile Topbar interaction CSS importance cleanup.
+
+التعديلات المقبولة
+------------------
+- إزالة !important من transform:scale(.93) لحالة active في أزرار Topbar على الموبايل.
+- إزالة !important من box-shadow لحالة hover في أزرار Topbar على الموبايل.
+- القيم نفسها بقيت كما هي، والـselectors الحالية كافية للحفاظ على النتيجة النهائية.
+
+اختبارات المقارنة للمكوّن
+-------------------------
+- الحالات: normal / hover / active / disabled.
+- العناصر: mobile-menu / global-nav button / icon button / disabled global-nav.
+- الأحجام: 780 / 600 / 390px.
+- الإجمالي: 36 مقارنة / 0 اختلافات بعد الدفعة المعتمدة.
+
+الملفات المصدرية المعدلة وظيفيًا
+--------------------------------
+- src/styles.css
+
+ملفات رقم الإصدار / التوثيق / مخرجات البناء
+------------------------------------------
+- package.json / package-lock.json
+- server/package.json / server/package-lock.json
+- src/core/runtime.ts
+- src/mobile.ts
+- android/app/build.gradle
+- CUSTOMER_PACKAGE.txt
+- MOBILE_ANDROID_AR.md
+- README_AR.md
+- dist/app.js
+- dist/index.html
+- dist/manifest.webmanifest
+- dist/styles.css
+- dist/sw.js
+
+نتيجة !important
+----------------
+- src/styles.css: 64 -> 62
+- src/reports/printing.ts: 2 (بدون تغيير)
+- إجمالي src: 66 -> 64
+- المحذوف في الدفعة: 2
+- البداية الأصلية قبل التنظيف: 796 داخل src / 751 داخل styles.css
+
+التعديلات المرفوضة والمتراجع عنها
+--------------------------------
+- إزالة !important من Mobile Topbar hover transform: مرفوضة.
+- السبب: غيّرت حالة disabled button عند hover على 780/600/390px؛ لذلك بقيت القاعدة كما هي.
+
+حماية Login
+-----------
+4/4 محفوظة كما هي:
+.login.hidden
+.login-inline-message.hidden
+.auth-boot-brand.hidden
+.auth-boot-offline.hidden
+
+بوابات الفحص
+------------
+- TypeScript Build: PASS
+- Node smoke: 49/49 PASS
+- Browser smoke: 6/6 PASS
+- UI routes: 48/48 PASS
+- Console Errors: 0
+- Page Errors: 0
+- Accounting: PASS — journals 31 / imbalanced 0
+- Umrah workflow: PASS — journals 9 / imbalanced 0
+- Cancel integrity: PASS
+- src/dist parity: PASS
+
+تأكيد النطاق
+------------
+لا يوجد تعديل على Navigation logic أو Auth أو المحاسبة أو الحجوزات.
+التغيير المعتمد CSS cleanup فقط + محاذاة رقم الإصدار والتوثيق.
+
+الحالة
+------
+v32.5.34 Checkpoint آمن ومعتمد للاستكمال منه.

@@ -1,0 +1,106 @@
+ELHAFEZ TOURISM — RELEASE REPORT v32.5.42
+========================================
+النسخة الأساسية: v32.5.41 CUSTOMER-SYNC-RELIABILITY-FIX
+الإصدار الجديد: v32.5.42 CUSTOMER-WHATSAPP-PDF-SHARE
+Database Migration: غير مطلوبة (migrationRequired=false)
+
+الهدف
+-----
+إضافة مشاركة أي مستند مطبوع مرتبط بطرف واحد معروف إلى صاحبه عبر واتساب، من نفس طبقة الطباعة المركزية وبأقل تعديل ممكن، بدون إعادة بناء الشاشات أو تكرار وظائف PDF/Print.
+
+ما تم تنفيذه
+------------
+1) إضافة زر "إرسال واتساب" داخل نافذة الطباعة المركزية.
+2) تحديد المستلم تلقائيًا من Context المستند ورقم WhatsApp/Phone المسجل، مع استخدام نفس normalizeWhatsApp الموجود في النظام.
+3) Android:
+   - NativePrint.sharePdf يستقبل نفس HTML المستخدم للطباعة.
+   - إنشاء PDF عبر WebView PrintDocumentAdapter داخل Cache التطبيق.
+   - مشاركة PDF عبر FileProvider إلى WhatsApp ثم WhatsApp Business ثم Share Chooser كـfallback.
+4) Web/Laptop:
+   - فتح محادثة WhatsApp على رقم المستلم برسالة جاهزة.
+   - تشغيل مسار Print / Save PDF الحالي كـfallback؛ المتصفح لا يُفترض أنه يستطيع إرفاق PDF تلقائيًا دون Native/API إضافي.
+5) الزر لا يظهر للتقارير العامة أو متعددة الأطراف حتى لا يتم تخمين مستلم خاطئ.
+6) ربط الزر بالـUI Delegation المركزي عبر data-print-whatsapp؛ لم تتم إضافة inline event جديد للخاصية.
+
+المطبوعات ذات المستلم التلقائي الحالي
+-------------------------------------
+- فواتير العملاء والموردين.
+- الإشعارات الدائنة/المدينة المرتبطة بطرف.
+- سندات القبض والصرف المرتبطة بعميل/مورد/مندوب.
+- عروض الأسعار.
+- أوامر الشراء (المورد).
+- كشوف حساب العملاء والموردين والمندوبين.
+- قائمة مسافري الحجز التقليدي المرتبطة بالعميل.
+- تأكيد حجز الحج/العمرة المرتبط بالعميل.
+- أي Module Print يمرر partyType + partyId أو Context مدعوم للطبقة المركزية.
+
+المطبوعات التي لا يتم تخمين مستلم لها
+-------------------------------------
+- القيود الداخلية، المصروفات الداخلية، التحويلات بين الخزن.
+- ميزان المراجعة والتقارير العامة.
+- مطبوعات البرنامج الجماعية/متعددة الأطراف عندما لا يوجد طرف واحد واضح.
+السبب: منع إرسال مستند لشخص/شركة غير صحيحة.
+
+الملفات المصدرية المعدلة للخاصية
+--------------------------------
+- src/reports/printing.ts
+- index.html
+- src/ui/delegated-actions.ts
+- src/ui/actions.ts
+- src/core/umrah/actions-print.ts
+- android/app/src/main/java/com/elhafez/tourism/erp/customer/MainActivity.java
+
+ملفات الإصدار/التوثيق/الاختبارات المعدلة
+----------------------------------------
+- package.json / package-lock.json
+- server/package.json / server/package-lock.json
+- src/core/runtime.ts
+- src/mobile.ts
+- android/app/build.gradle
+- README_AR.md
+- MOBILE_ANDROID_AR.md
+- CUSTOMER_PACKAGE.txt
+- scripts/mobile-android-smoke.mjs
+- scripts/system-ux-smoke.mjs
+- scripts/ui-browser-smoke.py
+- dist/* تم تحديثه من Source عبر Build/Copy Static.
+
+بوابات الفحص النهائية
+---------------------
+- Frontend TypeScript build: PASS
+- Server TypeScript build: PASS
+  ملاحظة: تم توفير type-only QA dependencies مؤقتة بسبب عدم وجود node_modules داخل ZIP ثم حُذفت قبل التغليف.
+- Node smoke tests: 49/49 PASS
+- Browser smoke tests: 6/6 PASS
+- UI routes: 48/48 PASS
+- Console Errors: 0
+- Page Errors: 0
+- WhatsApp print flow browser regression: PASS
+  * زر المستند المرتبط بطرف ظاهر ومفعّل.
+  * 01012345678 تم تطبيعه إلى 201012345678.
+  * Native bridge استلم HTML + عنوان المستند + الهاتف + الرسالة.
+  * التقرير العام أخفى زر واتساب.
+- Accounting smoke: 31 journal / 0 imbalanced / PASS
+- Umrah workflow: 9 journal / 0 imbalanced / PASS
+- Cancel integrity: PASS
+- src/dist parity: PASS
+- Module size gate: PASS
+- CSS: لم يتغير عن v32.5.41 حرفيًا (نفس SHA-256)
+- !important: 37 داخل src/styles.css / 39 داخل src كله
+- Login protection selectors: 4/4 موجودة
+- Temporary node_modules inside release: 0
+
+Android build verification
+--------------------------
+- Android static/native bridge smoke ضمن 49 Node tests: PASS.
+- تم محاولة تشغيل Gradle Java compile، لكن بيئة الفحص لا تحتوي Gradle 8.14.3 كاملًا في cache ولا يوجد اتصال إنترنت؛ Gradle توقف عند محاولة تنزيل التوزيعة من services.gradle.org قبل أن يبدأ compilation.
+- لذلك لا يتم الادعاء أن APK/AAB تم بناؤه داخل هذه البيئة.
+- قبل نشر APK/AAB على العملاء يجب تشغيل GitHub Actions/بيئة Android المتصلة للتأكد من compile/sign الفعلي لنفس source v32.5.42.
+
+الحفاظ على الاستقرار
+--------------------
+- لا توجد Database Migration.
+- لم تتم إضافة مكتبة PDF أو WhatsApp خارجية.
+- لم يتم تغيير CSS أو التصميم.
+- لم يتم تغيير دورة المحاسبة أو الحجوزات أو أوامر الشراء.
+- تم إعادة استخدام Print engine وActions.normalizeWhatsApp وFileProvider الموجودة بالفعل.

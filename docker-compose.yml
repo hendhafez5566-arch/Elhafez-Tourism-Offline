@@ -1,0 +1,50 @@
+name: ${COMPOSE_PROJECT_NAME:-tourism-erp-commercial}
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tourism_erp
+      POSTGRES_USER: tourism_erp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+    volumes:
+      - erp_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tourism_erp -d tourism_erp"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 8080
+      DATABASE_URL: postgresql://tourism_erp:${POSTGRES_PASSWORD}@db:5432/tourism_erp
+      ERP_TENANT: ${ERP_TENANT:-company_default}
+      ERP_COMPANY_ID: ${ERP_COMPANY_ID:-}
+      ERP_LICENSE_TOKEN: ${ERP_LICENSE_TOKEN:-}
+      TRIAL_DAYS: ${TRIAL_DAYS:-30}
+      VENDOR_LICENSE_URL: ${VENDOR_LICENSE_URL:-}
+      VENDOR_AGENT_KEY: ${VENDOR_AGENT_KEY:-}
+      VENDOR_LICENSE_CHECK_MINUTES: ${VENDOR_LICENSE_CHECK_MINUTES:-5}
+      LICENSE_GRACE_HOURS: ${LICENSE_GRACE_HOURS:-72}
+      ERP_PUBLIC_URL: ${ERP_PUBLIC_URL:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
+      SESSION_HOURS: ${SESSION_HOURS:-12}
+      ALLOW_TENANT_HEADER: "false"
+      ALLOW_FACTORY_RESET: ${ALLOW_FACTORY_RESET:-false}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
+      WHATSAPP_ACCESS_TOKEN: ${WHATSAPP_ACCESS_TOKEN:-}
+      WHATSAPP_GRAPH_VERSION: ${WHATSAPP_GRAPH_VERSION:-v23.0}
+    ports:
+      - "${ERP_PORT:-8080}:8080"
+volumes:
+  erp_postgres_data:
+

@@ -1,0 +1,69 @@
+name: Elhafez Tourism Offline Android
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android/**'
+      - 'src/**'
+      - 'index.html'
+      - 'pwa/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/offline-copy-smoke.mjs'
+      - '.github/workflows/android-apk.yml'
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - id: meta
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Verify full offline architecture
+        run: npm run test:offline
+      - name: Build bundled ERP and sync Android
+        run: npm run mobile:sync
+      - name: Restore release signing key
+        if: env.KEYSTORE_B64 != ''
+        shell: bash
+        run: echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/elhafez-release.jks"
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 || secrets.ANDROID_KEYSTORE_B64 }}
+      - name: Build Android APK
+        id: android-build
+        shell: bash
+        env:
+          ELHAFEZ_APP_ID: com.elhafez.tourism.erp.offline
+          ELHAFEZ_KEYSTORE_FILE: ${{ runner.temp }}/elhafez-release.jks
+          ELHAFEZ_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ELHAFEZ_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ELHAFEZ_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          cd android
+          chmod +x gradlew
+          if [ -f "$ELHAFEZ_KEYSTORE_FILE" ] \
+             && [ -n "$ELHAFEZ_KEYSTORE_PASSWORD" ] \
+             && [ -n "$ELHAFEZ_KEY_ALIAS" ] \
+             && [ -n "$ELHAFEZ_KEY_PASSWORD" ]; then
+            ./gradlew assembleRelease
+            echo "artifact=android/app/build/outputs/apk/release/*.apk" >> "$GITHUB_OUTPUT"
+          else
+            ./gradlew assembleDebug
+            echo "artifact=android/app/build/outputs/apk/debug/*.apk" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Elhafez-Tourism-OFFLINE-v${{ steps.meta.outputs.version }}
+          path: ${{ steps.android-build.outputs.artifact }}

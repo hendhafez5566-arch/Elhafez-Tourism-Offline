@@ -1,0 +1,18 @@
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(p,'utf8');
+const store=read('src/persistence/server-store.ts'), party=read('src/crm/party360.ts'), master=read('src/accounting/invoices.ts'), pages=read('src/ui/pages.ts'), actions=read('src/commercial/actions.ts'), product=read('src/commercial/product.ts'), server=read('server/src/server.ts'), session=read('server/src/session.ts'), vendor=read('server/src/vendor.ts'), owner=read('src/commercial/vendor-owner.ts'), ui=read('src/ui/ui.ts'), del=read('src/core/delete-center.ts'), css=read('src/styles.css'), browser=read('src/persistence/browser-store.ts'), umrahData=read('src/core/umrah/data.ts');
+const C=[]; const ck=(n,p)=>C.push({name:n,pass:!!p});
+ck('Same-device save conflict retries with base data',store.includes('_baseData')&&store.includes('baseData')&&store.includes('attempt>0'));
+ck('Party More has suspend and delete is locked while active',party.includes('تعليق')&&party.includes('يجب تعليق السجل أولًا')&&party.includes('toggleSuspended'));
+ck('Master delete also enforces suspend',master.includes('علّق العميل أولًا قبل الحذف')&&master.includes('علّق المورد أولًا قبل الحذف')&&master.includes('علّق المندوب أولًا قبل الحذف'));
+ck('Activity history uses range view plus one advanced cleanup entry',pages.includes('آخر 24 ساعة')&&pages.includes('آخر 30 يومًا')&&pages.includes('إدارة السجل')&&pages.includes('تنظيف السجل يدويًا')&&pages.includes('setActivityRetention'));
+ck('Activity cleanup reaches server',actions.includes('clearActivity(range)')&&product.includes("method:'DELETE'")&&server.includes("req.method==='DELETE'")&&server.includes('/api/audit'));
+ck('Local activity storage is capped and retention-aware',browser.includes('auditLog.length>2000')&&umrahData.includes('activityRetentionDays')&&umrahData.includes('slice(0, 1500)'));
+ck('Same device/IP/user session is deduplicated',session.includes('delete from erp_sessions where tenant_key=$1 and user_id=$2 and ip_address=$3 and user_agent=$4'));
+ck('Umrah workspace duplicate home removed',ui.includes("ws.id==='umrah'?'':")&&ui.includes("id==='umrah'?modules[0][0]:'dashboard'"));
+ck('Safe Umrah program delete blocks live operation/finance',del.includes('programOperationalRefs')&&del.includes('programFinancialRefs')&&del.includes("['planning','contracting','pricing','cancelled']")&&del.includes("p.status==='closed'"));
+ck('Only three themes remain',pages.includes('value="light"')&&pages.includes('value="dark"')&&pages.includes('value="comfort"')&&!pages.includes('value="executive"')&&!pages.includes('value="sand"')&&!pages.includes('value="graphite"'));
+ck('Typography scale is global',css.includes('--font-scale')&&css.includes('font-size:calc(15px * var(--font-scale))'));
+ck('Customer runtime has no local Vendor deployment authority',owner.includes('enabled:false')&&owner.includes('deploymentAutomation:false')&&owner.includes('autoRollout:false'));
+ck('Customer Vendor UI is physically disabled',owner.includes("page(..._args:any[]){return''}"));
+const failed=C.filter(x=>!x.pass);console.log(JSON.stringify({ok:!failed.length,checks:C},null,2));if(failed.length)process.exit(1);

@@ -1,0 +1,10 @@
+dist/integrated/hr/app.js
+dist/integrated/hr/app.js.map
+dist/integrated/hr/index.html
+dist/integrated/hr/styles.css
+dist/integrated/umrah/app.js
+dist/integrated/umrah/app.js.map
+dist/integrated/umrah/index.html
+dist/integrated/umrah/styles.css
+src/integrated/hr/index.html
+src/integrated/umrah/index.html

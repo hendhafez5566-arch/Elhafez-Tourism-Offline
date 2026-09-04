@@ -1,0 +1,58 @@
+Elhafez Tourism v32.5.39 — تقرير إغلاق تنظيف CSS الآمن
+====================================================
+
+المرجع:
+- تم البناء على Checkpoint v32.5.38 الآمن.
+- لا يوجد تغيير في التصميم أو منطق النظام أو المحاسبة أو الحجوزات.
+
+تعديل هذه الدفعة:
+- تنظيف آخر زوج Topbar interaction كان يعتمد على !important متبادل:
+  1) global-nav-btn[disabled] transform:none
+  2) mobile topbar hover transform
+- تم فصل presentation الخاص بالزر المعطل عن transform الخاص به، ورفع specificity للـtransform فقط.
+- أزيلت 2 !important بدون تغيير opacity/cursor أو hover behavior.
+
+المقارنة البصرية:
+- 50 حالة على 1280/781/780/480/390px.
+- الحالات: enabled / disabled / Home / mobile-menu / icon button + normal/hover.
+- النتيجة: 0 اختلافات.
+
+عداد !important:
+- البداية v32.5.16: styles.css = 751، src كامل = 796.
+- v32.5.38: styles.css = 39، src كامل = 41.
+- v32.5.39: styles.css = 37، reports/printing.ts = 2، src كامل = 39.
+- إجمالي الانخفاض من بداية التنظيف: styles.css 751 -> 37، src 796 -> 39.
+
+قواعد حماية تسجيل الدخول:
+- .login.hidden
+- .login-inline-message.hidden
+- .auth-boot-brand.hidden
+- .auth-boot-offline.hidden
+النتيجة: 4/4 محفوظة.
+
+بوابات الفحص:
+- TypeScript build: PASS
+- Node smoke tests: 49/49 PASS
+- Browser smoke tests: 6/6 PASS
+- UI routes: 48/48 PASS
+- Console Errors: 0
+- Page Errors: 0
+- Accounting: PASS — journals 31 / imbalanced 0
+- Umrah workflow: PASS — journals 9 / imbalanced 0
+- Cancel integrity: PASS
+- src/dist parity: PASS
+
+تصنيف المتبقي:
+- no-animation emergency utility.
+- generic hidden utility.
+- print isolation.
+- focus-row animation declaration.
+- mobile scroll contract.
+- mobile sidebar protection.
+- Login/Auth guards.
+- Android WebView shell scroll protection.
+- قاعدتا print reset داخل reports/printing.ts.
+
+الخلاصة:
+- v32.5.39 هو حد التوقف الآمن لتنظيف !important حاليًا.
+- لا يُنصح بحذف المتبقي لمجرد الوصول إلى رقم أقل؛ المتبقي مرتبط بحماية سلوك مقصود أو بعقود mobile/Android/print/auth.

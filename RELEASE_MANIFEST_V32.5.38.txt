@@ -1,0 +1,11 @@
+Elhafez Tourism v32.5.38
+Channel: stable customer checkpoint
+CSS !important: styles.css=39; src-total=41
+Node: 49/49 PASS
+Browser: 6/6 PASS
+Routes: 48/48 PASS
+Accounting: 31 journals / 0 imbalanced
+Umrah: 9 journals / 0 imbalanced
+Cancel integrity: PASS
+Parity: PASS
+Login guards: 4/4

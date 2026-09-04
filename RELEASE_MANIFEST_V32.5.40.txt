@@ -1,0 +1,21 @@
+ELHAFEZ TOURISM v32.5.40 — COMMERCIAL RELEASE MANIFEST
+Base: v32.5.39
+Channel: stable
+Migration required: NO
+Runtime version: 32.5.40
+Server version: 32.5.40
+Android: 32.5.40 / versionCode 32540
+Build: PASS
+Node smokes: 49/49 PASS
+Browser smokes: 6/6 PASS
+Routes: 48/48 PASS
+Console errors: 0
+Page errors: 0
+Accounting imbalanced: 0
+Umrah workflow: PASS
+src/dist parity: PASS
+Source maps: 0
+@ts-nocheck: 0
+src/styles.css !important: 37
+src total !important: 39
+Commercial hardening: factory reset env gate + backup verification + restore preflight + dynamic Windows version naming + updater base-image pull

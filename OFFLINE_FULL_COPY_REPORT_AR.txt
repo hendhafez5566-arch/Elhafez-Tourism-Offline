@@ -1,0 +1,63 @@
+ELHAFEZ TOURISM v32.5.43 — FULL OFFLINE COPY
+============================================
+
+الهدف
+-----
+إنشاء Copy مستقلة من النسخة التجارية v32.5.43 تعمل على Android بدون Railway أو PostgreSQL أو Company Code أثناء التشغيل، مع الحفاظ على نفس واجهة ووظائف النظام الأساسية.
+
+المعمارية
+---------
+- نفس كود ERP/Accounting/CRM/Umrah المستخدم في v32.5.43.
+- التخزين الأساسي محلي على الجهاز عبر IndexedDB + Local WebView Storage.
+- المرفقات تحفظ محليًا على الجهاز.
+- تسجيل الدخول وكلمات المرور تعمل محليًا بنفس PBKDF2 الموجود في المشروع.
+- First Setup يعمل محليًا وينشئ الشركة/المدير/الفرع/الخزنة دون خادم.
+- App ID منفصل: com.elhafez.tourism.erp.offline
+- يمكن تثبيت النسخة الأوفلاين بجانب النسخة الأونلاين دون مشاركة البيانات.
+- Android يفتح النظام الكامل المدمج داخل APK مباشرة، ولا توجد شاشة Company Code ولا انتقال إلى Railway.
+
+ما لم يتغير
+-----------
+- src/styles.css مطابق حرفيًا للنسخة الأصلية.
+- منطق المحاسبة والفواتير والحجوزات والعمرة والعقود والمخزون والطباعة لم يتغير.
+- WhatsApp/PDF share نفسه لم يتغير.
+
+الوظائف الخادمية غير المستخدمة في النسخة الأوفلاين
+---------------------------------------------------
+- مزامنة أكثر من جهاز.
+- Owner Center / Company Code / Railway runtime.
+- جلسات الخادم وسجل الخادم.
+- تحديث الترخيص من الخادم.
+- النسخ الخادمية المركزية.
+- استعادة الحساب بالبريد عبر الخادم.
+
+البدائل المحلية
+---------------
+- Backup خارجي كامل + Restore محلي يعملان من داخل النظام.
+- Factory Reset يعمل محليًا.
+- البيانات والمرفقات تحفظ على نفس الجهاز.
+
+اختبارات النسخة
+---------------
+- TypeScript frontend build: PASS
+- Offline architecture smoke: 15/15 PASS
+- Offline boot with navigator.onLine=false: PASS
+- Browser product suite: 6/6 PASS
+- UI routes: 49 routes, 0 Page Errors, 0 Console Errors
+- Accounting smoke: 31 journals / 0 imbalanced
+- Advanced accounting: 28 journals / 0 imbalanced
+- Umrah workflow: 9 journals / 0 imbalanced
+- Cancel integrity: PASS
+- src/dist parity: PASS
+- Module size gate: PASS
+- CSS identical to v32.5.43: YES
+
+Android APK build in this environment
+-------------------------------------
+لم يكتمل Gradle APK هنا لأن Gradle 8.14.3 غير موجود في cache وبيئة التنفيذ بلا إنترنت.
+تم تجهيز GitHub Actions داخل .github/workflows/android-apk.yml لبناء APK أوفلاين مباشرة عند رفع المشروع إلى GitHub وتشغيل Workflow.
+
+ملاحظة مهمة
+------------
+حذف التطبيق أو Clear Data يمسح البيانات المحلية. يجب أخذ Backup خارجي دوريًا.
+وظائف خارجية بطبيعتها مثل WhatsApp أو جلب سعر صرف مباشر تحتاج إنترنت وقت استخدامها، لكن تشغيل ERP وحفظ البيانات لا يحتاج Railway أو إنترنت.

@@ -1,0 +1,82 @@
+Elhafez Tourism v32.5.35 — تقرير Checkpoint آمن
+=================================================
+
+المرجع السابق الآمن: v32.5.34
+نطاق هذه الدفعة: Legacy Login CSS importance cleanup.
+
+التعديلات المقبولة
+------------------
+- إزالة !important من margin القديم لعنوان login-form-head h2.
+- إزالة !important من font-size القديم لعنوان login-form-head h2.
+- إزالة !important من margin القديم لـ login-form-head p.
+- إزالة !important من font-size القديم داخل <=520px لعنوان login-form-head h2.
+- الطبقة النهائية المتأخرة لـ Login/Auth/Setup تغطي هذه القيم بالكامل وتحافظ على نفس النتيجة.
+
+اختبارات المقارنة للمكوّن
+-------------------------
+- الحالات: Login عادي / Setup / Regular Login.
+- الأحجام: 1280 / 900 / 781 / 780 / 600 / 521 / 520 / 390px.
+- الخصائص: font-size / line-height / margin / color / المقاسات الفعلية للعنوان والوصف.
+- الإجمالي: 48 مقارنة / 0 اختلافات.
+
+الملفات المصدرية المعدلة وظيفيًا
+--------------------------------
+- src/styles.css
+
+ملفات رقم الإصدار / التوثيق / مخرجات البناء
+------------------------------------------
+- package.json / package-lock.json
+- server/package.json / server/package-lock.json
+- src/core/runtime.ts
+- src/mobile.ts
+- android/app/build.gradle
+- CUSTOMER_PACKAGE.txt
+- MOBILE_ANDROID_AR.md
+- README_AR.md
+- dist/app.js
+- dist/index.html
+- dist/manifest.webmanifest
+- dist/styles.css
+- dist/sw.js
+
+نتيجة !important
+----------------
+- src/styles.css: 62 -> 58
+- src/reports/printing.ts: 2 (بدون تغيير)
+- إجمالي src: 64 -> 60
+- المحذوف في الدفعة: 4
+- البداية الأصلية قبل التنظيف: 796 داخل src / 751 داخل styles.css
+
+التعديلات المرفوضة والمتراجع عنها
+--------------------------------
+- لا توجد محاولة مرفوضة في هذه الدفعة؛ تم اختبار الطبقة القديمة فقط ولم يتم لمس قواعد Login النهائية أو قواعد hidden الأربع.
+
+حماية Login
+-----------
+4/4 محفوظة كما هي:
+.login.hidden
+.login-inline-message.hidden
+.auth-boot-brand.hidden
+.auth-boot-offline.hidden
+
+بوابات الفحص
+------------
+- TypeScript Build: PASS
+- Node smoke: 49/49 PASS
+- Browser smoke: 6/6 PASS
+- UI routes: 48/48 PASS
+- Console Errors: 0
+- Page Errors: 0
+- Accounting: PASS — journals 31 / imbalanced 0
+- Umrah workflow: PASS — journals 9 / imbalanced 0
+- Cancel integrity: PASS
+- src/dist parity: PASS
+
+تأكيد النطاق
+------------
+لا يوجد تعديل على Auth logic أو Setup logic أو المحاسبة أو الحجوزات.
+التغيير المعتمد CSS cleanup فقط + محاذاة رقم الإصدار والتوثيق.
+
+الحالة
+------
+v32.5.35 Checkpoint آمن ومعتمد للاستكمال منه.

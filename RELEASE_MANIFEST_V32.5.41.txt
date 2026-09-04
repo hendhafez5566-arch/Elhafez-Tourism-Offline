@@ -1,0 +1,15 @@
+ELHAFEZ TOURISM v32.5.41 — SYNC RELIABILITY RELEASE MANIFEST
+===============================================================
+Release: 32.5.41
+Base: 32.5.40 CUSTOMER COMMERCIAL RELEASE
+Runtime version: 32.5.41
+Server version: 32.5.41
+Android: 32.5.41 / versionCode 32541
+Database migration: NO
+Primary fixes: Android resume/reconnect readiness, pending-save refresh protection, Party360 live mutation refresh.
+Node smoke: 49/49 PASS
+Browser smoke: 6/6 PASS
+Routes: 48/48 PASS
+Accounting: 31 journals / 0 imbalanced
+Umrah: 9 journals / 0 imbalanced
+src/dist parity: PASS

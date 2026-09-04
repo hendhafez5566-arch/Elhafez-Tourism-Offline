@@ -1,0 +1,82 @@
+Elhafez Tourism v32.5.32 — تقرير Checkpoint آمن
+=================================================
+
+المرجع السابق الآمن: v32.5.31
+نطاق هذه الدفعة: Responsive Umrah/Core Suite CSS cleanup.
+
+التعديلات المقبولة
+------------------
+- إزالة !important من grid/kpis العامة داخل Core Suite على الشاشات <= 780px.
+- إزالة !important من Umrah KPI grid (الأعمدة + gap) مع الحفاظ على نفس القيم النهائية.
+- إزالة !important من Umrah dashboard lower grid.
+- إزالة !important من Umrah form-grid two/three/four على الموبايل.
+- إزالة !important من Umrah KPI grid داخل <= 420px.
+- الاعتماد على ترتيب الـCascade وspecificity الحالية بدل صراع !important بين الطبقة العامة وطبقة العمرة.
+
+اختبارات المقارنة للمكوّن
+-------------------------
+- الأحجام: 1280 / 900 / 781 / 780 / 600 / 421 / 420 / 390px.
+- الحالات: Core Suite grid + Umrah KPI grid + dashboard lower + form-grid 2/3/4.
+- الإجمالي: 56 مقارنة / 0 اختلافات في computed styles.
+
+الملفات المصدرية المعدلة وظيفيًا
+--------------------------------
+- src/styles.css
+
+ملفات رقم الإصدار / التوثيق / مخرجات البناء
+------------------------------------------
+- package.json / package-lock.json
+- server/package.json / server/package-lock.json
+- src/core/runtime.ts
+- src/mobile.ts
+- android/app/build.gradle
+- CUSTOMER_PACKAGE.txt
+- MOBILE_ANDROID_AR.md
+- README_AR.md
+- dist/app.js
+- dist/index.html
+- dist/manifest.webmanifest
+- dist/styles.css
+- dist/sw.js
+
+نتيجة !important
+----------------
+- src/styles.css: 72 -> 66
+- src/reports/printing.ts: 2 (بدون تغيير)
+- إجمالي src: 74 -> 68
+- المحذوف في الدفعة: 6
+- البداية الأصلية قبل التنظيف: 796 داخل src / 751 داخل styles.css
+
+التعديلات المرفوضة والمتراجع عنها
+--------------------------------
+- لا توجد محاولة CSS مرفوضة في هذه الدفعة.
+
+حماية Login
+-----------
+4/4 محفوظة كما هي:
+.login.hidden
+.login-inline-message.hidden
+.auth-boot-brand.hidden
+.auth-boot-offline.hidden
+
+بوابات الفحص
+------------
+- TypeScript Build: PASS
+- Node smoke: 49/49 PASS
+- Browser smoke: 6/6 PASS
+- UI routes: 48/48 PASS
+- Console Errors: 0
+- Page Errors: 0
+- Accounting: PASS — journals 31 / imbalanced 0
+- Umrah workflow: PASS — journals 9 / imbalanced 0
+- Cancel integrity: PASS
+- src/dist parity: PASS
+
+تأكيد النطاق
+------------
+لا يوجد تعديل على منطق العمرة أو الحجوزات أو المحاسبة أو Navigation.
+التغيير المعتمد CSS cleanup فقط + محاذاة رقم الإصدار والتوثيق.
+
+الحالة
+------
+v32.5.32 Checkpoint آمن ومعتمد للاستكمال منه.

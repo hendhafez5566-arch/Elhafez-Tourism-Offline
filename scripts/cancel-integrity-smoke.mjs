@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {assertRecordLifecycle} from '../server/dist/authz.js';
+const base={invoices:[],umrahSupplierCommitments:[],purchaseOrders:[]};
+const draft={id:'PO-DRAFT',no:'PO-DRAFT',status:'draft',sourceType:'umrah-procurement'};
+const activeCommit={id:'C1',hostPOId:'PO-DRAFT',status:'committed',active:true};
+assert.throws(()=>assertRecordLifecycle({...base,purchaseOrders:[draft],umrahSupplierCommitments:[activeCommit]},{...base,purchaseOrders:[],umrahSupplierCommitments:[activeCommit]}),/التزام مورد نشط/);
+assert.doesNotThrow(()=>assertRecordLifecycle({...base,purchaseOrders:[draft],umrahSupplierCommitments:[activeCommit]},{...base,purchaseOrders:[],umrahSupplierCommitments:[{...activeCommit,status:'cancelled',active:false,hostPOId:'',cancelledHostPOId:'PO-DRAFT'}]}));
+const approved={...draft,id:'PO-APP',no:'PO-APP',status:'approved'};
+assert.throws(()=>assertRecordLifecycle({...base,purchaseOrders:[approved]},{...base,purchaseOrders:[]}),/المعتمد أو المنفذ أو المحول/);
+const invoiced={id:'I1',status:'posted',active:true,sourceType:'purchaseOrder',sourceId:'PO-DRAFT'};
+assert.throws(()=>assertRecordLifecycle({...base,purchaseOrders:[draft],invoices:[invoiced]},{...base,purchaseOrders:[],invoices:[invoiced]}),/فاتورة/);
+console.log(JSON.stringify({ok:true,draftCleanup:true,activeCommitmentProtected:true,approvedProtected:true,invoiceProtected:true}));

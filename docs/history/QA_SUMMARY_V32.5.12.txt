@@ -1,0 +1,10 @@
+Elhafez Tourism v32.5.12 — Entity-Backed State Storage
+
+- Operational/accounting entity collections are persisted in erp_entity_records.
+- erp_state switches to compact entity-backed storage only after row-count verification inside the transaction.
+- Unsafe legacy payloads remain legacy-full automatically.
+- Reads fail closed on entity-backed inconsistency instead of returning partial data.
+- Backup/restore, critical state history, archive close, setup/reset, vendor security and email recovery use hydrated state and centralized persistence.
+- Migration 013 adds explicit storage mode + compact manifest columns.
+
+Release gate must pass before distribution.

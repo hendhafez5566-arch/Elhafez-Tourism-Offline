@@ -1,0 +1,18 @@
+import fs from 'node:fs';
+const ui=fs.readFileSync('src/ui/ui.ts','utf8');
+const umrah=fs.readFileSync('src/core/umrah/ui.ts','utf8')+fs.readFileSync('src/core/umrah/ui-pages.ts','utf8');
+const css=fs.readFileSync('src/styles.css','utf8');
+const delegated=fs.readFileSync('src/ui/delegated-actions.ts','utf8');
+const assert=(ok,msg)=>{if(!ok)throw new Error(msg)};
+assert(ui.includes('installFormKeyboardNavigation()'),'Global mobile form keyboard navigation is missing');
+assert(ui.includes("e.key!=='Enter'")&&ui.includes("fields[idx+1]"),'Enter/Next does not move to the next field');
+assert(ui.includes("el.setAttribute('enterkeyhint',i===fields.length-1?'done':'next')"),'Mobile enterkeyhint next/done is missing');
+assert(ui.includes("el.tagName==='TEXTAREA'")&&ui.includes("enterkeyhint','enter'"),'Textarea newline behavior is not protected');
+assert(ui.includes('workspaceAccordionToggle(el)'),'Workspace accordion controller is missing');
+assert(ui.includes("ontoggle=\"UI.workspaceAccordionToggle(this)\""),'Workspace groups are not wired to the accordion controller');
+assert(!ui.includes('<b>${g.items.length}</b>'),'Umrah group numeric counters still appear beside group labels');
+assert(!ui.includes('<summary>${esc(g.name)}<span>${g.items.length}</span></summary>'),'Generic group numeric counters still appear beside group labels');
+assert(css.includes('.workspace-nav-chevron')&&css.includes('.workspace-accordion details[open]'),'Sidebar open/close affordance is missing');
+assert(umrah.includes('data-umrah-program-wizard-start="1">+ برنامج جديد</button>')&&delegated.includes('[data-umrah-program-wizard-start]')&&delegated.includes('UmrahCore_ProgramWizard.start()'),'Programs list still opens the direct create form instead of the guided wizard');
+assert(!umrah.includes('onclick="UmrahCore_Forms.program()">+ برنامج جديد</button>'),'Direct new-program form entry still exists');
+console.log(JSON.stringify({ok:true,mobileNext:true,accordion:true,noGroupCounters:true,guidedProgramCreate:true},null,2));

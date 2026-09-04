@@ -1,0 +1,119 @@
+Elhafez Tourism — تقرير إصدار v32.5.31
+======================================
+
+المرجع الآمن السابق: v32.5.30-CUSTOMER-CSS-SUITE-FOCUS-CLEAN
+نطاق الدفعة: Responsive Visibility CSS Cleanup
+
+1) الملفات المعدلة فعليًا
+------------------------
+تعديل المنتج:
+- src/styles.css
+
+ملفات رفع رقم الإصدار/المزامنة فقط:
+- package.json
+- package-lock.json
+- server/package.json
+- server/package-lock.json
+- src/core/runtime.ts
+- src/mobile.ts
+- android/app/build.gradle
+- CUSTOMER_PACKAGE.txt
+- MOBILE_ANDROID_AR.md
+- README_AR.md
+- dist/* الناتج من الـBuild ومزامنة الملفات الثابتة
+
+لا توجد إعادة بناء للمشروع من الصفر، ولا وظائف مكررة، ولا تغيير في منطق الأعمال.
+
+2) تنظيف !important
+--------------------
+قبل الدفعة (v32.5.30):
+- src/styles.css = 74
+- src/reports/printing.ts = 2
+- إجمالي src = 76
+
+بعد الدفعة (v32.5.31):
+- src/styles.css = 72
+- src/reports/printing.ts = 2
+- إجمالي src = 74
+
+تمت إزالة 2 !important فقط في هذه الدفعة.
+
+3) التعديلات المقبولة
+---------------------
+أ) Mobile Login Showcase
+- قبل: html.mobile-device .login-showcase{display:none!important}
+- بعد: html.mobile-device .login-showcase{display:none}
+- السبب: selector الخاص بالموبايل أقوى بالفعل من القاعدة الأساسية، ولا توجد حاجة إلى !important.
+
+ب) Data Protection Desktop Visibility
+- قبل داخل max-width:780px: .data-protection-desktop{display:none!important}
+- بعد: .data-protection-desktop{display:none}
+- السبب: لا توجد قاعدة display منافسة تحتاج كسر Cascade بالقوة.
+
+اختبار مقارنة المكوّن:
+- Desktop / Tablet / Mobile
+- Login + Data Protection visibility states
+- 27 مقارنة
+- الاختلافات: 0
+
+4) التعديلات المرفوضة والمتراجع عنها
+-----------------------------------
+- لا توجد محاولات CSS مرفوضة في هذه الدفعة.
+- القواعد المعروفة بحساسيتها من الدفعات السابقة لم تُمس (Topbar / Android scroll / Login guards / td.empty / visually-hidden-select width وغيرها).
+
+5) قواعد حماية شاشة الدخول
+---------------------------
+تم التأكد من بقاء القواعد الأربع كما هي:
+- .login.hidden = موجودة
+- .login-inline-message.hidden = موجودة
+- .auth-boot-brand.hidden = موجودة
+- .auth-boot-offline.hidden = موجودة
+
+6) بوابات الفحص النهائية
+-------------------------
+TypeScript / Build:
+- PASS
+
+Node Smoke Tests:
+- 49/49 PASS
+
+Browser Tests:
+- 6/6 PASS
+- المسارات: 48/48 PASS
+- Console Errors: 0
+- Page Errors: 0
+- Party360: PASS
+- UI Browser: PASS
+- v32469 browser policy: PASS
+
+Accounting:
+- journals: 31
+- imbalanced: 0
+- criticalAudit: 0
+- PASS
+
+Umrah Workflow:
+- journals: 9
+- imbalanced: 0
+- PASS
+
+Cancel Integrity:
+- draftCleanup: PASS
+- activeCommitmentProtected: PASS
+- approvedProtected: PASS
+- invoiceProtected: PASS
+
+src/dist parity:
+- htmlShell: true
+- runtime: true
+- css: true
+- syntax: true
+- stale: []
+- missingIds: []
+- missingRuntime: []
+- PASS
+
+7) النتيجة
+-----------
+الإصدار v32.5.31 Checkpoint آمن ومعتمد لاستكمال التنظيف منه.
+لم يتم تغيير التصميم أو سلوك النظام، وتم تقليل !important فقط حيث أثبتت المقارنة والاختبارات عدم الحاجة إليها.

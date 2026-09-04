@@ -1,0 +1,83 @@
+Elhafez Tourism v32.5.33 — تقرير Checkpoint آمن
+=================================================
+
+المرجع السابق الآمن: v32.5.32
+نطاق هذه الدفعة: Setup Wizard CSS importance cleanup.
+
+التعديلات المقبولة
+------------------
+- إزالة !important من margin-top لزر setup-start-button مع بقاء القيمة 16px كما هي.
+- إزالة !important من justify-content لأزرار setup-wizard-actions مع بقاء center كما هي.
+- لم يتم تغيير أي Layout أو Gradient أو Button sizing.
+
+اختبارات المقارنة للمكوّن
+-------------------------
+- عناصر فعلية بنفس classes المستخدمة في Auth/Setup: btn primary setup-next-button / setup-start-button / ghost back.
+- الأحجام: 1280 / 900 / 601 / 600 / 390px.
+- الخصائص المقارنة: margin, justify-content, min-width, width, background, border, color, display, grid, order + المقاسات الفعلية.
+- الإجمالي: 25 مقارنة / 0 اختلافات.
+
+الملفات المصدرية المعدلة وظيفيًا
+--------------------------------
+- src/styles.css
+
+ملفات رقم الإصدار / التوثيق / مخرجات البناء
+------------------------------------------
+- package.json / package-lock.json
+- server/package.json / server/package-lock.json
+- src/core/runtime.ts
+- src/mobile.ts
+- android/app/build.gradle
+- CUSTOMER_PACKAGE.txt
+- MOBILE_ANDROID_AR.md
+- README_AR.md
+- dist/app.js
+- dist/index.html
+- dist/manifest.webmanifest
+- dist/styles.css
+- dist/sw.js
+
+نتيجة !important
+----------------
+- src/styles.css: 66 -> 64
+- src/reports/printing.ts: 2 (بدون تغيير)
+- إجمالي src: 68 -> 66
+- المحذوف في الدفعة: 2
+- البداية الأصلية قبل التنظيف: 796 داخل src / 751 داخل styles.css
+
+التعديلات المرفوضة والمتراجع عنها
+--------------------------------
+- إزالة !important من Gradient الخاص بـ setup-next-button / setup-start-button: مرفوضة؛ غيّرت الخلفية بسبب .btn.primary.
+- إزالة !important من min-width:280px لزر البدء: مرفوضة؛ غيّرت عرض الزر على Desktop/Tablet.
+- إزالة !important من min-width:0 داخل Mobile Setup actions: مرفوضة؛ غيّرت عرض الأزرار على <=600px.
+- القواعد الثلاث السابقة بقيت كما هي لأنها ضرورية بسبب Cascade.
+
+حماية Login
+-----------
+4/4 محفوظة كما هي:
+.login.hidden
+.login-inline-message.hidden
+.auth-boot-brand.hidden
+.auth-boot-offline.hidden
+
+بوابات الفحص
+------------
+- TypeScript Build: PASS
+- Node smoke: 49/49 PASS
+- Browser smoke: 6/6 PASS
+- UI routes: 48/48 PASS
+- Console Errors: 0
+- Page Errors: 0
+- Accounting: PASS — journals 31 / imbalanced 0
+- Umrah workflow: PASS — journals 9 / imbalanced 0
+- Cancel integrity: PASS
+- src/dist parity: PASS
+
+تأكيد النطاق
+------------
+لا يوجد تعديل على Auth logic أو Setup logic أو المحاسبة أو الحجوزات.
+التغيير المعتمد CSS cleanup فقط + محاذاة رقم الإصدار والتوثيق.
+
+الحالة
+------
+v32.5.33 Checkpoint آمن ومعتمد للاستكمال منه.

@@ -1,0 +1,69 @@
+ELHAFEZ TOURISM — RELEASE REPORT v32.5.43
+==================================================
+القاعدة: v32.5.42 CUSTOMER-WHATSAPP-PDF-SHARE
+الإصدار: v32.5.43 CUSTOMER-WHATSAPP-PDF-NATIVE-FIX
+
+سبب المشكلة الفعلي
+-------------------
+- مسار Android كان يستدعي PrintDocumentAdapter يدويًا بدون lifecycle كامل.
+- adapter.onStart() لم يكن يُستدعى قبل onLayout/onWrite، وadapter.onFinish() لم يكن يُستدعى بعد الانتهاء.
+- أخطاء onLayout/onWrite/FileProvider/فتح WhatsApp كانت تُبتلع بصمت بدون Callback للواجهة.
+- JavaScript كان يعرض "جاري تجهيز" بمجرد استدعاء NativePrint.sharePdf بدون معرفة هل تم إنشاء PDF أو فشل.
+
+الإصلاح
+--------
+1) Android MainActivity.java
+- إضافة lifecycle كامل: onStart -> onLayout -> onWrite -> onFinish.
+- مهلة 12 ثانية تمنع تعليق العملية بلا نهاية.
+- التحقق من أن ملف PDF موجود وحجمه > 0 قبل المشاركة.
+- إضافة ClipData + FLAG_GRANT_READ_URI_PERMISSION لـ FileProvider.
+- محاولة WhatsApp ثم WhatsApp Business ثم Android share chooser.
+- إرسال حدث erp:native-pdf-share للواجهة بحالة success/error ورسالة مفهومة.
+- عدم تجاهل فشل layout/write/share بصمت.
+
+2) src/reports/printing.ts
+- الاستماع لحدث Android native share وعرض نجاح/فشل حقيقي.
+- الإبقاء على رسالة "جاري تجهيز" كحالة انتظار فقط.
+- إذا كان APK قديمًا ولا يرجع Callback خلال 15 ثانية تظهر رسالة صريحة تطلب تحديث التطبيق إلى v32.5.43 بدل التعليق الصامت.
+
+3) QA
+- توسيع Android smoke للتأكد من onStart/onFinish وClipData وnative callback.
+
+الملفات المصدرية المعدلة
+------------------------
+- android/app/src/main/java/com/elhafez/tourism/erp/customer/MainActivity.java
+- src/reports/printing.ts
+- scripts/mobile-android-smoke.mjs
+- ملفات الإصدار/التوثيق فقط لرفع 32.5.42 -> 32.5.43
+
+ما لم يتغير
+------------
+- src/styles.css: بدون أي تغيير.
+- قواعد Login الأربع: محفوظة.
+- قاعدة البيانات: لا Migration.
+- المحاسبة والحجوزات والعمرة: لا تغيير في منطق الأعمال.
+
+نتائج الفحص
+------------
+- Frontend TypeScript build: PASS
+- Node smoke tests: 49/49 PASS
+- Browser smoke tests: 6/6 PASS
+- UI routes: 48/48 PASS
+- Console Errors: 0
+- Page Errors: 0
+- Accounting smoke: 31 journals / 0 imbalanced
+- Umrah workflow smoke: 9 journals / 0 imbalanced
+- Cancel integrity: PASS
+- src/dist parity: PASS
+- MainActivity Java syntax compile ضد stubs مماثلة لتواقيع Android/Capacitor المستخدمة: PASS
+- Android native regression checks: PASS
+
+قيد بيئة الفحص
+---------------
+- Gradle 8.14.3 الكامل غير موجود في الكاش والبيئة بلا إنترنت؛ لذلك لم يتم Gradle Android compile الفعلي هنا.
+- يجب بناء APK/AAB من GitHub Actions/بيئة Android المتصلة قبل نشره للعملاء.
+
+مهم جدًا
+---------
+هذا الإصلاح يغير Java داخل تطبيق Android. رفع ملفات الويب/Railway وحده لا يغيّر NativePrint الموجود في APK المثبت.
+يجب إصدار APK/AAB جديد v32.5.43 وتحديث التطبيق على الجهاز حتى يعمل الإصلاح Native بالكامل.

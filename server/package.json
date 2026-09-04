@@ -1,0 +1,27 @@
+{
+  "name": "erp-professional-suite-commercial-api",
+  "private": true,
+  "version": "32.5.43",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/pg": "^8.15.0",
+    "typescript": "^5.8.3"
+  },
+  "erpRelease": {
+    "channel": "stable",
+    "notes": "v32.5.43: no database migration; Android PDF share reliability fix with no API schema changes.",
+    "migrationRequired": false
+  },
+  "description": "Elhafez Tourism v32.5.43 — Customer API compatible Android WhatsApp PDF reliability release.",
+  "erp": {
+    "notes": "Accounting and Hajj/Umrah lifecycle controls aligned with the customer runtime."
+  }
+}

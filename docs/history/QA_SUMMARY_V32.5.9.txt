@@ -1,0 +1,41 @@
+Elhafez Tourism v32.5.9 — FINAL QA CHECKPOINT
+
+Runtime identity
+- Customer only. Owner/Vendor administration remains external in Elhafez Technology Owner Center.
+
+Type safety
+- Frontend src/: 0 files with @ts-nocheck.
+- Frontend TypeScript: 0 errors.
+- server/src/server.ts is the only remaining @ts-nocheck file.
+- Server source was not re-typechecked in this offline QA environment because the real @types/pg dependency was unavailable locally. No fake production type shims were added.
+
+Structure / cleanup
+- contracts.ts split cleanly: contract center 82,239 bytes + procurement 17,927 bytes.
+- Module size gate: PASS.
+- Dead Owner Center Customer CSS removed (~20 KB).
+- CSS !important declarations reduced from 813 to 751.
+- Customer Owner workspace route registration removed.
+- Customer build generator no longer reintroduces @ts-nocheck into Vendor stubs.
+- Historical release/QA notes moved under docs/history/releases instead of cluttering the current package root.
+
+Persistence / safety retained from v32.5.8
+- Record-level state patches retained.
+- Indexed PostgreSQL entity mirror retained.
+- Pinned reset/restore checkpoints retained.
+- Login throttling, Android cookie-backed session, audit retention and release signing hardening retained.
+
+Final release gate (this artifact source tree)
+- Node smoke tests: 41/41 PASS.
+- Browser smoke suites: 6/6 PASS.
+- Browser route coverage: 48 routes PASS.
+- Large-list browser dataset: 5,000 customers / 25,000 invoices / 50,000 journals, no page errors.
+- Frontend src/dist parity: PASS; no stale runtime chunks.
+- server/dist/server.js syntax check: PASS.
+- Accounting smoke: journals balanced (31 journals, 0 imbalanced).
+- Cancellation / contract inventory / Umrah lifecycle tests: PASS.
+
+Known remaining structural work
+- server/src/server.ts still has @ts-nocheck pending a real dependency-backed strict typecheck.
+- Central JSONB state remains as compatibility/source-of-truth while normalized record mirrors are introduced incrementally.
+- 751 !important declarations and legacy inline event handlers remain; further cleanup must be incremental to avoid UI regressions.
+- operations.ts remains near its focused size ceiling (~104.5 KB) and should be split only behind dedicated behavior tests.

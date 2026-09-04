@@ -1,0 +1,20 @@
+import { mkdir, copyFile, readFile, writeFile, rm } from 'node:fs/promises';
+const root=new URL('../',import.meta.url);
+async function cp(src,dst){await mkdir(new URL(dst.substring(0,dst.lastIndexOf('/')+1),root),{recursive:true});await copyFile(new URL(src,root),new URL(dst,root));}
+const pkg=JSON.parse(await readFile(new URL('package.json',root),'utf8'));
+const version=encodeURIComponent(String(pkg.version||'dev'));
+let html=await readFile(new URL('index.html',root),'utf8');
+for(const asset of ['./styles.css','./app.js','./manifest.webmanifest','./icons/erp-192.png','./icons/erp-512.png'])html=html.replaceAll(asset,`${asset}?v=${version}`);
+await mkdir(new URL('dist/',root),{recursive:true});
+await rm(new URL('dist/app.js.map',root),{force:true});
+await writeFile(new URL('dist/index.html',root),html);
+await cp('src/styles.css','dist/styles.css');
+let manifest=await readFile(new URL('pwa/manifest.webmanifest',root),'utf8');
+for(const asset of ['./icons/erp-192.png','./icons/erp-512.png'])manifest=manifest.replaceAll(asset,`${asset}?v=${version}`);
+await writeFile(new URL('dist/manifest.webmanifest',root),manifest);
+await cp('pwa/icons/erp-192.png','dist/icons/erp-192.png');
+await cp('pwa/icons/erp-512.png','dist/icons/erp-512.png');
+await cp('native-offline.html','dist/native-offline.html');
+const sw=(await readFile(new URL('pwa/sw.js',root),'utf8')).replaceAll('__ERP_VERSION__',String(pkg.version||'dev'));
+await writeFile(new URL('dist/sw.js',root),sw);
+console.log(`Static/PWA files copied to dist/ with cache-busting version ${version}.`);

@@ -1,0 +1,58 @@
+Elhafez Tourism v32.5.37 — تقرير Checkpoint آمن
+================================================
+
+المرجع السابق: v32.5.36
+نوع الدفعة: Login / Setup button cascade cleanup
+
+الهدف
+-----
+إزالة اعتماد CSS غير الضروري على !important داخل أزرار الدخول والتهيئة، مع الحفاظ على الشكل والسلوك الحاليين 100% باستخدام Component-scoped specificity طبيعية.
+
+التعديلات المقبولة
+------------------
+1) login-submit:
+   - استبدال margin-top:17px!important بقاعدة scoped داخل .login-card تحافظ على نفس الهامش بدون !important.
+2) Setup wizard gradient:
+   - تقوية selector داخل .setup-wizard-actions بدل استخدام !important على الخلفية.
+3) Setup start desktop min-width:
+   - استخدام selector خاص بالمكوّن بدل min-width!important.
+4) Setup mobile min-width:
+   - الاعتماد على قاعدة .setup-wizard-actions .btn داخل media query بدون !important.
+
+المقارنة البصرية للمكوّن
+------------------------
+- Login regular / offline / recovery + Setup next/start/ghost
+- المقاسات: 1280 / 900 / 601 / 600 / 390
+- عدد المقارنات: 40
+- الاختلافات: 0
+
+عداد !important
+---------------
+- src/styles.css: 52 -> 48
+- src بالكامل: 54 -> 50
+- printing.ts: 2 (مقصودة ومحفوظة)
+- قواعد حماية Login الأربع: 4/4 محفوظة
+
+بوابات الفحص
+------------
+- TypeScript Build: PASS
+- Node smoke tests: 49/49 PASS
+- Browser smoke tests: 6/6 PASS
+- UI routes: 48/48 PASS
+- Console Errors: 0
+- Page Errors: 0
+- Accounting: PASS — journals 31 / imbalanced 0
+- Umrah workflow: PASS — journals 9 / imbalanced 0
+- Program cancellation integrity: PASS
+- src/dist parity: PASS
+
+التعديلات المرفوضة والمتراجع عنها في هذه الدفعة
+----------------------------------------------
+- لا يوجد تعديل منتج مرفوض في هذه الدفعة؛ تم اختيار refactor scoped من البداية بعد نتائج الدفعات السابقة التي أثبتت أن الحذف المباشر لبعض Setup rules يغيّر الشكل.
+
+ملاحظات
+-------
+- لا يوجد تغيير في منطق المحاسبة أو الحجوزات أو العمرة.
+- لا يوجد تغيير في التصميم أو سلوك الأزرار.
+- لم يتم حذف !important بالجملة.
+- الـ !important المتبقية ستظل للمراجعة Component-by-Component فقط.

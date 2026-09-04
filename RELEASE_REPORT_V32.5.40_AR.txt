@@ -1,0 +1,126 @@
+Elhafez Tourism v32.5.40 — FINAL COMMERCIAL RELEASE QA
+======================================================
+التاريخ: 2026-09-02
+المرجع: v32.5.39 CUSTOMER CSS TOPBAR INTERACTION CLEAN
+الحكم: PASS — النسخة البرمجية مؤهلة للنشر التجاري بعد إغلاق العيوب المكتشفة في فحص Commercial Release.
+
+1) العيوب الحقيقية التي كشفها الفحص وتم إصلاحها
+--------------------------------------------------
+1. Factory Reset:
+   - قبل الإصلاح: ALLOW_FACTORY_RESET=false كان موجودًا في .env والوثائق لكن الخادم لا يطبقه.
+   - بعد الإصلاح: الخادم يقرأ ALLOW_FACTORY_RESET، والـFactory Reset يرجع factory_reset_disabled ما لم يتم تفعيله صراحة.
+
+2. Backup Verification على Windows:
+   - قبل الإصلاح: VERIFY_BACKUP_WINDOWS.bat كان يستخدم Docker service باسم backup غير موجود، ويبحث عن erp_*.dump بينما النسخ اليدوية manual_*.dump.
+   - بعد الإصلاح: يستخدم service db الصحيحة، يبحث عن أحدث *.dump، ينسخ الـdump إلى PostgreSQL container ويفحصه بـ pg_restore -l.
+
+3. Backup / Restore Safety:
+   - النسخ اليدوي يُنشأ داخل PostgreSQL container، يُفحص قبل نسخه إلى الجهاز، وتحذف النسخة غير الصالحة عند الفشل.
+   - Restore يتحقق من dump قبل تنفيذ --clean، ثم ينشئ Backup احتياطي قبل الاسترجاع.
+
+4. Windows Release Naming:
+   - أزيلت أرقام الإصدار القديمة v32.2 / v32.5.1 من سكربتات التشغيل والبناء.
+   - الإصدار يُقرأ من package.json، وAPK Debug الناتج يحمل رقم الإصدار الحالي تلقائيًا.
+   - BUILD_ANDROID_APK_WINDOWS.bat يستخدم npm ci لبناء reproducible من package-lock.
+
+5. Update Runtime Base Security:
+   - install-update.ps1 يستخدم build --pull --no-cache app لضمان سحب أحدث node:22-alpine عند التحديث بدل الاعتماد على Base image قديمة محليًا.
+
+6. Release Metadata:
+   - Web package: 32.5.40
+   - Server package: 32.5.40
+   - Runtime: 32.5.40
+   - Android versionName: 32.5.40
+   - Android versionCode: 32540
+   - migrationRequired=false لأن الإصدار لا يضيف Database migration جديدة.
+
+2) نتائج بوابات الفحص
+--------------------
+TypeScript / Build:
+- npm run build: PASS
+- Frontend + static/PWA copy + Server TypeScript: PASS
+
+Node smoke tests:
+- 49 / 49 PASS
+- تشمل: accounting, advanced accounting, accounting constitution, Umrah workflow,
+  contracts/inventory, cancellation integrity, roles, concurrency, security, archive,
+  data protection, licensing/customer central, Android/mobile/connectivity, reset entry,
+  entity-backed storage, lifecycle, UI/action integrity, customer parity وغيرها.
+
+Browser tests:
+- 6 / 6 PASS
+- list-performance-browser-smoke: PASS
+- modal-footer-browser-smoke: PASS
+- party-controls-browser-smoke: PASS
+- party360-browser-smoke: PASS
+- ui-browser-smoke: PASS
+- v32469-browser-smoke: PASS
+- Routes tested: 48 / 48
+- Console Errors: 0
+- Page Errors: 0
+
+Performance browser dataset passed:
+- Customers: 5,000
+- Suppliers: 2,500
+- Invoices: 25,000
+- Receipts: 12,500
+- Journals: 50,000
+- Journal lines: 100,000
+- Lazy pagination/search remained operational with 25 rendered rows per page.
+
+Accounting:
+- Standard accounting smoke: 31 journals / 0 imbalanced
+- Advanced accounting smoke: 28 journals / 0 imbalanced
+- Customer/Supplier advances, allocations, void/reversal, deferred revenue/cost,
+  fixed assets, loans, bad debt, payroll, bank matching: PASS
+
+Hajj / Umrah / Tourism operations:
+- Umrah workflow: PASS
+- Workflow journals: 9 / 0 imbalanced
+- Program/booking/traveler lifecycle: PASS
+- Draft PO cleanup on cancellation: PASS
+- Approved/received/invoiced protection: PASS
+- Duplicate traveler protection: PASS
+- Visa batch duplicate protection: PASS
+- Contracts & owned inventory logic: PASS
+- Program safe delete / financial audit retention: PASS
+
+Architecture / Source:
+- module-size-check: PASS
+- monolithFree: true
+- Largest regular TS module: 91,282 bytes (< 100,000 limit)
+- @ts-nocheck in src + server/src: 0
+- Production source maps: 0
+- src/dist parity: PASS
+- Stale runtime chunks: 0
+- Missing runtime IDs: 0
+
+Security / Packaging:
+- Real private-key/token pattern hits in shipped source scan: 0
+- Only public license keys are shipped.
+- Customer Vendor/Owner administration remains physically disabled in customer runtime.
+- Persistent PostgreSQL login throttling: PASS
+- HttpOnly session cookie / token hash handling: PASS
+- Release Android signing requirement: PASS (source/config check)
+- ALLOW_TENANT_HEADER default false: retained
+- ALLOW_FACTORY_RESET default false and now enforced: PASS
+
+CSS final state:
+- src/styles.css !important: 37
+- Entire src !important: 39
+- Remaining rules intentionally retained as required guards/Android/mobile/auth/print protections.
+- Four required login hidden guards retained.
+
+3) الاختبارات التي لم يمكن تنفيذها داخل بيئة الفحص الحالية
+---------------------------------------------------------
+هذه ليست أخطاء مكتشفة في الكود، لكنها خطوات Acceptance مرتبطة ببيئة خارجية:
+- تشغيل Docker/PostgreSQL حقيقي غير متاح في بيئة الفحص الحالية؛ لذلك لم يتم تنفيذ Railway/real-Postgres deployment smoke هنا.
+- بيئة Windows حقيقية غير متاحة؛ تم فحص Batch/PowerShell آليًا كنص وإضافة Smoke assertions لها، لكن لم يتم تشغيل ملفات .bat على Windows فعلي.
+- Android SDK + مفاتيح Release signing غير متاحة؛ Android source/config/connectivity smokes نجحت، لكن Signed Release APK/AAB يجب بناؤه بمفاتيح Elhafez Technology عند النشر.
+
+4) الحكم التجاري
+----------------
+- من ناحية Source/Business Logic/UI/Browser/Accounting/Security Guards/Packaging: PASS.
+- هذه هي النسخة المعتمدة كأساس البيع والنشر: v32.5.40.
+- لا ينصح بأي تنظيف CSS إضافي للـ39 !important المتبقية بدون سبب وظيفي.
+- لكل شركة جديدة يبقى مطلوبًا Deployment Acceptance قصير بعد رفعها: /api/health + تسجيل الدخول + إنشاء عملية تجريبية + Backup/Restore verification + التحقق من الترخيص المركزي.

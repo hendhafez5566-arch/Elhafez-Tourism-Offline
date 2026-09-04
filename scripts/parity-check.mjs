@@ -1,0 +1,15 @@
+import {readFile,access} from 'node:fs/promises';
+import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+const read=async p=>readFile(new URL(`../${p}`,import.meta.url),'utf8');
+const exists=async p=>{try{await access(new URL(`../${p}`,import.meta.url));return true}catch{return false}};
+const html=await read('dist/index.html'),js=await read('dist/app.js'),css=await read('dist/styles.css');
+const requiredIds=['login','app','sidebar','nav','pages','modal','quickModal','printModal','printFrame','toast'];
+const missing=requiredIds.filter(id=>!new RegExp(`id=["']${id}["']`).test(html));
+const requiredRuntime=['const UI','const DB','const Auth','const Pages','const Forms','const Actions','const CoreSuites','const UmrahCore_DB','const UmrahCore_Ops'];
+const missingRuntime=requiredRuntime.filter(x=>!js.includes(x));
+const stale=[];for(const p of ['dist/integrated/hr/native.js','dist/integrated/umrah/native.js','dist/core/hr.js','dist/core/hr.js.map','dist/core/umrah.js','dist/core/umrah.js.map','src/integrated/hr','src/core/hr','src/integrated/umrah','scripts/build-native-modules.mjs','tsconfig.hr-core.json','tsconfig.umrah-core.json'])if(await exists(p))stale.push(p);
+const syntax=spawnSync(process.execPath,['--check',fileURLToPath(new URL('../dist/app.js',import.meta.url))],{encoding:'utf8'}).status===0;
+const checks={htmlShell:missing.length===0,runtime:missingRuntime.length===0,css:css.length>50000,totalRuntimeChars:js.length,mainBundleChars:js.length,stale,missingIds:missing,missingRuntime,mainRuntimeOnly:html.includes('app.js')&&!html.includes('core/hr.js')&&!html.includes('core/umrah.js'),directUmrahCore:js.includes('const UmrahCore_DB')&&!js.includes('umrah-v2'),hrRemoved:!js.includes('HRCore_'),syntax};
+console.log(JSON.stringify(checks,null,2));
+if(!checks.htmlShell||!checks.runtime||!checks.css||!checks.mainRuntimeOnly||!checks.directUmrahCore||!checks.hrRemoved||!checks.syntax||stale.length)process.exit(1);

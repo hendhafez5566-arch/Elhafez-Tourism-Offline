@@ -1,0 +1,9 @@
+Elhafez Tourism v32.5.8 — QA Summary
+Identity: CUSTOMER only
+Frontend TypeScript: PASS (0 errors)
+Node smoke suite: PASS 40/40
+Browser smoke suite: PASS 6/6
+Runtime parity: PASS
+Remaining @ts-nocheck directives: 12 total (server: 1)
+PostgreSQL normalization status: transitional entity mirror; erp_state.payload remains compatibility authority.
+Server dist: regenerated from current source in the offline QA environment using a temporary pg type-only shim; the shim is not included in this package.

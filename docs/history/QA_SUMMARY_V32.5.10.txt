@@ -1,0 +1,35 @@
+QA SUMMARY — Elhafez Tourism v32.5.10
+
+FINAL RELEASE GATE
+- Frontend TypeScript: 0 errors.
+- Server TypeScript source: 0 errors in strict QA compile.
+- @ts-nocheck: 0 files across src + server/src.
+- Node smoke tests: 42/42 passed.
+- Browser smoke tests: 6/6 passed.
+- Browser routes exercised: 48.
+- Performance browser dataset: 5,000 customers, 2,500 suppliers, 25,000 invoices, 12,500 receipts, 50,000 journals / 100,000 journal lines; no page/console errors.
+- src/dist frontend parity: passed.
+- Server dist rebuilt from the current TypeScript source.
+- Accounting smoke: 0 imbalanced journals in the tested scenario.
+- Cancellation integrity: passed for draft cleanup and protection of active/approved/invoiced commitments.
+
+STRUCTURAL RESULT
+- contracts.ts: 82,239 bytes; procurement.ts is a focused split module.
+- operations.ts: 91,282 bytes; operations-execution.ts: 13,480 bytes.
+- Standard TypeScript module ceiling: 100,000 bytes; operations.ts no longer needs a special exception.
+- Customer Owner/Vendor page styles/routes remain removed.
+- CSS !important count: 751 (audited baseline was 813).
+- PostgreSQL entity mirror + incremental state patching retained as the compatibility migration layer away from full-state-only persistence.
+- Reset/restore safety history, Android cookie session hardening, DB login limiter and audit protections retained.
+
+SERVER TYPECHECK NOTE
+The offline QA environment could not complete npm ci. Server strict compilation used the installed Node type definitions plus a temporary compile-only declaration for the small pg surface used by context.ts (Pool.query/connect). That declaration was deleted after compilation and is NOT included in the package. Production/CI should still run npm ci + npm run verify with the declared @types/pg dependency.
+
+KNOWN REMAINING TECHNICAL DEBT
+- erp_state JSONB remains the compatibility source of truth while entity tables/mirror are introduced; full normalization is intentionally not forced in one release to avoid migration risk.
+- CSS still contains legacy !important rules; only proven-dead Customer Owner CSS has been removed so far.
+
+PACKAGE HYGIENE
+- node_modules excluded.
+- No generated source maps.
+- Customer identity only; central Owner Control Center remains separate.

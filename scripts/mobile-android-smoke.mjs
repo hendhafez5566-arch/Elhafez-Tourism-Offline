@@ -1,0 +1,30 @@
+import { readFile } from 'node:fs/promises';
+const read=p=>readFile(new URL(`../${p}`,import.meta.url),'utf8');
+const pkg=JSON.parse(await read('package.json'));
+const cfg=JSON.parse(await read('capacitor.config.json'));
+const [mobile,store,pwa,server,context,session,manifest,gradle,resolver,assetResolver,mainActivity,printing,workflow]=await Promise.all([
+ read('src/mobile.ts'),read('src/persistence/server-store.ts'),read('src/pwa.ts'),read('server/src/server.ts'),read('server/src/context.ts'),read('server/src/session.ts'),read('android/app/src/main/AndroidManifest.xml'),read('android/app/build.gradle'),read('mobile-customer/index.html'),read('android/app/src/main/assets/public/index.html'),read('android/app/src/main/java/com/elhafez/tourism/erp/customer/MainActivity.java'),read('src/reports/printing.ts'),read('.github/workflows/android-apk.yml')
+]);
+const version=String(pkg.version||''),[vMajor=0,vMinor=0,vPatch=0]=version.split('.').map(Number),versionCode=String(vMajor*1000+vMinor*100+vPatch);
+const checks=[];const check=(name,pass)=>{checks.push({name,pass:!!pass});if(!pass)process.exitCode=1};
+check('Customer app id is isolated',cfg.appId==='com.elhafez.tourism.erp.customer'&&gradle.includes("'com.elhafez.tourism.erp.customer'")&&gradle.includes('namespace = "com.elhafez.tourism.erp.customer"')&&!gradle.includes('com.elhafez.tourism.erp.vendor'));
+check('Customer shell is the only bundled web entry',cfg.webDir==='mobile-customer'&&!cfg.server?.url&&assetResolver===resolver);
+check('Customer runtime navigation is HTTPS Railway only',cfg.server?.cleartext===false&&cfg.server?.allowNavigation?.includes('*.up.railway.app')&&resolver.includes("endsWith('.up.railway.app')"));
+check('Elhafez Technology URL is build-time Android config',gradle.includes('ELHAFEZ_TECHNOLOGY_URL')&&gradle.includes('BuildConfigField')===false&&gradle.includes('buildConfigField')&&mainActivity.includes('BuildConfig.ELHAFEZ_TECHNOLOGY_URL')&&resolver.includes('getOwnerBaseUrl'));
+check('Resolver has no old Tourism Vendor domain',!resolver.includes('zonal-charm-production.up.railway.app'));
+check('Customer GitHub workflow contains no Vendor APK variant',workflow.includes('Tourism Customer Android')&&workflow.includes('com.elhafez.tourism.erp.customer')&&!workflow.includes('com.elhafez.tourism.erp.vendor')&&!workflow.includes('variant: [vendor, customer]'));
+check('Android version matches current release',gradle.includes(`versionCode ${versionCode}`)&&gradle.includes(`versionName "${version}"`)&&mobile.includes(`'X-ERP-Mobile-Version','${version}'`));
+check('Android internet and hardening flags exist',manifest.includes('android.permission.INTERNET')&&manifest.includes('android:usesCleartextTraffic="false"')&&manifest.includes('android:allowBackup="false"'));
+check('NativeShell survives remote runtime navigation',mainActivity.includes('addJavascriptInterface(new NativeShellBridge(), "NativeShell")')&&mainActivity.includes('openRuntime(String url)')&&mainActivity.includes('.endsWith(".up.railway.app")'));
+check('native requests identify Android client',mobile.includes("h.set('X-ERP-Mobile','android')"));
+check('server explicitly allows Android WebView CORS origin',context.includes('https://localhost')&&context.includes('Access-Control-Allow-Origin'));
+check('native session uses HttpOnly cookie instead of JS-readable bearer token',mobile.includes("credentials:'include'")&&!mobile.includes('erp_native_session_v1')&&!mobile.includes('mobileSessionToken')&&!server.includes('mobileSessionToken'));
+check('Android sessions are long-lived sliding sessions',context.includes('MOBILE_SESSION_HOURS||720')&&session.includes('sessionTtlHours'));
+check('native app retries pending saves after connectivity returns',mobile.includes('ServerStore.flushPending()')&&mobile.includes('network-return'));
+check('native app has pull-to-refresh and manual refresh',mobile.includes('installPullToRefresh')&&mobile.includes("refreshFromServer('pull')")&&mobile.includes('nativeRefreshBtn'));
+check('dirty forms/conflicts are protected on refresh',mobile.includes('dirtyFormOpen()')&&mobile.includes('ServerStore.lastConflict||DB.syncBlocked'));
+check('service worker is disabled in native shell',pwa.includes('NativeShell?.isNative?.()===true')&&pwa.includes('if(native)return'));
+check('Android system Back and lifecycle bridges exist',mainActivity.includes('erp:native-back')&&mainActivity.includes('erp:native-state')&&mobile.includes("window.addEventListener('erp:native-back'"));
+check('Android native print and WhatsApp PDF bridge exists',mainActivity.includes('PrintManager')&&mainActivity.includes('printHtml')&&mainActivity.includes('sharePdf(String html')&&mainActivity.includes('Intent.ACTION_SEND')&&mainActivity.includes('application/pdf')&&mainActivity.includes('FileProvider.getUriForFile')&&mainActivity.includes('adapter.onStart()')&&mainActivity.includes('adapter.onFinish()')&&mainActivity.includes('ClipData.newRawUri')&&mainActivity.includes('erp:native-pdf-share')&&printing.includes('native?.printHtml')&&printing.includes('native?.sharePdf')&&printing.includes('erp:native-pdf-share')&&printing.includes('حدّث التطبيق إلى الإصدار 32.5.43'));
+check('Customer owner resolver endpoint is central',resolver.includes('/api/vendor/mobile/resolve/')&&resolver.includes('Elhafez Technology'));
+console.log(JSON.stringify({ok:checks.every(x=>x.pass),version,checks},null,2));

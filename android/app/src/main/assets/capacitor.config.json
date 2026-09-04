@@ -1,0 +1,16 @@
+{
+  "appId": "com.elhafez.tourism.erp.offline",
+  "appName": "Elhafez Tourism Offline",
+  "webDir": "dist",
+  "backgroundColor": "#071d3d",
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "server": {
+    "androidScheme": "https",
+    "cleartext": false,
+    "errorPath": "index.html"
+  }
+}

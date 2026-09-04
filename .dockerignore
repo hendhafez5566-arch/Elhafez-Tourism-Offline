@@ -1,0 +1,11 @@
+.git
+node_modules
+server/node_modules
+*.zip
+npm-debug.log
+.env
+backups
+release
+vendor-private
+vendor-tools
+licenses

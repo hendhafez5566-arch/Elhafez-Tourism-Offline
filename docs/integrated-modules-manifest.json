@@ -1,0 +1,18 @@
+{
+  "hr": {
+    "original_chars": 140706,
+    "original_sha256": "483a684da7cc12ad23c5bb9a1978c47d579ed4cccf82f135522e89558905766d",
+    "script_chars": 126257,
+    "style_chars": 12089,
+    "static_ids": 12,
+    "onclick_handlers": 66
+  },
+  "umrah": {
+    "original_chars": 298549,
+    "original_sha256": "d5e08c4c53072e5401af4a3ae4a4aec519e8c4999f69a23b3f7276ef9a422660",
+    "script_chars": 266987,
+    "style_chars": 29120,
+    "static_ids": 18,
+    "onclick_handlers": 186
+  }
+}

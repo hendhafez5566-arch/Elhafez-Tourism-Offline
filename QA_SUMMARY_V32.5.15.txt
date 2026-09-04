@@ -1,0 +1,41 @@
+QA SUMMARY — Elhafez Tourism v32.5.15
+CUSTOMER / MODULAR + ENTITY-BACKED + ZERO-INLINE-EVENT HARDENED
+
+FINAL ACCEPTANCE
+- Node smoke tests: 49/49 passed.
+- Browser smoke tests: 6/6 passed.
+- Browser route coverage: 48 routes, 0 page errors, 0 console errors in the final browser gate.
+- Frontend TypeScript build: passed.
+- Frontend src/dist parity: passed.
+- Server TypeScript noEmit check: passed with compile-only local type dependencies; temporary dependencies removed afterward.
+- Server build + compiled JavaScript syntax check: passed.
+- TypeScript @ts-nocheck: 0 in frontend and server source.
+- Accounting smoke suites: 0 imbalanced journals in tested scenarios.
+
+EVENT / UI HARDENING
+- Generated HTML onclick: 0.
+- Generated HTML onchange: 0.
+- Generated HTML oninput: 0.
+- Generated HTML onsubmit: 0.
+- Direct .onclick assignments in TypeScript source: 0.
+- Dynamic JavaScript action strings used by Smart Filters, Umrah guided recommendations, contract editing, output-center cards and program selectors were replaced by structured data-* attributes and explicit whitelists.
+- No eval or new Function was introduced.
+- Empty-state creation actions now use the existing Forms delegation path.
+- Umrah current/history tabs now use structured state actions instead of executable strings.
+
+DATA ARCHITECTURE
+- PostgreSQL entity-backed reads/writes remain active for verified mirrored operational collections.
+- erp_state persistence remains centralized and compact for verified entity-backed state.
+- Legacy/full-state fallback remains fail-closed for old/inconsistent data.
+- Backup and sensitive history paths retain hydrated full snapshots for recovery.
+- Database migration path includes 012_entity_mirror_read_source.sql and 013_entity_backed_state_storage.sql.
+
+STRUCTURE / PRODUCT BOUNDARY
+- No TypeScript source module exceeds 100 KB.
+- Customer runtime only. Owner/Vendor control remains external in Elhafez Technology Owner Center.
+- Owner/Vendor workspace registration and Customer CSS block remain excluded.
+
+REMAINING SAFE DEBT
+- src/styles.css is about 201 KB and still contains 751 !important declarations. They were not bulk-removed because many are media/cascade-specific and not proven redundant.
+- TypeScript-rendered markup still contains static inline style attributes in places; these should be migrated component-by-component with visual regression coverage, not by blind replacement.
+- Automated gates do not replace a live Railway/PostgreSQL multi-user pilot and a backup/restore disaster drill before broad commercial rollout.

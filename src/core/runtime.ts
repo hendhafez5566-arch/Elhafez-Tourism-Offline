@@ -1,0 +1,86 @@
+'use strict';
+const EPS=0.000001;
+const S=v=>String(v??'');
+const N=v=>Number(v)||0;
+const deep=o=>globalThis.structuredClone?structuredClone(o):JSON.parse(JSON.stringify(o));
+const today=()=>{const x=new Date();return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`};
+const now=()=>new Date().toISOString();
+const year2=d=>String(new Date((d||today())+'T00:00:00').getFullYear()).slice(-2);
+const esc=s=>S(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fmt=(n,d=2)=>N(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:d});
+const byId=(arr,id)=>arr.find(x=>x.id===id);
+const live=x=>x&&x.status!=='void'&&x.status!=='cancelled'&&x.status!=='rejected'&&x.deleted!==true;
+const iid=()=>globalThis.crypto?.randomUUID?.()||('i-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10));
+const Money={decimals(code=''){const d=typeof DB!=='undefined'?DB.data:null,c=S(code||(d?.settings?.baseCurrency)||'EGP').toUpperCase(),row=d?.currencies?.find?.(x=>x.code===c);return Math.min(6,Math.max(0,N(row?.decimals??2)))},round(n,code=''){const d=this.decimals(code),m=10**d;return Math.round((N(n)+Number.EPSILON)*m)/m},epsilon(code=''){return .5/(10**this.decimals(code))},format(n,code=''){const d=this.decimals(code);return this.round(n,code).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:d})}};
+const money=(n,c)=>`${Money.format(n,c)} ${S(c||DB.data.settings.baseCurrency).toUpperCase()}`;
+const MONTH_NAMES_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const monthNameAr=m=>MONTH_NAMES_AR[Math.max(1,Math.min(12,N(m)||1))-1]||S(m);
+const PrefixLabels={customer:'العملاء',supplier:'الموردون',agent:'المندوبون',lead:'العملاء المحتملون',quotation:'عروض الأسعار',purchaseOrder:'أوامر الشراء',program:'برامج الحج والعمرة',booking:'حجوزات الحج والعمرة',service:'الخدمات السياحية',salesInvoice:'فواتير المبيعات',purchaseInvoice:'فواتير الموردين',creditNote:'الإشعارات الدائنة',debitNote:'الإشعارات المدينة',receipt:'سندات القبض',payment:'سندات الصرف',expense:'المصروفات',journal:'القيود اليومية',transfer:'تحويلات الخزن',commission:'العمولات',costCenter:'مراكز التكلفة',treasury:'الخزن والبنوك',attachment:'المرفقات',approval:'الاعتمادات',cashCount:'جرد الخزن',reconciliation:'مقارنات البنك',fxRevaluation:'إعادة تقييم العملات'};
+const formatDate=d=>{if(!d)return '-';try{return new Date(`${d}T00:00:00`).toLocaleDateString('ar-EG-u-nu-latn',{year:'numeric',month:'2-digit',day:'2-digit'})}catch(_){return d}};
+const formatDateTime=d=>{if(!d)return '-';try{return new Date(d).toLocaleString('ar-EG-u-nu-latn',{dateStyle:'short',timeStyle:'short'})}catch(_){return d}};
+const daysBetween=(a,b)=>Math.floor((new Date(`${b}T00:00:00`).getTime()-new Date(`${a}T00:00:00`).getTime())/86400000);
+const dateAddMonthsClamped=(d,months)=>{if(!d)return'';const [y,m,day]=S(d).split('-').map(N),shift=N(months),base=new Date(y,m-1,1),targetMonth=base.getMonth()+shift,targetYear=base.getFullYear()+Math.floor(targetMonth/12),month=((targetMonth%12)+12)%12,last=new Date(targetYear,month+1,0).getDate();return `${targetYear}-${String(month+1).padStart(2,'0')}-${String(Math.min(Math.max(1,day),last)).padStart(2,'0')}`};
+const numWordsAr=n=>{n=Math.round(Math.abs(N(n)));if(n===0)return'صفر';const ones=['','واحد','اثنان','ثلاثة','أربعة','خمسة','ستة','سبعة','ثمانية','تسعة','عشرة','أحد عشر','اثنا عشر','ثلاثة عشر','أربعة عشر','خمسة عشر','ستة عشر','سبعة عشر','ثمانية عشر','تسعة عشر'],tens=['','','عشرون','ثلاثون','أربعون','خمسون','ستون','سبعون','ثمانون','تسعون'];const u=x=>x<20?ones[x]:(x%10?ones[x%10]+' و':'')+tens[Math.floor(x/10)];const h=x=>{const a=Math.floor(x/100),r=x%100,m=['','مائة','مائتان','ثلاثمائة','أربعمائة','خمسمائة','ستمائة','سبعمائة','ثمانمائة','تسعمائة'];return m[a]+(a&&r?' و':'')+u(r)};const chunk=(x,s,d,p)=>x===1?s:x===2?d:x>=3&&x<=10?h(x)+' '+p:h(x)+' '+s;let out=[];const mil=Math.floor(n/1e6);n%=1e6;const th=Math.floor(n/1000),rest=n%1000;if(mil)out.push(chunk(mil,'مليون','مليونان','ملايين'));if(th)out.push(chunk(th,'ألف','ألفان','آلاف'));if(rest)out.push(h(rest));return out.join(' و')};
+const amountWordsAr=(amount,code)=>{const d=Money.decimals(code),n=Math.abs(Money.round(amount,code)),whole=Math.floor(n),factor=10**d,frac=Math.round((n-whole)*factor),cur=Currency?.get?.(code),name=cur?.name||S(code),minor=d?` جزء من ${numWordsAr(factor)}`:'';return `فقط ${numWordsAr(whole)} ${name}${frac?` و${numWordsAr(frac)}${minor}`:''} لا غير`};
+const currencyFlag=code=>({EGP:'🇪🇬',SAR:'🇸🇦',USD:'🇺🇸',EUR:'🇪🇺',AED:'🇦🇪',KWD:'🇰🇼',QAR:'🇶🇦',BHD:'🇧🇭',OMR:'🇴🇲',GBP:'🇬🇧',TRY:'🇹🇷'})[S(code).toUpperCase()]||'💱';
+function toast(msg,type='ok'){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.className=`toast show ${type}`;clearTimeout((toast as any)._t);(toast as any)._t=setTimeout(()=>t.className='toast',2800)}
+
+const ICONS={
+ dashboard:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
+ programs:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/><path d="M8 15h3M8 18h6"/>',
+ bookings:'<path d="M4 5h16v4a2 2 0 0 0 0 4v6H4v-6a2 2 0 0 0 0-4V5z"/><path d="M12 7v10"/>',
+ services:'<path d="M22 2 9.5 14.5"/><path d="m15 3 6 6"/><path d="M9.5 14.5 4 12l-2 2 5 3 3 5 2-2-2.5-5.5z"/>',
+ customers:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+ suppliers:'<path d="M3 21h18M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6M9 9h.01M15 9h.01M9 12h.01M15 12h.01"/>',
+ agents:'<circle cx="12" cy="8" r="4"/><path d="M6 21v-2a6 6 0 0 1 12 0v2"/><path d="m17 11 2 2 4-4"/>',
+ expenses:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 13h4M2 9h20M6 16h2"/>',
+ receipts:'<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>',
+ payments:'<path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/>',
+ invoices:'<path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6M9 9h2"/>',
+ journal:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M8 7h8M8 11h8"/>',
+ documents:'<path d="M3 6h6l2 2h10v12H3z"/><path d="M3 6V4h7l2 2"/>',
+ accounts:'<path d="M4 6h16M4 12h16M4 18h16"/><circle cx="7" cy="6" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="17" cy="18" r="1"/>',
+ trial:'<path d="M12 3v18M5 7h14"/><path d="m5 7-3 6h6L5 7zM19 7l-3 6h6l-3-6z"/><path d="M8 21h8"/>',
+ costcenters:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+ treasury:'<path d="M3 10h18M5 10v8M9 10v8M15 10v8M19 10v8M2 21h20M12 3 2 8h20L12 3z"/>',
+ currencies:'<circle cx="9" cy="12" r="7"/><circle cx="15" cy="12" r="7"/><path d="M12 7v10M9.5 9.5h3a1.5 1.5 0 0 1 0 3h-1a1.5 1.5 0 0 0 0 3h3"/>',
+ reports:'<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',
+ audit:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
+ users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M16 11h6"/>',
+ settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.6v-.09A1.7 1.7 0 0 0 8.5 19.3a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3V9.6h.09A1.7 1.7 0 0 0 4.7 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.09A1.7 1.7 0 0 0 15.5 4.7a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.13.37.36.7.68.94.32.24.7.38 1.1.4H21v4h-.09a1.7 1.7 0 0 0-1.51.66z"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>', bell:'<path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+ menu:'<path d="M4 6h16M4 12h16M4 18h16"/>', plus:'<path d="M12 5v14M5 12h14"/>', chevron:'<path d="m9 18 6-6-6-6"/>', logout:'<path d="M10 17l5-5-5-5M15 12H3"/><path d="M15 3h6v18h-6"/>',
+ save:'<path d="M5 3h12l2 2v16H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/>', print:'<path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/>',
+ edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>', archive:'<path d="M3 5h18v4H3zM5 9v11h14V9M9 13h6"/>', eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ file:'<path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/>', csv:'<path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M8 13h8M8 17h8"/>',
+ wallet:'<path d="M3 6h16a2 2 0 0 1 2 2v10H3a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14"/><path d="M15 11h6v4h-6a2 2 0 0 1 0-4z"/>', cash:'<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 9h.01M18 15h.01"/>',
+ profit:'<path d="M3 18 9 12l4 4 8-10"/><path d="M15 6h6v6"/>', activity:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>', clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', warning:'<path d="M10.3 3.6 2.2 18a2 2 0 0 0 1.7 3h16.2a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>', check:'<path d="m5 12 4 4L19 6"/>', close:'<path d="M6 6l12 12M18 6 6 18"/>',
+ statement:'<path d="M5 3h14v18H5z"/><path d="M8 7h8M8 11h8M8 15h5"/>', lock:'<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>', palette:'<path d="M12 3a9 9 0 1 0 0 18h1.5a1.5 1.5 0 0 0 0-3H12a2 2 0 0 1 0-4h2a7 7 0 0 0-2-11z"/><circle cx="7.5" cy="10" r="1"/><circle cx="9.5" cy="6.5" r="1"/><circle cx="14" cy="6.5" r="1"/><circle cx="17" cy="10" r="1"/>',
+ backup:'<path d="M12 3a9 9 0 1 1-8.5 6"/><path d="M3 3v6h6M12 7v6l4 2"/>', shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>', info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>',
+ phone:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7A2 2 0 0 1 22 16.9z"/>',
+ more:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
+ trash:'<path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15M10 10v7M14 10v7"/>',
+ user:'<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/>'
+};
+const icon=(name,cls='')=>`<svg class="svg-icon ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]||ICONS.file}</svg>`;
+const roleLabel=r=>({admin:'مدير النظام',accountant:'محاسب',cashier:'مسؤول خزينة',sales:'مبيعات وحجوزات',auditor:'مراجع داخلي',manager:'مدير فرع'})[r]||r||'-';
+const statusLabel=s=>({draft:'مسودة',posted:'مرحل',open:'مفتوحة',partial:'جزئية',paid:'مسددة',pending:'معلقة',approved:'معتمدة',confirmed:'مؤكد',completed:'مكتمل',cancelled:'ملغي',void:'ملغي/معكوس',reversed:'معكوس',rejected:'مرفوض',active:'نشط',inactive:'موقوف',closed:'مغلق',checked:'تمت المراجعة',matched:'مطابق',difference:'فرق قائم',expired:'منتهي'})[s]||s||'-';
+const statusClass=s=>({draft:'gray',posted:'green',paid:'green',approved:'green',confirmed:'green',completed:'green',open:'red',partial:'orange',pending:'blue',cancelled:'red',void:'red',reversed:'orange',rejected:'red',closed:'gray'})[s]||'gray';
+const accountTypeLabel=t=>({asset:'أصول',liability:'خصوم',equity:'حقوق ملكية',revenue:'إيرادات',expense:'مصروفات',group:'مجموعة'})[t]||t;
+const natureLabel=n=>({debit:'مدين',credit:'دائن'})[n]||n;
+const expenseModeLabel=m=>({paid:'مدفوع الآن',accrued:'مستحق',prepaid:'مصروف مقدم'})[m]||m;
+
+const APP={name:'Elhafez',product:'نظام السياحة والحج والعمرة',descriptionAr:'نظام إدارة شركات السياحة والحج والعمرة',manufacturer:'Elhafez Technology',tagline:'حلول البرمجيات والذكاء الاصطناعي',version:'32.5.43',offlineEdition:true,schema:'erp-professional-suite-v32.2-commercial-offline',storage:'erp_professional_suite_v32_2_commercial_offline',session:'erp_suite_v32_2_commercial_offline_user',filesDb:'erp_professional_suite_v32_2_commercial_offline_files',dataDb:'erp_professional_suite_v32_2_commercial_offline_data',tenantStorage:'erp_suite_v32_2_commercial_offline_tenant',legacyStorage:'',legacyFilesDb:''};
+const Device={isMobileHardware(){const coarse=matchMedia?.('(any-pointer: coarse)')?.matches||false,touch=N(navigator.maxTouchPoints)>0,smallPhysical=Math.min(N(screen.width)||9999,N(screen.height)||9999)<=900,ua=/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);return ua||(touch&&coarse&&smallPhysical)},apply(){document.documentElement.classList.toggle('mobile-device',this.isMobileHardware())}};Device.apply();
+const PrefixDefaults={customer:'C',supplier:'S',agent:'A',lead:'L',quotation:'Q',purchaseOrder:'PO',program:'U',booking:'B',service:'SV',salesInvoice:'SI',purchaseInvoice:'PI',creditNote:'CN',debitNote:'DN',receipt:'R',payment:'P',expense:'E',journal:'J',transfer:'T',commission:'M',costCenter:'CC',treasury:'TR',attachment:'AT',approval:'AP',cashCount:'CT',reconciliation:'BR',fxRevaluation:'FX'};
+const StatusCatalog={
+ labels:{draft:'مسودة',posted:'مرحل',open:'مفتوح',partial:'جزئي',paid:'مسدد',pending:'معلق',approved:'معتمد',confirmed:'مؤكد',completed:'مكتمل',cancelled:'ملغي',void:'ملغي/معكوس',reversed:'معكوس',rejected:'مرفوض',active:'نشط',inactive:'موقوف',closed:'مغلق',checked:'تمت المراجعة',matched:'مطابق',difference:'فرق قائم',expired:'منتهي',sent:'مرسل',accepted:'مقبول',received:'مستلم',deposited:'مودع',cleared:'محصل',bounced:'مرتجع',converted:'محول',qualified:'مؤهل',won:'ناجح',lost:'خاسر',new:'جديد',planning:'تخطيط',contracting:'تعاقدات',pricing:'تسعير',salesClosed:'مغلق للبيع',operating:'تشغيل قبل السفر',traveling:'مسافر',returned:'عاد',inquiry:'استفسار',quotation:'عرض سعر',hold:'حجز مؤقت',waitlist:'انتظار',partiallyPaid:'مسدد جزئيًا',fullyPaid:'مسدد بالكامل',docsPending:'مستندات ناقصة',ready:'جاهز',checkedIn:'تم التجمع',modified:'معدل',cancelRequested:'طلب إلغاء',refunded:'مسترد',noShow:'عدم حضور',transferred:'منقول',unpaid:'غير مسدد',not_started:'لم يبدأ',documents_received:'تم استلام المستندات',submitted:'تم التقديم',processing:'تحت الإجراء',issued:'صادر',more_info:'بيانات إضافية مطلوبة'},
+ tones:{draft:'gray',posted:'green',paid:'green',approved:'green',confirmed:'green',completed:'green',accepted:'green',received:'green',cleared:'green',won:'green',open:'red',partial:'orange',pending:'blue',sent:'blue',qualified:'purple',new:'blue',cancelled:'red',void:'red',bounced:'red',lost:'red',reversed:'orange',rejected:'red',closed:'gray',inactive:'gray',checked:'blue',matched:'green',difference:'orange',expired:'red',planning:'gray',contracting:'blue',pricing:'orange',salesClosed:'orange',operating:'blue',traveling:'blue',returned:'gray',inquiry:'gray',quotation:'blue',hold:'orange',waitlist:'orange',partiallyPaid:'orange',fullyPaid:'green',docsPending:'orange',ready:'purple',checkedIn:'purple',modified:'blue',cancelRequested:'orange',refunded:'red',noShow:'red',transferred:'blue',unpaid:'red',not_started:'gray',documents_received:'blue',submitted:'blue',processing:'orange',issued:'green',more_info:'orange'},
+ label(s,context=''){if(context==='umrahProgram'&&s==='open')return'مفتوح للبيع';if(context==='umrahProgram'&&s==='traveling')return'الفوج مسافر';return this.labels[s]||s||'-'},tone(s,context=''){if(context==='umrahProgram'&&s==='open')return'blue';if(context==='umrahBooking'&&s==='confirmed')return'blue';return this.tones[s]||'gray'}
+};
+const sl=s=>StatusCatalog.label(s);
+const sc=s=>StatusCatalog.tone(s);
+const paymentMethodLabel=m=>({cash:'نقدي',bank:'تحويل بنكي',card:'بطاقة / نقطة بيع',cheque:'شيك',wallet:'محفظة إلكترونية'})[m]||m||'-';
+const approvalTypeLabel=t=>({payment:'سند صرف',expense:'مصروف',commission:'عمولة مندوب'})[t]||t||'-';
+const activityActionLabel=a=>({add:'إضافة',create:'إنشاء',update:'تعديل',edit:'تعديل',delete:'حذف',remove:'حذف',post:'ترحيل',void:'إلغاء / عكس',reverse:'عكس',approve:'اعتماد',reject:'رفض',login:'تسجيل دخول',logout:'تسجيل خروج',setup:'إعداد أول تشغيل',security:'أمان',permissions:'تعديل صلاحيات',branches:'تعديل فروع المستخدم',attach:'إرفاق',request:'طلب اعتماد',integrate:'تكامل',import:'استيراد',export:'تصدير','cash-count':'جرد خزنة','bank-compare':'مقارنة كشف بنك'})[a]||a||'-';
+const entityLabel=e=>({user:'مستخدم',branch:'فرع',customer:'عميل',supplier:'مورد',agent:'مندوب',lead:'عميل محتمل',quotation:'عرض سعر',purchaseOrder:'أمر شراء',program:'برنامج',booking:'حجز',traveler:'مسافر',service:'خدمة',invoice:'فاتورة',invoiceAdjustment:'إشعار فاتورة',receipt:'سند قبض',payment:'سند صرف',expense:'مصروف',journal:'قيد يومية',manualJournalDraft:'مسودة قيد',treasury:'خزنة / بنك',currency:'عملة',transfer:'تحويل',commission:'عمولة',costcenter:'مركز تكلفة',tax:'ضريبة',approval:'اعتماد',attachment:'مرفق',system:'النظام',umrahBooking:'حجز حج/عمرة',umrahProgram:'برنامج حج/عمرة',umrahTraveler:'مسافر حج/عمرة',programSegment:'قطاع برنامج',supplierCommitment:'التزام مورد حج/عمرة',umrahSupplier:'التزام مورد حج/عمرة'})[e]||e||'-';

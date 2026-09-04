@@ -1,0 +1,41 @@
+QA SUMMARY — Elhafez Tourism v32.5.13
+CUSTOMER / MODULAR + ENTITY-BACKED HARDENED
+
+FINAL ACCEPTANCE
+- Node smoke tests: 47/47 passed.
+- Browser smoke tests: 6/6 passed.
+- Browser route coverage: 48 routes, 0 page errors, 0 console errors.
+- Frontend src/dist parity: passed.
+- TypeScript @ts-nocheck: 0 in frontend and server source.
+- Server compiled JavaScript syntax check: passed.
+- Accounting smoke suites: 0 imbalanced journals in tested scenarios.
+- Large-list browser dataset: 5,000 customers, 2,500 suppliers, 25,000 invoices, 12,500 receipts, 50,000 journals / 100,000 journal lines.
+
+DATA ARCHITECTURE
+- PostgreSQL entity-backed reads/writes are used for mirrored operational collections after revision/count/identity verification.
+- erp_state persistence is centralized and may compact mirrored operational collections after verification.
+- Legacy/full-state fallback remains fail-closed for old/inconsistent data.
+- Backup and sensitive history paths retain hydrated full snapshots for recovery.
+- Database migration path includes 012_entity_mirror_read_source.sql and 013_entity_backed_state_storage.sql.
+
+STRUCTURAL CLEANUP
+- program-wizard: 59,938 bytes + program-wizard-view: 37,627 bytes.
+- generic forms runtime: 47,962 bytes + definitions: 48,357 bytes.
+- Umrah forms: 68,862 bytes + contract forms: 11,965 bytes.
+- Umrah UI shell: 9,098 bytes + page renderers: 71,151 bytes.
+- contract allocation core: 53,808 bytes + management/insights: 28,437 bytes.
+- operations core remains below 100 KB at 91,282 bytes; execution workflow is separate.
+- No TypeScript source module exceeds 100 KB.
+
+UI CLEANUP
+- Explicit raw inline event guard: onclick=330, onchange=2, oninput=0, onsubmit=0.
+- Delegated UI events are centralized in src/ui/delegated-actions.ts.
+- CSS is ~201 KB with 751 !important declarations. No further blind deletion was performed because remaining rules are not proven duplicate/safe.
+
+PRODUCT BOUNDARY
+- Customer runtime only. Owner/Vendor control remains external in Elhafez Technology Owner Center.
+- Owner/Vendor workspace registration and customer CSS block remain excluded.
+
+LIMITS
+- The remaining specialized inline onclick handlers and CSS specificity debt require module-by-module UI refactoring, not bulk removal.
+- Smoke/browser/load-fixture success is a release gate, not a substitute for a live Railway/PostgreSQL multi-user pilot and backup/restore drill.

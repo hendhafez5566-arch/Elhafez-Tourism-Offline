@@ -1,0 +1,7 @@
+node_modules/
+.env
+.env.*
+!.env.example
+*SECRETS*.txt
+*.log
+.DS_Store

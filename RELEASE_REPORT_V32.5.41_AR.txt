@@ -1,0 +1,133 @@
+Elhafez Tourism v32.5.41 — ANDROID SYNC & LIVE MUTATION RELIABILITY QA
+=======================================================================
+التاريخ: 2026-09-02
+المرجع: v32.5.40 CUSTOMER COMMERCIAL RELEASE
+الحكم: PASS — إصلاحات مزامنة محدودة داخل نفس المشروع، بدون تغيير التصميم أو الدورة المحاسبية.
+
+1) سبب العطل الذي تم إصلاحه
+---------------------------
+A. أول حفظ بعد Resume / عودة الشبكة:
+- `ServerStore.probe()` كان يثق في `available=true` القديمة بدون مدة انتهاء.
+- وعند `available=false` كان Negative Cache قد يؤخر أول محاولة بعد عودة الشبكة.
+- Android Resume كان يبدأ Health Check لاحقًا، ويمكن للمستخدم الضغط على حفظ قبله.
+
+B. الحالة لا تظهر إلا بعد Refresh:
+- Party360 كان ينفذ `MasterData.toggle(...)` ثم `DB.save(false)`؛ البيانات تتغير لكن الصفحة الخلفية لا يعاد رسمها.
+
+C. خطر Pending Save مع Refresh:
+- `refreshFromServer()` كان يستطيع جلب نسخة الخادم ثم تنفيذ `discardPending()` بصورة غير مشروطة.
+- في فشل اتصال لحظي كان ذلك قد يلغي تعديلًا محليًا لم تتم مزامنته بعد.
+
+2) الإصلاحات المقبولة
+---------------------
+1. `src/persistence/server-store.ts`
+- Positive probe cache أصبح 10 ثوانٍ فقط بدل الثقة غير المحدودة.
+- Negative probe cache أصبح 3 ثوانٍ.
+- إضافة `invalidateConnection()` لإسقاط حالة الاتصال القديمة بدون إنهاء الجلسة.
+- إضافة `flushPending()` لانتظار/إعادة مزامنة Pending Save بشكل موحد.
+
+2. `src/mobile.ts`
+- عند Background/Resume وعودة الشبكة يتم Invalidate لحالة الاتصال القديمة.
+- Resume health check يبدأ فورًا (`0ms`) بدل انتظار 180ms.
+- Health check يستخدم `flushPending()`.
+- Refresh يحاول مزامنة Pending Save أولًا؛ إذا فشل يتوقف حفاظًا على التعديل.
+- Pending conflict لا يُسقط إلا بعد Confirm صريح، ويتم الإسقاط قبل جلب نسخة الخادم وليس بعدها.
+- أزيل `discardPending()` غير المشروط بعد جلب البيانات.
+
+3. `src/crm/party360.ts`
+- تعليق/إلغاء تعليق العميل/المورد/المندوب ينتظر الحفظ ويطلب Render للصفحة (`DB.save(true)`).
+- القائمة خلف المودال والحالة داخل Party360 تتحدثان مباشرة.
+- إذا كان الخادم غير متاح يبقى التعديل Pending وتظهر رسالة مزامنة بدل نجاح مضلل.
+
+4. Regression QA
+- `android-connectivity-smoke`: 13/13 checks تشمل stale probe / reconnect / pending refresh protection.
+- `party-controls-browser-smoke`: اختبار حي جديد يثبت أن تعليق العميل يحدث Data + List + Party360 header بدون Refresh.
+- `mobile-android-smoke`: محدث لطبقة `flushPending()` الجديدة.
+
+3) نتائج بوابات الفحص
+---------------------
+Build:
+- Frontend TypeScript: PASS
+- Static/PWA copy: PASS
+- Server TypeScript: PASS
+- ملاحظة بيئة QA: تم استخدام type stubs مؤقتة لـ pg و@types/node لأن node_modules غير مشحونة داخل ZIP؛ هذه الملفات غير داخلة في الحزمة النهائية.
+
+Node smoke tests:
+- 49 / 49 PASS
+
+Browser tests:
+- 6 / 6 PASS
+- Routes: 48 / 48
+- Console Errors: 0
+- Page Errors: 0
+- Live Party mutation regression: PASS
+
+Performance browser dataset:
+- Customers: 5,000
+- Suppliers: 2,500
+- Invoices: 25,000
+- Receipts: 12,500
+- Journals: 50,000
+- Journal lines: 100,000
+- PASS
+
+Accounting:
+- Standard accounting: 31 journals / 0 imbalanced
+- Cancel integrity: PASS
+
+Hajj / Umrah:
+- Workflow: PASS
+- 9 journals / 0 imbalanced
+- Draft PO cleanup / approved-received-invoiced protections: PASS
+
+Architecture / parity:
+- src/dist parity: PASS
+- module-size-check: PASS
+- monolithFree: true
+
+Version consistency:
+- Web package: 32.5.41
+- Server package: 32.5.41
+- Runtime: 32.5.41
+- Android versionName: 32.5.41
+- Android versionCode: 32541
+- migrationRequired=false
+
+CSS:
+- لم يتم تغيير CSS في هذا الإصدار.
+- src/styles.css !important: 37
+- entire src !important: 39
+- قواعد حماية Login الأربع محفوظة.
+
+4) ملفات المنتج المعدلة
+-----------------------
+- src/persistence/server-store.ts
+- src/mobile.ts
+- src/crm/party360.ts
+- src/core/runtime.ts (version only)
+- package.json / package-lock.json
+- server/package.json / server/package-lock.json
+- android/app/build.gradle
+- dist/app.js + static versioned files الناتجة من Build
+
+ملفات QA المعدلة:
+- scripts/android-connectivity-smoke.mjs
+- scripts/mobile-android-smoke.mjs
+- scripts/party-controls-browser-smoke.py
+
+5) ما لم يتم تغييره
+-------------------
+- لا تغيير في التصميم أو CSS.
+- لا تغيير في القيود المحاسبية أو الحجوزات أو العقود أو المخزون.
+- لا Database Migration جديدة.
+- لا Retry أعمى لعملية حفظ قد تكون وصلت للخادم؛ تم الحفاظ على نظام State Revision/Patch الحالي.
+
+6) حدود الفحص الخارجي
+---------------------
+- لم يتم تنفيذ Railway/real PostgreSQL deployment داخل بيئة الاختبار الحالية.
+- لم يتم بناء Signed APK/AAB لعدم توفر Android SDK/Release signing keys هنا.
+- بعد الرفع الفعلي يظل Acceptance قصير مطلوبًا: Background → Resume → حفظ فوري، قطع/عودة الشبكة، Refresh مع Pending Save، وتعليق/إلغاء تعليق عميل.
+
+7) الحكم
+--------
+PASS كـCheckpoint إصلاح للمشكلتين المبلغ عنهما، مع اختبارات Regression تمنع عودتهما في المسارات المغطاة.

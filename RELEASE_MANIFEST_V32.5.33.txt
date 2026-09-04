@@ -1,0 +1,20 @@
+ELHAFEZ TOURISM v32.5.33 — SAFE CHECKPOINT MANIFEST
+Base: v32.5.32
+Scope: Setup Wizard CSS importance cleanup
+styles.css !important: 64
+printing.ts !important: 2
+src total !important: 66
+Removed this batch: 2
+Component comparisons: 25 checks / 0 diffs
+Rejected/preserved: setup gradient + desktop/mobile min-width guards
+Build: PASS
+Node: 49/49 PASS
+Browser: 6/6 PASS
+Routes: 48/48 PASS
+Console/Page errors: 0/0
+Accounting: PASS, journals=31, imbalanced=0
+Umrah: PASS, journals=9, imbalanced=0
+Cancel integrity: PASS
+Parity: PASS
+Login guards: 4/4 preserved
+Status: SAFE TO CONTINUE

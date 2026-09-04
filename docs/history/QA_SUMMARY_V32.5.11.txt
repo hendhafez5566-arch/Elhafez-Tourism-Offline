@@ -1,0 +1,42 @@
+QA SUMMARY — Elhafez Tourism v32.5.11
+
+FINAL RELEASE GATE
+- Frontend TypeScript build: passed.
+- Server TypeScript strict build: passed in offline QA with temporary compile-only pg declaration; no shim is shipped.
+- @ts-nocheck: 0 files across src + server/src.
+- Node smoke tests: 44/44 passed.
+- Browser smoke tests: 6/6 passed.
+- Browser routes exercised by the suite: 48.
+- Browser performance dataset retained: 5,000 customers, 2,500 suppliers, 25,000 invoices, 12,500 receipts, 50,000 journals / 100,000 journal lines; no page/console errors in the performance smoke.
+- src/dist frontend parity: passed.
+- Accounting/cancellation/inventory/Umrah regression suites: passed.
+
+V32.5.11 DATA ARCHITECTURE RESULT
+- Added migration 012_entity_mirror_read_source.sql.
+- erp_entity_records is now a verified primary read source for mirrored ERP collections when mirror revision exactly matches erp_state revision.
+- Reads strip mirrored collections from the large erp_state JSONB before loading row-level entities, reducing DB-to-Node transfer for normal state reads.
+- The main state-write transaction also uses the entity-backed reader while preserving the erp_state row lock and conflict controls.
+- Any stale revision, row-count mismatch, missing record ID, duplicate record ID, or mirror drift automatically falls back to the complete erp_state payload.
+- erp_entity_mirror_meta stores revision, row count and present collection keys.
+- Startup validates stale/uninitialized tenant mirrors before enabling entity-backed reads.
+- Setup, regular writes, reset, restore, archive, backup restore, email verification and password recovery keep mirror metadata aligned.
+- Support diagnostics now expose entityStorage readiness/revision/row counts.
+- Backup/history schema metadata now accepts the canonical schema_version field (with camelCase compatibility fallback).
+
+RETAINED HARDENING
+- Customer-only runtime; Owner/Vendor control remains external.
+- contracts.ts procurement split retained.
+- operations.ts execution split retained and below the 100KB module ceiling.
+- CSS !important baseline remains 751; no risky bulk CSS cleanup was performed in this release.
+- Incremental client state patching, pinned reset/restore history, DB login throttling, audit protection and Android cookie-session hardening retained.
+
+KNOWN REMAINING TECHNICAL DEBT
+- erp_state is still written as the backwards-compatible full snapshot; v32.5.11 reduces read dependence but does not yet remove the compatibility snapshot.
+- The client still receives a complete hydrated state on initial load/login; future normalization should move selected large lists/reports to paged server queries before removing erp_state.
+- CSS still contains legacy !important rules and inline handlers; only proven-safe cleanup should continue incrementally.
+
+PACKAGE HYGIENE
+- node_modules excluded.
+- No QA pg shim included.
+- No source maps.
+- Customer identity only.

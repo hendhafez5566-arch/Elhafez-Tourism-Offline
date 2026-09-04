@@ -1,0 +1,75 @@
+Elhafez Tourism v32.5.38 — تقرير تنظيف CSS للدفعة النهائية
+=========================================================
+
+المرجع:
+- تم البناء على آخر Checkpoint آمن v32.5.37 فقط.
+- لا توجد إعادة بناء للنظام ولا تغيير في منطق المحاسبة أو الحجوزات.
+
+الملفات المصدرية المعدلة في هذه الدفعة:
+- src/styles.css
+- src/core/runtime.ts (رفع رقم الإصدار فقط)
+- src/mobile.ts (رفع رقم الإصدار فقط)
+- package.json / package-lock.json (رفع رقم الإصدار ووصف الإصدار)
+- server/package.json / server/package-lock.json (محاذاة رقم الإصدار فقط)
+- android/app/build.gradle (versionCode 32538 / versionName 32.5.38)
+- README_AR.md / MOBILE_ANDROID_AR.md / CUSTOMER_PACKAGE.txt (محاذاة وصف الإصدار)
+- dist/* تم توليده بواسطة build من src ولم يتم تعديله يدويًا.
+
+عداد !important:
+- بداية المشروع الأصلية v32.5.16: styles.css = 751، src كامل = 796.
+- قبل هذه الدفعة v32.5.37: styles.css = 48، src كامل = 50.
+- بعد هذه الدفعة v32.5.38: styles.css = 39، reports/printing.ts = 2، src كامل = 41.
+- المحذوف في هذه الدفعة: 9 قواعد !important.
+- إجمالي الانخفاض منذ v32.5.16: styles.css 751 -> 39، src 796 -> 41.
+
+التعديلات المقبولة:
+1) Topbar Home button:
+   - فصل min-width عن ألوان الزر.
+   - استبدال 5 !important بخصوصية مكوّن محددة عبر .btn.home-primary.global-home-btn.
+   - حافظ على min-width الحالي عند Desktop/Tablet/Mobile.
+   - مقارنة 18 حالة عبر 1600/1500/1280/900/781/780/600/480/390px: 0 اختلافات.
+
+2) Empty table cell:
+   - استبدال .empty + padding!important بـ .table td.empty بدون !important.
+   - يحافظ على padding 34px حتى مع Responsive Tables.
+
+3) Visually hidden select:
+   - استبدال selector العام بـ select.visually-hidden-select وإزالة !important من width.
+   - يحافظ على width=1px أمام .field select دون تغيير السلوك.
+
+4) Umrah blocker text:
+   - إزالة !important من font-size لأن selector الخاص بالمكوّن أعلى specificity من .muted.
+
+5) Umrah mobile navigation:
+   - إزالة !important من transform:none لأن قاعدة المكوّن المتأخرة تحافظ على نفس النتيجة داخل <=780px.
+
+- مقارنة المكونات الأربع الأخيرة: 19 حالة / 0 اختلافات.
+
+محاولات مرفوضة/متراجع عنها:
+- الحذف المباشر السابق لقواعد Home button بدون فصل min-width تسبب في تغيير عرض الزر على Desktop؛ تم رفضه وعدم إدخاله.
+- لم يتم حذف أي قواعد Android/Sidebar/Login Guards/Print utilities لمجرد تقليل الرقم؛ الباقي مصنف كحماية فعلية أو يحتاج مبرر أقوى قبل لمسه.
+
+قواعد حماية تسجيل الدخول:
+- .login.hidden
+- .login-inline-message.hidden
+- .auth-boot-brand.hidden
+- .auth-boot-offline.hidden
+النتيجة: 4/4 محفوظة.
+
+بوابات الفحص:
+- TypeScript build: PASS
+- Node smoke tests: 49/49 PASS
+- Browser smoke tests: 6/6 PASS
+- UI routes: 48/48 PASS
+- Console Errors: 0
+- Page Errors: 0
+- Accounting smoke: PASS — journals 31 / imbalanced 0
+- Umrah workflow smoke: PASS — journals 9 / imbalanced 0
+- Cancel integrity: PASS
+- src/dist parity: PASS
+- Component visual comparisons: Home 18/18 + component batch 19/19 = 37/37، 0 اختلافات
+
+الخلاصة:
+- v32.5.38 Checkpoint آمن.
+- التنظيف لم يستهدف الوصول إلى صفر !important بالقوة.
+- المتبقي محصور أساسًا في no-animation/hidden utilities، mobile scroll contract، Android shell، Sidebar mobile protection، Login guards، Print isolation، وبعض حالات hover/disabled المحمية.
