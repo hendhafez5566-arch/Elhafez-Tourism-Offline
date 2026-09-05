@@ -36,6 +36,7 @@
     "src/documents/attachments-backup.ts",
     "src/security/auth.ts",
     "src/commercial/data-exchange.ts",
+    "src/crm/unified-party.ts",
     "src/crm/party360.ts",
     "src/finance/insights.ts",
     "src/reports/printing.ts",

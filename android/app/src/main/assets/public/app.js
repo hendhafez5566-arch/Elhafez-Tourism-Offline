@@ -15,7 +15,7 @@ const Money = { decimals(code = '') { const d = typeof DB !== 'undefined' ? DB.d
 const money = (n, c) => `${Money.format(n, c)} ${S(c || DB.data.settings.baseCurrency).toUpperCase()}`;
 const MONTH_NAMES_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 const monthNameAr = m => MONTH_NAMES_AR[Math.max(1, Math.min(12, N(m) || 1)) - 1] || S(m);
-const PrefixLabels = { customer: 'العملاء', supplier: 'الموردون', agent: 'المندوبون', lead: 'العملاء المحتملون', quotation: 'عروض الأسعار', purchaseOrder: 'أوامر الشراء', program: 'برامج الحج والعمرة', booking: 'حجوزات الحج والعمرة', service: 'الخدمات السياحية', salesInvoice: 'فواتير المبيعات', purchaseInvoice: 'فواتير الموردين', creditNote: 'الإشعارات الدائنة', debitNote: 'الإشعارات المدينة', receipt: 'سندات القبض', payment: 'سندات الصرف', expense: 'المصروفات', journal: 'القيود اليومية', transfer: 'تحويلات الخزن', commission: 'العمولات', costCenter: 'مراكز التكلفة', treasury: 'الخزن والبنوك', attachment: 'المرفقات', approval: 'الاعتمادات', cashCount: 'جرد الخزن', reconciliation: 'مقارنات البنك', fxRevaluation: 'إعادة تقييم العملات' };
+const PrefixLabels = { customer: 'العملاء', supplier: 'الموردون', agent: 'المندوبون', lead: 'العملاء المحتملون', quotation: 'عروض الأسعار', purchaseOrder: 'أوامر الشراء', program: 'برامج الحج والعمرة', booking: 'حجوزات الحج والعمرة', service: 'الخدمات السياحية', salesInvoice: 'فواتير المبيعات', purchaseInvoice: 'فواتير الموردين', creditNote: 'الإشعارات الدائنة', debitNote: 'الإشعارات المدينة', receipt: 'سندات القبض', payment: 'سندات الصرف', expense: 'المصروفات', journal: 'القيود اليومية', transfer: 'تحويلات الخزن', commission: 'العمولات', costCenter: 'مراكز التكلفة', treasury: 'الخزن والبنوك', attachment: 'المرفقات', approval: 'الاعتمادات', cashCount: 'جرد الخزن', reconciliation: 'مقارنات البنك', fxRevaluation: 'إعادة تقييم العملات', partyNetting: 'مقاصات الأطراف' };
 const formatDate = d => { if (!d)
     return '-'; try {
     return new Date(`${d}T00:00:00`).toLocaleDateString('ar-EG-u-nu-latn', { year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -86,10 +86,10 @@ const statusClass = s => ({ draft: 'gray', posted: 'green', paid: 'green', appro
 const accountTypeLabel = t => ({ asset: 'أصول', liability: 'خصوم', equity: 'حقوق ملكية', revenue: 'إيرادات', expense: 'مصروفات', group: 'مجموعة' })[t] || t;
 const natureLabel = n => ({ debit: 'مدين', credit: 'دائن' })[n] || n;
 const expenseModeLabel = m => ({ paid: 'مدفوع الآن', accrued: 'مستحق', prepaid: 'مصروف مقدم' })[m] || m;
-const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.43', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
+const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.44', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
 const Device = { isMobileHardware() { const coarse = matchMedia?.('(any-pointer: coarse)')?.matches || false, touch = N(navigator.maxTouchPoints) > 0, smallPhysical = Math.min(N(screen.width) || 9999, N(screen.height) || 9999) <= 900, ua = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent); return ua || (touch && coarse && smallPhysical); }, apply() { document.documentElement.classList.toggle('mobile-device', this.isMobileHardware()); } };
 Device.apply();
-const PrefixDefaults = { customer: 'C', supplier: 'S', agent: 'A', lead: 'L', quotation: 'Q', purchaseOrder: 'PO', program: 'U', booking: 'B', service: 'SV', salesInvoice: 'SI', purchaseInvoice: 'PI', creditNote: 'CN', debitNote: 'DN', receipt: 'R', payment: 'P', expense: 'E', journal: 'J', transfer: 'T', commission: 'M', costCenter: 'CC', treasury: 'TR', attachment: 'AT', approval: 'AP', cashCount: 'CT', reconciliation: 'BR', fxRevaluation: 'FX' };
+const PrefixDefaults = { customer: 'C', supplier: 'S', agent: 'A', lead: 'L', quotation: 'Q', purchaseOrder: 'PO', program: 'U', booking: 'B', service: 'SV', salesInvoice: 'SI', purchaseInvoice: 'PI', creditNote: 'CN', debitNote: 'DN', receipt: 'R', payment: 'P', expense: 'E', journal: 'J', transfer: 'T', commission: 'M', costCenter: 'CC', treasury: 'TR', attachment: 'AT', approval: 'AP', cashCount: 'CT', reconciliation: 'BR', fxRevaluation: 'FX', partyNetting: 'NET' };
 const StatusCatalog = {
     labels: { draft: 'مسودة', posted: 'مرحل', open: 'مفتوح', partial: 'جزئي', paid: 'مسدد', pending: 'معلق', approved: 'معتمد', confirmed: 'مؤكد', completed: 'مكتمل', cancelled: 'ملغي', void: 'ملغي/معكوس', reversed: 'معكوس', rejected: 'مرفوض', active: 'نشط', inactive: 'موقوف', closed: 'مغلق', checked: 'تمت المراجعة', matched: 'مطابق', difference: 'فرق قائم', expired: 'منتهي', sent: 'مرسل', accepted: 'مقبول', received: 'مستلم', deposited: 'مودع', cleared: 'محصل', bounced: 'مرتجع', converted: 'محول', qualified: 'مؤهل', won: 'ناجح', lost: 'خاسر', new: 'جديد', planning: 'تخطيط', contracting: 'تعاقدات', pricing: 'تسعير', salesClosed: 'مغلق للبيع', operating: 'تشغيل قبل السفر', traveling: 'مسافر', returned: 'عاد', inquiry: 'استفسار', quotation: 'عرض سعر', hold: 'حجز مؤقت', waitlist: 'انتظار', partiallyPaid: 'مسدد جزئيًا', fullyPaid: 'مسدد بالكامل', docsPending: 'مستندات ناقصة', ready: 'جاهز', checkedIn: 'تم التجمع', modified: 'معدل', cancelRequested: 'طلب إلغاء', refunded: 'مسترد', noShow: 'عدم حضور', transferred: 'منقول', unpaid: 'غير مسدد', not_started: 'لم يبدأ', documents_received: 'تم استلام المستندات', submitted: 'تم التقديم', processing: 'تحت الإجراء', issued: 'صادر', more_info: 'بيانات إضافية مطلوبة' },
     tones: { draft: 'gray', posted: 'green', paid: 'green', approved: 'green', confirmed: 'green', completed: 'green', accepted: 'green', received: 'green', cleared: 'green', won: 'green', open: 'red', partial: 'orange', pending: 'blue', sent: 'blue', qualified: 'purple', new: 'blue', cancelled: 'red', void: 'red', bounced: 'red', lost: 'red', reversed: 'orange', rejected: 'red', closed: 'gray', inactive: 'gray', checked: 'blue', matched: 'green', difference: 'orange', expired: 'red', planning: 'gray', contracting: 'blue', pricing: 'orange', salesClosed: 'orange', operating: 'blue', traveling: 'blue', returned: 'gray', inquiry: 'gray', quotation: 'blue', hold: 'orange', waitlist: 'orange', partiallyPaid: 'orange', fullyPaid: 'green', docsPending: 'orange', ready: 'purple', checkedIn: 'purple', modified: 'blue', cancelRequested: 'orange', refunded: 'red', noShow: 'red', transferred: 'blue', unpaid: 'red', not_started: 'gray', documents_received: 'blue', submitted: 'blue', processing: 'orange', issued: 'green', more_info: 'orange' },
@@ -104,7 +104,7 @@ const sc = s => StatusCatalog.tone(s);
 const paymentMethodLabel = m => ({ cash: 'نقدي', bank: 'تحويل بنكي', card: 'بطاقة / نقطة بيع', cheque: 'شيك', wallet: 'محفظة إلكترونية' })[m] || m || '-';
 const approvalTypeLabel = t => ({ payment: 'سند صرف', expense: 'مصروف', commission: 'عمولة مندوب' })[t] || t || '-';
 const activityActionLabel = a => ({ add: 'إضافة', create: 'إنشاء', update: 'تعديل', edit: 'تعديل', delete: 'حذف', remove: 'حذف', post: 'ترحيل', void: 'إلغاء / عكس', reverse: 'عكس', approve: 'اعتماد', reject: 'رفض', login: 'تسجيل دخول', logout: 'تسجيل خروج', setup: 'إعداد أول تشغيل', security: 'أمان', permissions: 'تعديل صلاحيات', branches: 'تعديل فروع المستخدم', attach: 'إرفاق', request: 'طلب اعتماد', integrate: 'تكامل', import: 'استيراد', export: 'تصدير', 'cash-count': 'جرد خزنة', 'bank-compare': 'مقارنة كشف بنك' })[a] || a || '-';
-const entityLabel = e => ({ user: 'مستخدم', branch: 'فرع', customer: 'عميل', supplier: 'مورد', agent: 'مندوب', lead: 'عميل محتمل', quotation: 'عرض سعر', purchaseOrder: 'أمر شراء', program: 'برنامج', booking: 'حجز', traveler: 'مسافر', service: 'خدمة', invoice: 'فاتورة', invoiceAdjustment: 'إشعار فاتورة', receipt: 'سند قبض', payment: 'سند صرف', expense: 'مصروف', journal: 'قيد يومية', manualJournalDraft: 'مسودة قيد', treasury: 'خزنة / بنك', currency: 'عملة', transfer: 'تحويل', commission: 'عمولة', costcenter: 'مركز تكلفة', tax: 'ضريبة', approval: 'اعتماد', attachment: 'مرفق', system: 'النظام', umrahBooking: 'حجز حج/عمرة', umrahProgram: 'برنامج حج/عمرة', umrahTraveler: 'مسافر حج/عمرة', programSegment: 'قطاع برنامج', supplierCommitment: 'التزام مورد حج/عمرة', umrahSupplier: 'التزام مورد حج/عمرة' })[e] || e || '-';
+const entityLabel = e => ({ user: 'مستخدم', branch: 'فرع', customer: 'عميل', supplier: 'مورد', agent: 'مندوب', lead: 'عميل محتمل', quotation: 'عرض سعر', purchaseOrder: 'أمر شراء', program: 'برنامج', booking: 'حجز', traveler: 'مسافر', service: 'خدمة', invoice: 'فاتورة', invoiceAdjustment: 'إشعار فاتورة', receipt: 'سند قبض', payment: 'سند صرف', expense: 'مصروف', journal: 'قيد يومية', manualJournalDraft: 'مسودة قيد', treasury: 'خزنة / بنك', currency: 'عملة', transfer: 'تحويل', commission: 'عمولة', costcenter: 'مركز تكلفة', tax: 'ضريبة', approval: 'اعتماد', partyGroup: 'طرف موحد', partyNetting: 'مقاصة طرف', attachment: 'مرفق', system: 'النظام', umrahBooking: 'حجز حج/عمرة', umrahProgram: 'برنامج حج/عمرة', umrahTraveler: 'مسافر حج/عمرة', programSegment: 'قطاع برنامج', supplierCommitment: 'التزام مورد حج/عمرة', umrahSupplier: 'التزام مورد حج/عمرة' })[e] || e || '-';
 const ActionPolicy = {
     status(x) { return S(x?.status || '').trim().toLowerCase(); },
     canEdit(kind, x) {
@@ -170,7 +170,7 @@ const Seed = {
     ],
     taxCodes: [{ id: 'TAX0', name: 'بدون ضريبة', rate: 0, type: 'both', active: true, inputAccount: '1310', outputAccount: '2300' }, { id: 'VAT14', name: 'ضريبة قيمة مضافة 14%', rate: 14, type: 'both', active: true, inputAccount: '1310', outputAccount: '2300' }],
     costCenters: [{ id: 'CC-UMRAH', no: 'CC0001', name: 'برامج العمرة', description: 'إيرادات وتكاليف برامج العمرة', active: true, system: true }, { id: 'CC-TOUR', no: 'CC0002', name: 'الخدمات السياحية', description: 'الطيران والفنادق والنقل والتأشيرات', active: true, system: true }],
-    treasuries: [], customers: [], suppliers: [], agents: [], leads: [], followups: [], quotations: [], purchaseOrders: [], programs: [], bookings: [], travelers: [], roomAllocations: [], services: [], serviceInventoryAllocations: [], invoices: [], invoiceAdjustments: [], receipts: [], payments: [], cheques: [], expenses: [], prepaidSchedules: [], commissions: [], commissionRules: [], manualJournalDrafts: [], recurringJournals: [], journals: [], documents: [], attachments: [], transfers: [], cashCounts: [], bankReconciliations: [], bankStatementLines: [], bankMatches: [], fxRevaluations: [], supplierSettlements: [], customerSettlements: [], deferredRevenueSchedules: [], deferredCostSchedules: [], accruedRevenues: [], fixedAssets: [], assetDepreciations: [], loans: [], loanSchedules: [], provisions: [], doubtfulAllowances: [], payrollRuns: [], accountBudgets: [], openingBalanceBatches: [], approvals: [], users: [], auditLog: [], fiscalYears: [], periods: [], printNarratives: [], dataImports: [], supportNotes: [],
+    treasuries: [], customers: [], suppliers: [], agents: [], leads: [], followups: [], quotations: [], purchaseOrders: [], programs: [], bookings: [], travelers: [], roomAllocations: [], services: [], serviceInventoryAllocations: [], invoices: [], invoiceAdjustments: [], receipts: [], payments: [], cheques: [], expenses: [], prepaidSchedules: [], commissions: [], commissionRules: [], manualJournalDrafts: [], recurringJournals: [], journals: [], documents: [], attachments: [], transfers: [], cashCounts: [], bankReconciliations: [], bankStatementLines: [], bankMatches: [], fxRevaluations: [], supplierSettlements: [], customerSettlements: [], partyGroups: [], partyNettings: [], deferredRevenueSchedules: [], deferredCostSchedules: [], accruedRevenues: [], fixedAssets: [], assetDepreciations: [], loans: [], loanSchedules: [], provisions: [], doubtfulAllowances: [], payrollRuns: [], accountBudgets: [], openingBalanceBatches: [], approvals: [], users: [], auditLog: [], fiscalYears: [], periods: [], printNarratives: [], dataImports: [], supportNotes: [],
     umrahSeasons: [], umrahHotelContracts: [], umrahFlightBlocks: [], umrahTransportContracts: [], umrahVisaContracts: [], umrahContractReservations: [], umrahPrograms: [], umrahProgramSegments: [], umrahProgramCosts: [], umrahBookings: [], umrahTravelers: [], umrahHotelRooms: [], umrahVisaBatches: [], umrahVisaItems: [], umrahTickets: [], umrahBusRuns: [], umrahOperationTasks: [], umrahIncidents: [], umrahSupplierCommitments: [], umrahActivity: [], umrahOutbox: [],
     umrahMeta: {}, umrahSettings: {}, umrahSequences: {}
 };
@@ -999,13 +999,13 @@ const DB = { data: null, _depth: 0, _dirty: false, _renderPending: false, _rende
         }
         throw e;
     } },
-    auditCollection(entity) { return ({ user: 'users', branch: 'branches', customer: 'customers', supplier: 'suppliers', agent: 'agents', lead: 'leads', quotation: 'quotations', purchaseOrder: 'purchaseOrders', program: 'programs', booking: 'bookings', traveler: 'travelers', service: 'services', invoice: 'invoices', receipt: 'receipts', payment: 'payments', expense: 'expenses', journal: 'journals', treasury: 'treasuries', currency: 'currencies', transfer: 'transfers', commission: 'commissions', costcenter: 'costCenters', approval: 'approvals', attachment: 'attachments', umrahProgram: 'umrahPrograms', umrahBooking: 'umrahBookings', programSegment: 'umrahProgramSegments', supplierCommitment: 'umrahSupplierCommitments', umrahSupplier: 'umrahSupplierCommitments', umrahTraveler: 'umrahTravelers' })[entity] || ''; },
+    auditCollection(entity) { return ({ user: 'users', branch: 'branches', customer: 'customers', supplier: 'suppliers', agent: 'agents', lead: 'leads', quotation: 'quotations', purchaseOrder: 'purchaseOrders', program: 'programs', booking: 'bookings', traveler: 'travelers', service: 'services', invoice: 'invoices', receipt: 'receipts', payment: 'payments', expense: 'expenses', journal: 'journals', treasury: 'treasuries', currency: 'currencies', transfer: 'transfers', commission: 'commissions', costcenter: 'costCenters', approval: 'approvals', partyGroup: 'partyGroups', partyNetting: 'partyNettings', attachment: 'attachments', umrahProgram: 'umrahPrograms', umrahBooking: 'umrahBookings', programSegment: 'umrahProgramSegments', supplierCommitment: 'umrahSupplierCommitments', umrahSupplier: 'umrahSupplierCommitments', umrahTraveler: 'umrahTravelers' })[entity] || ''; },
     auditSnapshot(entity, id) { const col = this.auditCollection(entity), r = col && this.data?.[col]?.find?.(x => x.id === id); if (!r)
         return null; const keys = ['no', 'name', 'title', 'description', 'status', 'date', 'dueDate', 'amount', 'total', 'currency', 'partyId', 'customerId', 'supplierId', 'programId', 'persons', 'discount', 'departureDate', 'returnDate', 'capacity', 'phone', 'email', 'active']; const o = {}; for (const k of keys)
         if (r[k] !== undefined && typeof r[k] !== 'object')
             o[k] = r[k]; return o; },
     refreshAuditBaseline() { this._auditBaseline = new Map(); if (!this.data)
-        return; const entities = ['user', 'branch', 'customer', 'supplier', 'agent', 'lead', 'quotation', 'purchaseOrder', 'program', 'booking', 'traveler', 'service', 'invoice', 'receipt', 'payment', 'expense', 'journal', 'treasury', 'currency', 'transfer', 'commission', 'costcenter', 'approval', 'attachment', 'umrahProgram', 'umrahBooking', 'programSegment', 'supplierCommitment', 'umrahTraveler']; for (const e of entities) {
+        return; const entities = ['user', 'branch', 'customer', 'supplier', 'agent', 'lead', 'quotation', 'purchaseOrder', 'program', 'booking', 'traveler', 'service', 'invoice', 'receipt', 'payment', 'expense', 'journal', 'treasury', 'currency', 'transfer', 'commission', 'costcenter', 'approval', 'partyGroup', 'partyNetting', 'attachment', 'umrahProgram', 'umrahBooking', 'programSegment', 'supplierCommitment', 'umrahTraveler']; for (const e of entities) {
         const col = this.auditCollection(e);
         for (const r of this.data[col] || []) {
             const snap = this.auditSnapshot(e, r.id);
@@ -1911,13 +1911,20 @@ const Invoices = {
                 total += N(a.invoiceAmount); for (const p of DB.data.payments.filter(live))
         for (const a of p.allocations || [])
             if (a.invoiceId === id)
-                total += N(a.invoiceAmount); return total; }, adjustmentEffect(id) { return DB.data.invoiceAdjustments.filter(x => live(x) && x.invoiceId === id).reduce((s, x) => s + (x.effect || 0), 0); }, listMetrics(items = DB.data.invoices || []) { const allocations = new Map(), adjustments = new Map(), add = (m, id, v) => { if (!id || !v)
+                total += N(a.invoiceAmount); for (const n of (DB.data.partyNettings || []))
+        if (n.status === 'posted')
+            for (const a of n.invoiceAllocations || [])
+                if (a.invoiceId === id)
+                    total += N(a.invoiceAmount); return total; }, adjustmentEffect(id) { return DB.data.invoiceAdjustments.filter(x => live(x) && x.invoiceId === id).reduce((s, x) => s + (x.effect || 0), 0); }, listMetrics(items = DB.data.invoices || []) { const allocations = new Map(), adjustments = new Map(), add = (m, id, v) => { if (!id || !v)
         return; m.set(id, N(m.get(id)) + N(v)); }; for (const r of DB.data.receipts || [])
         if (live(r))
             for (const a of r.allocations || [])
                 add(allocations, a.invoiceId, a.invoiceAmount); for (const p of DB.data.payments || [])
         if (live(p))
             for (const a of p.allocations || [])
+                add(allocations, a.invoiceId, a.invoiceAmount); for (const n of DB.data.partyNettings || [])
+        if (n.status === 'posted')
+            for (const a of n.invoiceAllocations || [])
                 add(allocations, a.invoiceId, a.invoiceAmount); for (const a of DB.data.invoiceAdjustments || [])
         if (live(a))
             add(adjustments, a.invoiceId, a.effect); const out = new Map(); for (const inv of items) {
@@ -4098,6 +4105,177 @@ const CommercialData = {
         throw new Error('لا توجد بيانات للتصدير'); const keys = [...new Set(arr.flatMap((x) => Object.keys(x)).filter((k) => !['passwordHash', 'passwordSalt'].includes(k)))]; this.downloadCsv(`${type}_${today()}.csv`, [keys, ...arr.map(x => keys.map(k => typeof x[k] === 'object' ? JSON.stringify(x[k] ?? '') : x[k] ?? ''))]); },
     downloadCsv(name, rows) { const cell = v => `"${S(v).replace(/"/g, '""').replace(/\r?\n/g, ' ')}"`, blob = new Blob(['\ufeff' + rows.map(r => r.map(cell).join(',')).join('\n')], { type: 'text/csv;charset=utf-8' }), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
 };
+const UnifiedParty = {
+    roleConfig: {
+        customer: { list: 'customers', label: 'عميل', accountIds: ['1200', '2400'] },
+        supplier: { list: 'suppliers', label: 'مورد', accountIds: ['2100', '1400'] },
+        agent: { list: 'agents', label: 'مندوب', accountIds: ['1210', '2200', '2410'] }
+    },
+    ensureData() { DB.data.partyGroups = Array.isArray(DB.data.partyGroups) ? DB.data.partyGroups : []; DB.data.partyNettings = Array.isArray(DB.data.partyNettings) ? DB.data.partyNettings : []; return DB.data; },
+    record(type, id) { const c = this.roleConfig[type]; return c ? byId(DB.data[c.list] || [], id) : null; },
+    groupById(id) { this.ensureData(); return byId(DB.data.partyGroups, id); },
+    groupFor(type, id) { const x = this.record(type, id); return x?.partyGroupId ? this.groupById(x.partyGroupId) : null; },
+    roleIds(group) { return { customer: group?.roles?.customer || '', supplier: group?.roles?.supplier || '', agent: group?.roles?.agent || '' }; },
+    roleRecord(group, type) { const id = this.roleIds(group)[type]; return id ? this.record(type, id) : null; },
+    canonical(type, id) { const x = this.record(type, id), g = this.groupFor(type, id); return g || x || null; },
+    roleLabel(type) { return this.roleConfig[type]?.label || type; },
+    identityFrom(x) { return { name: S(x?.name || '').trim(), phone: S(x?.phone || ''), whatsapp: S(x?.whatsapp || ''), email: S(x?.email || ''), address: S(x?.address || ''), taxNo: S(x?.taxNo || '') }; },
+    ensureGroup(type, id) { this.ensureData(); const x = this.record(type, id); if (!x)
+        throw new Error('الطرف غير موجود'); let g = this.groupFor(type, id); if (g)
+        return g; g = { id: iid(), name: S(x.name || '').trim(), phone: S(x.phone || ''), whatsapp: S(x.whatsapp || ''), email: S(x.email || ''), address: S(x.address || ''), taxNo: S(x.taxNo || ''), roles: { customer: '', supplier: '', agent: '', [type]: id }, active: true, createdAt: now(), updatedAt: now() }; x.partyGroupId = g.id; DB.data.partyGroups.unshift(g); DB.log('link', 'partyGroup', g.id, `إنشاء طرف موحد — ${x.name || x.no || id}`); return g; },
+    touch(type, id) { const x = this.record(type, id), g = this.groupFor(type, id); if (!x || !g)
+        return; const roles = this.roleIds(g); roles[type] = id; g.roles = roles; const current = this.identityFrom(x); for (const k of ['name', 'phone', 'whatsapp', 'email', 'address', 'taxNo'])
+        if (current[k])
+            g[k] = current[k]; g.updatedAt = now(); },
+    cloneRoleData(source, targetType, groupId) { const base = this.identityFrom(source), currency = source?.currency || source?.commissionCurrency || DB.data.settings.baseCurrency; if (targetType === 'customer')
+        return { ...base, type: 'company', creditLimit: 0, creditDays: N(source?.creditDays), partyGroupId: groupId, notes: `طرف موحد مع ${source?.no || source?.name || ''}` }; if (targetType === 'supplier')
+        return { ...base, type: 'أخرى', currency, creditDays: N(source?.creditDays), partyGroupId: groupId, notes: `طرف موحد مع ${source?.no || source?.name || ''}` }; return { name: base.name, phone: base.phone, whatsapp: base.whatsapp, email: base.email, address: base.address, commissionMode: 'fixed', commissionValue: 0, commissionCurrency: currency, partyGroupId: groupId, note: `طرف موحد مع ${source?.no || source?.name || ''}` }; },
+    async createRole(type, id, targetType) { if (!this.roleConfig[targetType] || targetType === type)
+        throw new Error('الدور المطلوب غير صالح'); const source = this.record(type, id); if (!source)
+        throw new Error('الطرف غير موجود'); return DB.atomicAsync('unifiedPartyCreateRole', () => { const g = this.ensureGroup(type, id), roles = this.roleIds(g); if (roles[targetType])
+        throw new Error(`الطرف مسجل بالفعل كـ ${this.roleLabel(targetType)}`); const data = this.cloneRoleData(source, targetType, g.id); let x; if (targetType === 'customer')
+        x = Transactions.addCustomer(data);
+    else if (targetType === 'supplier')
+        x = Transactions.addSupplier(data);
+    else
+        x = Transactions.addAgent(data); x.partyGroupId = g.id; roles[targetType] = x.id; g.roles = roles; g.updatedAt = now(); DB.log('link', 'partyGroup', g.id, `إضافة دور ${this.roleLabel(targetType)} — ${x.no}`); return x; }, { save: true, render: true, waitForSave: true, rollback: true }); },
+    linkCandidates(type, id, targetType) { const source = this.record(type, id), g = this.groupFor(type, id), cfg = this.roleConfig[targetType]; if (!source || !cfg)
+        return []; const phone = Actions.normalizeWhatsApp(source.whatsapp || source.phone), name = S(source.name || '').trim().toLowerCase(); return (DB.data[cfg.list] || []).filter(x => x.id !== id && x.active !== false && (!x.partyGroupId || x.partyGroupId === g?.id)).map(x => { const xp = Actions.normalizeWhatsApp(x.whatsapp || x.phone), xn = S(x.name || '').trim().toLowerCase(), score = (phone && xp === phone ? 4 : 0) + (name && xn === name ? 3 : 0) + ((name && xn && (xn.includes(name) || name.includes(xn))) ? 1 : 0); return { x, score }; }).sort((a, b) => b.score - a.score || S(a.x.name).localeCompare(S(b.x.name), 'ar')).slice(0, 60).map(z => z.x); },
+    async linkRole(type, id, targetType, targetId) { if (!this.roleConfig[targetType] || targetType === type)
+        throw new Error('الدور المطلوب غير صالح'); const target = this.record(targetType, targetId); if (!target)
+        throw new Error('السجل المراد ربطه غير موجود'); return DB.atomicAsync('unifiedPartyLinkRole', () => { const g = this.ensureGroup(type, id), roles = this.roleIds(g); if (roles[targetType] && roles[targetType] !== targetId)
+        throw new Error(`يوجد ${this.roleLabel(targetType)} مرتبط بالفعل`); if (target.partyGroupId && target.partyGroupId !== g.id)
+        throw new Error('السجل المحدد مرتبط بطرف موحد آخر'); target.partyGroupId = g.id; roles[targetType] = target.id; g.roles = roles; g.updatedAt = now(); DB.log('link', 'partyGroup', g.id, `ربط ${this.roleLabel(targetType)} موجود — ${target.no}`); return target; }, { save: true, render: true, waitForSave: true, rollback: true }); },
+    allRoleEntries(group) { const out = []; for (const type of ['customer', 'supplier', 'agent']) {
+        const x = this.roleRecord(group, type);
+        if (x)
+            out.push({ type, id: x.id, x, label: this.roleLabel(type) });
+    } return out; },
+    controlComponents(group, to = '') {
+        const out = [];
+        const add = (type, x, accountId, label, kind, values) => { for (const [c, raw] of Object.entries(values || {})) {
+            const v = N(raw);
+            if (v > EPS)
+                out.push({ key: `${type}|${x.id}|${accountId}|${c}`, type, partyId: x.id, accountId, label, currency: c, kind, available: v });
+        } };
+        const c = this.roleRecord(group, 'customer');
+        if (c) {
+            add('customer', c, '1200', 'ذمة العميل — عليه', 'receivable', Accounting.partyReceivable('customer', c.id, '', to));
+            add('customer', c, '2400', 'دفعات مقدمة من العميل — له', 'payable', Accounting.customerAdvance('customer', c.id, '', to));
+        }
+        const s = this.roleRecord(group, 'supplier');
+        if (s) {
+            add('supplier', s, '2100', 'ذمة المورد — له', 'payable', Accounting.supplierPayable(s.id, '', to));
+            add('supplier', s, '1400', 'دفعات مقدمة للمورد — عليه', 'receivable', Accounting.supplierAdvance(s.id, '', to));
+        }
+        const a = this.roleRecord(group, 'agent');
+        if (a) {
+            add('agent', a, '1210', 'ذمة المندوب — عليه', 'receivable', Accounting.partyReceivable('agent', a.id, '', to));
+            add('agent', a, '2200', 'عمولات مستحقة للمندوب — له', 'payable', Accounting.agentPayable(a.id, '', to));
+            add('agent', a, '2410', 'دفعات مقدمة من المندوب — له', 'payable', Accounting.customerAdvance('agent', a.id, '', to));
+        }
+        return out;
+    },
+    summary(type, id, to = '') { const g = this.groupFor(type, id); if (!g)
+        return null; const byCurrency = {}; for (const c of this.controlComponents(g, to)) {
+        const row = byCurrency[c.currency] || (byCurrency[c.currency] = { currency: c.currency, له: 0, عليه: 0, net: 0 });
+        if (c.kind === 'payable')
+            row.له += c.available;
+        else
+            row.عليه += c.available;
+        row.net = row.له - row.عليه;
+    } return { group: g, rows: Object.values(byCurrency), components: this.controlComponents(g, to) }; },
+    lines(group, from = '', to = '') { const refs = new Map(); for (const r of this.allRoleEntries(group))
+        for (const aid of this.roleConfig[r.type].accountIds)
+            refs.set(`${r.type}|${r.id}|${aid}`, r); return Accounting.lines(from, to).filter(l => !l.baseOnly && refs.has(`${l.partyType}|${l.partyId}|${l.accountId}`)).map(l => ({ ...l, _role: refs.get(`${l.partyType}|${l.partyId}|${l.accountId}`) })).sort((a, b) => S(a.date).localeCompare(S(b.date)) || S(a.journalNo).localeCompare(S(b.journalNo))); },
+    position(group, to = '') { var _a; const out = {}; for (const l of this.lines(group, '', to)) {
+        out[_a = l.currency] ?? (out[_a] = 0);
+        out[l.currency] += N(l.debit) - N(l.credit);
+    } return out; },
+    nettingPairs(type, id, to = '') { const g = this.groupFor(type, id); if (!g)
+        return []; const parts = this.controlComponents(g, to), pay = parts.filter(x => x.kind === 'payable'), rec = parts.filter(x => x.kind === 'receivable'), out = []; for (const p of pay)
+        for (const r of rec)
+            if (p.currency === r.currency && p.type !== r.type) {
+                const max = Math.min(p.available, r.available);
+                if (max > EPS)
+                    out.push({ key: `${p.key}>>${r.key}`, payable: p, receivable: r, currency: p.currency, max });
+            } return out.sort((a, b) => b.max - a.max); },
+    parseComponentKey(key) { const [type, partyId, accountId, currency] = S(key).split('|'); return { type, partyId, accountId, currency }; },
+    componentAvailable(c, to = '') { if (c.accountId === '1200')
+        return Math.max(0, N(Accounting.partyReceivable('customer', c.partyId, '', to)[c.currency])); if (c.accountId === '2400')
+        return Math.max(0, N(Accounting.customerAdvance('customer', c.partyId, '', to)[c.currency])); if (c.accountId === '2100')
+        return Math.max(0, N(Accounting.supplierPayable(c.partyId, '', to)[c.currency])); if (c.accountId === '1400')
+        return Math.max(0, N(Accounting.supplierAdvance(c.partyId, '', to)[c.currency])); if (c.accountId === '1210')
+        return Math.max(0, N(Accounting.partyReceivable('agent', c.partyId, '', to)[c.currency])); if (c.accountId === '2200')
+        return Math.max(0, N(Accounting.agentPayable(c.partyId, '', to)[c.currency])); if (c.accountId === '2410')
+        return Math.max(0, N(Accounting.customerAdvance('agent', c.partyId, '', to)[c.currency])); return 0; },
+    componentKind(accountId) { return ['2100', '2200', '2400', '2410'].includes(accountId) ? 'payable' : ['1200', '1210', '1400'].includes(accountId) ? 'receivable' : ''; },
+    invoiceCandidates(c) { if (c.accountId === '2100')
+        return (DB.data.invoices || []).filter(inv => live(inv) && inv.status !== 'draft' && inv.kind === 'supplier' && inv.partyId === c.partyId && inv.currency === c.currency && Invoices.remaining(inv) > EPS); if (c.accountId === '1200')
+        return (DB.data.invoices || []).filter(inv => live(inv) && inv.status !== 'draft' && inv.kind !== 'supplier' && (inv.partyType || 'customer') === 'customer' && inv.partyId === c.partyId && inv.currency === c.currency && Invoices.remaining(inv) > EPS); if (c.accountId === '1210')
+        return (DB.data.invoices || []).filter(inv => live(inv) && inv.status !== 'draft' && inv.kind !== 'supplier' && inv.partyType === 'agent' && inv.partyId === c.partyId && inv.currency === c.currency && Invoices.remaining(inv) > EPS); return []; },
+    allocateInvoices(c, amount) { let left = Money.round(amount, c.currency), out = []; const rows = this.invoiceCandidates(c).sort((a, b) => S(a.dueDate).localeCompare(S(b.dueDate)) || S(a.date).localeCompare(S(b.date)) || S(a.no).localeCompare(S(b.no))); for (const inv of rows) {
+        if (left <= EPS)
+            break;
+        const use = Money.round(Math.min(left, Invoices.remaining(inv)), c.currency);
+        if (use <= EPS)
+            continue;
+        out.push({ invoiceId: inv.id, invoiceNo: inv.no, invoiceAmount: use, invoiceCurrency: inv.currency, partyType: c.type, partyId: c.partyId, accountId: c.accountId });
+        left = Money.round(Math.max(0, left - use), c.currency);
+    } return out; },
+    refreshNettingInvoices(x) { const ids = [...new Set((x?.invoiceAllocations || []).map(a => a.invoiceId))]; for (const id of ids) {
+        const inv = byId(DB.data.invoices, id);
+        if (inv)
+            Invoices.refresh(inv);
+    } },
+    async postNetting(type, id, o) { Auth.require('journal', 'add'); const g = this.groupFor(type, id); if (!g)
+        throw new Error('اربط أدوار الطرف أولًا'); const [payKey, recKey] = S(o.pairRef || '').split('>>'), p = this.parseComponentKey(payKey), r = this.parseComponentKey(recKey), date = o.date || today(), amount = N(o.amount), currency = S(o.currency || p.currency || r.currency).toUpperCase(); if (!payKey || !recKey || this.componentKind(p.accountId) !== 'payable' || this.componentKind(r.accountId) !== 'receivable')
+        throw new Error('اختر طرفي المقاصة بشكل صحيح'); if (p.currency !== r.currency || currency !== p.currency)
+        throw new Error('المقاصة المباشرة تتطلب نفس العملة'); if (p.type === r.type)
+        throw new Error('المقاصة الرسمية هنا بين دورين مختلفين لنفس الطرف؛ التسويات داخل نفس الدور تتم من مستنداتها الأصلية'); const entries = this.allRoleEntries(g), valid = (c) => entries.some(e => e.type === c.type && e.id === c.partyId); if (!valid(p) || !valid(r))
+        throw new Error('طرفا المقاصة لا ينتميان لنفس الطرف الموحد'); const max = Math.min(this.componentAvailable(p, date), this.componentAvailable(r, date)); if (amount <= EPS)
+        throw new Error('قيمة المقاصة يجب أن تكون أكبر من صفر'); if (amount > max + EPS)
+        throw new Error(`أقصى مقاصة متاحة ${money(max, currency)}`); return DB.atomicAsync('partyNetting', () => { const invoiceAllocations = [...this.allocateInvoices(p, amount), ...this.allocateInvoices(r, amount)], x = { id: iid(), no: Numbering.next('partyNetting', date), date, partyGroupId: g.id, payable: { ...p }, receivable: { ...r }, amount, currency, invoiceAllocations, note: S(o.note || 'مقاصة ذمم نفس الطرف').trim(), status: 'posted', createdAt: now(), createdBy: Auth.user?.id || '' }; const j = Accounting.post({ date, memo: `مقاصة ${x.no} — ${g.name || 'طرف موحد'} — ${x.note}`, refType: 'party-netting', refId: x.id, lines: [{ accountId: p.accountId, debit: amount, currency, partyType: p.type, partyId: p.partyId }, { accountId: r.accountId, credit: amount, currency, partyType: r.type, partyId: r.partyId }] }); x.journalId = j.id; DB.data.partyNettings.unshift(x); DB.data.documents.unshift({ id: iid(), no: x.no, date, type: 'partyNetting', refId: x.id, refNo: x.no, title: `مقاصة طرف ${x.no}`, status: 'posted' }); this.refreshNettingInvoices(x); DB.log('post', 'partyNetting', x.id, `${g.name || ''} • ${money(amount, currency)}`); return x; }, { save: true, render: true, strict: true, waitForSave: true, rollback: true }); },
+    async reverseNetting(id, reason = 'إلغاء المقاصة') { Auth.require('journal', 'add'); const x = byId(this.ensureData().partyNettings, id); if (!x || x.status !== 'posted')
+        throw new Error('المقاصة غير متاحة للعكس'); if (!S(reason).trim())
+        throw new Error('سبب العكس مطلوب'); return DB.atomicAsync('partyNettingReverse', () => { Accounting.reverse('party-netting', x.id, S(reason).trim()); x.status = 'reversed'; x.reversedAt = now(); x.reverseReason = S(reason).trim(); Accounting.documentStatus('partyNetting', x.id, 'reversed'); this.refreshNettingInvoices(x); DB.log('reverse', 'partyNetting', x.id, x.reverseReason); return x; }, { save: true, render: true, strict: true, waitForSave: true, rollback: true }); },
+    recentNettings(groupId, limit = 12) { return (this.ensureData().partyNettings || []).filter(x => x.partyGroupId === groupId).sort((a, b) => S(b.date).localeCompare(S(a.date)) || S(b.createdAt).localeCompare(S(a.createdAt))).slice(0, limit); },
+    roleBadges(type, id) { const g = this.groupFor(type, id); if (!g)
+        return `<span class="badge gray">${this.roleLabel(type)} فقط</span>`; return this.allRoleEntries(g).map(r => `<span class="badge ${r.type === type ? 'green' : 'gray'}">${r.label} — ${esc(r.x.no || '')}</span>`).join(' '); },
+    summaryHtml(type, id) { const s = this.summary(type, id); if (!s)
+        return '<div class="form-note">هذا السجل بدور واحد حاليًا. يمكنك إضافة أو ربط دور عميل/مورد/مندوب لنفس الطرف بدون دمج الحسابات الرقابية.</div>'; const rows = s.rows; return rows.length ? rows.map(r => `<div class="mini-row"><span>${esc(r.currency)}</span><b>له ${money(r.له, r.currency)} • عليه ${money(r.عليه, r.currency)} • ${Math.abs(r.net) <= EPS ? 'متعادل' : r.net > 0 ? `الصافي له ${money(r.net, r.currency)}` : `الصافي عليه ${money(Math.abs(r.net), r.currency)}`}</b></div>`).join('') : '<div class="mini-row"><span>الصافي</span><b>لا يوجد رصيد مستحق</b></div>'; },
+    missingRoles(type, id) { const g = this.groupFor(type, id), roles = g ? this.roleIds(g) : { customer: type === 'customer' ? id : '', supplier: type === 'supplier' ? id : '', agent: type === 'agent' ? id : '' }; return ['customer', 'supplier', 'agent'].filter(t => !roles[t]); },
+    renderPanel(type, id) { const x = this.record(type, id), g = this.groupFor(type, id), missing = this.missingRoles(type, id), roleCards = (g ? this.allRoleEntries(g) : [{ type, id, x, label: this.roleLabel(type) }]).map(r => `<div class="mini-row"><span>${r.label}</span><b>${esc(r.x.no || '')} — ${esc(r.x.name || '')}</b></div>`).join(''), create = Auth.can('journal', 'edit') ? missing.map(t => { const page = t === 'customer' ? 'customers' : t === 'supplier' ? 'suppliers' : 'agents', candidates = this.linkCandidates(type, id, t).length; if (!Auth.can(page, 'edit') && !Auth.can(page, 'add'))
+        return ''; return `<div class="party360-file-actions"><button type="button" class="btn small primary" data-party-action="unifiedCreateRole" data-party-type="${type}" data-party-id="${id}" data-party-key="${t}">+ إنشاء دور ${this.roleLabel(t)}</button>${candidates ? `<button type="button" class="btn small ghost" data-party-action="unifiedLinkRole" data-party-type="${type}" data-party-id="${id}" data-party-key="${t}">ربط ${this.roleLabel(t)} موجود</button>` : ''}</div>`; }).join('') : '', pairs = this.nettingPairs(type, id), nettings = g ? this.recentNettings(g.id) : [], netRows = nettings.map(n => `<tr><td><b>${esc(n.no)}</b></td><td>${formatDate(n.date)}</td><td>${money(n.amount, n.currency)}</td><td>${UI.badge(n.status)}</td><td>${n.status === 'posted' && Auth.can('journal', 'add') ? `<button type="button" class="btn small danger" data-party-action="unifiedReverseNetting" data-party-type="${type}" data-party-id="${id}" data-party-ref="${n.id}">عكس</button>` : '-'}</td></tr>`); return `<div class="split-equal"><div class="card"><div class="card-head"><h3>الأدوار المرتبطة</h3><span>${this.roleBadges(type, id)}</span></div><div class="mini-list mt-12">${roleCards}</div><div class="mt-12">${create || '<div class="form-note">الأدوار الثلاثة مرتبطة بهذا الطرف.</div>'}</div></div><div class="card"><div class="card-head"><h3>الموقف الشامل</h3>${g ? `<button type="button" class="btn small ghost" data-party-action="unifiedStatement" data-party-type="${type}" data-party-id="${id}">${icon('statement', 'sm')} كشف شامل PDF</button>` : ''}</div><div class="mini-list mt-12">${this.summaryHtml(type, id)}</div><div class="form-note mt-12">الصافي المعروض للبيان فقط. ذمم العميل والمورد والمندوب تظل منفصلة محاسبيًا، ولا تتغير إلا بمستند مقاصة معتمد.</div>${pairs.length && Auth.can('journal', 'add') ? `<button type="button" class="btn primary mt-12" data-party-action="unifiedNetting" data-party-type="${type}" data-party-id="${id}">إجراء مقاصة معتمدة</button>` : ''}</div></div>${g ? `<div class="card mt-12"><div class="card-head"><h3>سجل المقاصات</h3><span class="badge gray">${nettings.length}</span></div>${UI.table(['المستند', 'التاريخ', 'القيمة', 'الحالة', 'إجراء'], netRows, 'لا توجد مقاصات معتمدة', { export: false })}</div>` : ''}`; },
+    refreshPanel(type, id) { Party360.invalidate(); const root = document.querySelector(`.party360[data-party360-type="${type}"][data-party360-id="${id}"]`), btn = root?.querySelector('[data-party360-tab="unified"]'); if (root && btn)
+        Party360.loadTab(type, id, 'unified', btn); },
+    openLinkRole(type, id, targetType) { const candidates = this.linkCandidates(type, id, targetType); if (!candidates.length)
+        return toast(`لا يوجد ${this.roleLabel(targetType)} مناسب وغير مرتبط`, 'warning'); const modal = document.getElementById('modal'), form = document.getElementById('modalForm'); document.getElementById('modalTitle').textContent = `ربط دور ${this.roleLabel(targetType)}`; document.getElementById('modalSubtitle').textContent = 'اختر سجلًا موجودًا لنفس الشخص/الشركة. الربط لا يدمج القيود المحاسبية.'; document.getElementById('modalIcon').innerHTML = icon(this.roleConfig[targetType]?.label === 'مورد' ? 'suppliers' : targetType === 'agent' ? 'agents' : 'customers'); document.getElementById('modalSubmitText').textContent = 'ربط السجل'; document.getElementById('modalBody').innerHTML = `<div class="field"><label>${this.roleLabel(targetType)} الموجود</label><select name="targetId" required>${candidates.map(x => `<option value="${x.id}">${esc(x.no || '')} — ${esc(x.name || '')} ${x.phone ? `— ${esc(x.phone)}` : ''}</option>`).join('')}</select></div><div class="form-note">لن يتم نقل أو حذف أي فاتورة أو قيد. سيصبح السجلان أدوارًا لنفس الطرف فقط.</div>`; modal.classList.add('show'); form.onsubmit = async (e) => { e.preventDefault(); const fd = new FormData(form), targetId = S(fd.get('targetId')); try {
+        await this.linkRole(type, id, targetType, targetId);
+        UI.closeModal(true);
+        toast(`تم ربط دور ${this.roleLabel(targetType)}`);
+        setTimeout(() => Party360.open(type, id), 30);
+    }
+    catch (err) {
+        toast(err.message, 'error');
+    } }; },
+    openNetting(type, id) { const pairs = this.nettingPairs(type, id); if (!pairs.length)
+        return toast('لا توجد أرصدة متقابلة قابلة للمقاصة حاليًا', 'warning'); const first = pairs[0], modal = document.getElementById('modal'), form = document.getElementById('modalForm'); document.getElementById('modalTitle').textContent = 'مقاصة عميل / مورد / مندوب'; document.getElementById('modalSubtitle').textContent = 'تُرحّل المقاصة بقيد رسمي بين الحسابات الرقابية ولا تحذف أي فاتورة أو حركة أصلية.'; document.getElementById('modalIcon').innerHTML = icon('journal'); document.getElementById('modalSubmitText').textContent = 'اعتماد المقاصة'; document.getElementById('modalBody').innerHTML = `<div class="field full"><label>الأرصدة المتقابلة</label><select name="pairRef" required>${pairs.map(p => `<option value="${esc(p.key)}" data-max="${p.max}" data-currency="${p.currency}">${esc(p.payable.label)} ${money(p.payable.available, p.currency)} ↔ ${esc(p.receivable.label)} ${money(p.receivable.available, p.currency)} — الحد ${money(p.max, p.currency)}</option>`).join('')}</select></div><div class="form-grid"><div class="field"><label>المبلغ</label><input name="amount" type="number" min="0.01" step="0.01" value="${first.max}" required></div><div class="field"><label>العملة</label><input name="currency" value="${first.currency}" readonly></div><div class="field"><label>التاريخ</label><input name="date" type="date" value="${today()}" required></div><div class="field full"><label>البيان</label><textarea name="note">مقاصة ذمم نفس الطرف</textarea></div></div><div class="form-note">لا يمكن اعتماد قيمة أكبر من أقل الرصيدين. بعد الاعتماد لا تُعدّل المقاصة؛ عند الخطأ يتم عكسها بقيد عكسي.</div>`; modal.classList.add('show'); form.querySelector('[name="pairRef"]')?.addEventListener('change', (e) => { const o = e.target.selectedOptions?.[0], amount = form.elements.namedItem('amount'), currency = form.elements.namedItem('currency'); if (o && amount)
+        amount.value = o.dataset.max || ''; if (o && currency)
+        currency.value = o.dataset.currency || ''; }); form.onsubmit = async (e) => { e.preventDefault(); const fd = new FormData(form); try {
+        const x = await this.postNetting(type, id, { pairRef: fd.get('pairRef'), amount: fd.get('amount'), currency: fd.get('currency'), date: fd.get('date'), note: fd.get('note') });
+        UI.closeModal(true);
+        toast(`تم اعتماد المقاصة ${x.no}`);
+        setTimeout(() => Party360.open(type, id), 30);
+    }
+    catch (err) {
+        toast(err.message, 'error');
+    } }; },
+    openStatementOptions(type, id) { const g = this.groupFor(type, id); if (!g)
+        return Actions.statement(type, id); const modal = document.getElementById('modal'), form = document.getElementById('modalForm'); document.getElementById('modalTitle').textContent = 'كشف الحساب الشامل للطرف'; document.getElementById('modalSubtitle').textContent = 'يجمع العميل والمورد والمندوب في بيان واحد مع بقاء كل ذمة منفصلة محاسبيًا.'; document.getElementById('modalIcon').innerHTML = icon('statement'); document.getElementById('modalSubmitText').textContent = 'عرض الكشف'; document.getElementById('modalBody').innerHTML = `<div class="form-grid"><div class="field"><label>من تاريخ</label><input name="from" type="date"></div><div class="field"><label>إلى تاريخ</label><input name="to" type="date" value="${today()}"></div><div class="field full"><label>مستوى البيان</label><select name="level"><option value="short">مختصر</option><option value="full">تفصيلي</option></select></div></div>`; modal.classList.add('show'); form.onsubmit = e => { e.preventDefault(); const fd = new FormData(form); UI.closeModal(true); Print.showUnifiedStatement(g.id, S(fd.get('from')), S(fd.get('to')), S(fd.get('level') || 'short')); }; },
+    async reversePrompt(type, id, nettingId) { const x = byId(this.ensureData().partyNettings, nettingId); if (!x)
+        return; return Party360.child(() => UI.confirmAction('عكس المقاصة', `سيتم إنشاء قيد عكسي للمقاصة ${x.no}. لن يتم حذف المستند الأصلي.`, async () => { await this.reverseNetting(nettingId, 'عكس مقاصة بطلب المستخدم'); toast(`تم عكس المقاصة ${x.no}`); setTimeout(() => Party360.open(type, id), 30); }, { label: 'عكس المقاصة', danger: true })); }
+};
 const Party360 = {
     _loadToken: 0, _modelCacheKey: '', _modelCache: null, _chunkSize: 500,
     config(type) { return ({ customer: { list: 'customers', page: 'customers', form: 'customer', label: 'العميل', icon: 'customers' }, supplier: { list: 'suppliers', page: 'suppliers', form: 'supplier', label: 'المورد', icon: 'suppliers' }, agent: { list: 'agents', page: 'agents', form: 'agent', label: 'المندوب', icon: 'agents' } })[type] || null; },
@@ -4171,7 +4349,7 @@ const Party360 = {
         return toast('لا يوجد رقم هاتف/واتساب صالح لهذا الطرف', 'warning'); return this.child(() => Actions.openWhatsApp(type, id)); },
     deletePrompt(type, id) { const { cfg, x } = this.base(type, id); Auth.require(cfg.page, 'delete'); if (x.active !== false)
         return toast(`يجب تعليق ${cfg.label} أولًا قبل الحذف`, 'warning'); return this.child(() => DeleteCenter.request(type, id)); },
-    shell(type, id, { active = 'overview', detail = '' } = {}) { const { cfg, x } = this.base(type, id), tab = (key, label, ico) => `<button type="button" class="party360-tab ${active === key ? 'active' : ''}" data-party360-tab="${key}" data-party-action="tab" data-party-type="${type}" data-party-id="${id}" data-party-key="${key}"><span class="party360-tab-icon">${icon(ico, 'sm')}</span><span class="party360-tab-label">${label}</span></button>`, primaryLabel = type === 'customer' ? 'الحجوزات' : type === 'supplier' ? 'أوامر الشراء' : 'العمولات'; return `<div class="party360 party360-v3" data-party-more="1" data-no-page-empty-action="1" data-party360-type="${type}" data-party360-id="${id}"><div class="party360-head"><div class="party360-party"><span class="party360-avatar">${icon(cfg.icon)}</span><div><b data-party-more-name>${esc(x.name || x.no || '-')}</b><span>${esc(x.no || '')}${x.phone ? ` • ${esc(x.phone)}` : ''}</span></div></div><span data-party-more-status class="badge ${x.active === false ? 'gray' : 'green'}">${x.active === false ? 'معلّق' : 'نشط'}</span></div><div class="party-more-management"><div><b>إدارة ${cfg.label}</b></div><div class="party360-actions">${this.manageButtons(type, id)}</div></div><div class="party360-strip"><div><small>الفواتير</small><b data-party360-stat="invoices">…</b></div><div><small>${primaryLabel}</small><b data-party360-stat="primary">…</b></div><div><small>الحركات المالية</small><b data-party360-stat="moves">…</b></div><div><small>المرفقات</small><b data-party360-stat="attachments">…</b></div></div><div class="party360-tabs">${tab('overview', 'الملخص', 'dashboard')}${tab('financial', 'المالية', 'wallet')}${tab('operations', type === 'customer' ? 'الحجوزات والخدمات' : type === 'supplier' ? 'العقود والمشتريات' : 'العملاء والعمولات', 'bookings')}${tab('files', 'المرفقات والنشاط', 'documents')}</div><div class="party360-detail" id="party360-detail">${detail || '<div class="party360-loading">جاري تجهيز الملخص…</div>'}</div></div>`; },
+    shell(type, id, { active = 'overview', detail = '' } = {}) { const { cfg, x } = this.base(type, id), tab = (key, label, ico) => `<button type="button" class="party360-tab ${active === key ? 'active' : ''}" data-party360-tab="${key}" data-party-action="tab" data-party-type="${type}" data-party-id="${id}" data-party-key="${key}"><span class="party360-tab-icon">${icon(ico, 'sm')}</span><span class="party360-tab-label">${label}</span></button>`, primaryLabel = type === 'customer' ? 'الحجوزات' : type === 'supplier' ? 'أوامر الشراء' : 'العمولات'; return `<div class="party360 party360-v3" data-party-more="1" data-no-page-empty-action="1" data-party360-type="${type}" data-party360-id="${id}"><div class="party360-head"><div class="party360-party"><span class="party360-avatar">${icon(cfg.icon)}</span><div><b data-party-more-name>${esc(x.name || x.no || '-')}</b><span>${esc(x.no || '')}${x.phone ? ` • ${esc(x.phone)}` : ''}</span></div></div><span data-party-more-status class="badge ${x.active === false ? 'gray' : 'green'}">${x.active === false ? 'معلّق' : 'نشط'}</span></div><div class="party-more-management"><div><b>إدارة ${cfg.label}</b></div><div class="party360-actions">${this.manageButtons(type, id)}</div></div><div class="party360-strip"><div><small>الفواتير</small><b data-party360-stat="invoices">…</b></div><div><small>${primaryLabel}</small><b data-party360-stat="primary">…</b></div><div><small>الحركات المالية</small><b data-party360-stat="moves">…</b></div><div><small>المرفقات</small><b data-party360-stat="attachments">…</b></div></div><div class="party360-tabs">${tab('overview', 'الملخص', 'dashboard')}${tab('financial', 'المالية', 'wallet')}${tab('operations', type === 'customer' ? 'الحجوزات والخدمات' : type === 'supplier' ? 'العقود والمشتريات' : 'العملاء والعمولات', 'bookings')}${tab('files', 'المرفقات والنشاط', 'documents')}${tab('unified', 'الحساب الشامل', 'statement')}</div><div class="party360-detail" id="party360-detail">${detail || '<div class="party360-loading">جاري تجهيز الملخص…</div>'}</div></div>`; },
     overview(type, id, m) { const { cfg, x } = m, c = m; return `<div class="grid kpi-grid party360-kpis">${UI.kpi('الرصيد', m.balance, 'من الأستاذ العام', type === 'supplier' ? 'bad' : 'good', 'wallet')}${UI.kpi('الفواتير', c.invoices, 'مرتبطة بالطرف', 'info', 'invoices')}${UI.kpi(type === 'customer' ? 'الحجوزات' : type === 'supplier' ? 'العقود' : 'العمولات', type === 'customer' ? c.primary : type === 'supplier' ? c.contracts : c.primary, 'ملخص تشغيلي فقط', 'purple', cfg.icon)}${UI.kpi('المرفقات', c.attachments, 'ملفات محفوظة', 'warn', 'documents')}</div><div class="split-equal party360-summary"><div class="card"><h3>بيانات الاتصال</h3><div class="mini-list mt-12"><div class="mini-row"><span>الكود</span><b>${esc(x.no || '-')}</b></div><div class="mini-row"><span>الهاتف</span><b>${esc(x.phone || '-')}</b></div><div class="mini-row"><span>واتساب</span><b>${esc(x.whatsapp || '-')}</b></div><div class="mini-row"><span>البريد</span><b>${esc(x.email || '-')}</b></div><div class="mini-row"><span>العنوان</span><b>${esc(x.address || '-')}</b></div></div></div><div class="card"><h3>ملخص الحركة</h3><div class="mini-list mt-12"><div class="mini-row"><span>${type === 'customer' ? 'الحجوزات' : type === 'supplier' ? 'أوامر الشراء' : 'العمولات'}</span><b>${c.primary}</b></div><div class="mini-row"><span>الحركات المالية</span><b>${c.moves}</b></div><div class="mini-row"><span>الخدمات</span><b>${c.services}</b></div><div class="mini-row"><span>${type === 'supplier' ? 'التزامات الموردين' : 'الحالة'}</span><b>${type === 'supplier' ? c.commitments : (x.active === false ? 'موقوف' : 'نشط')}</b></div></div></div></div>`; },
     financial(type, id) { let invoices = [], moves = []; if (type === 'customer') {
         invoices = this.recent(DB.data.invoices, i => live(i) && i.partyId === id && i.kind !== 'supplier' && (i.partyType || 'customer') === 'customer', 20);
@@ -4218,7 +4396,8 @@ const Party360 = {
     renderTab(type, id, tab, model = null) { if (tab === 'financial')
         return this.financial(type, id); if (tab === 'operations')
         return this.operations(type, id); if (tab === 'files')
-        return this.files(type, id); return this.overview(type, id, model); },
+        return this.files(type, id); if (tab === 'unified')
+        return UnifiedParty.renderPanel(type, id); return this.overview(type, id, model); },
     updateStrip(type, model) { const root = document.querySelector(`.party360[data-party360-type="${type}"][data-party360-id="${model.id}"]`); if (!root)
         return; for (const [k, v] of Object.entries({ invoices: model.invoices, primary: model.primary, moves: model.moves, attachments: model.attachments })) {
         const e = root.querySelector(`[data-party360-stat="${k}"]`);
@@ -4599,6 +4778,9 @@ const Print = {
         return []; if (['customer', 'supplier', 'agent'].includes(c.statementType)) {
         const ids = PartyFinance.accountIds(c.statementType);
         return PartyFinance.lines(c.statementType, c.id, c.from || '', c.to || '', ids).sort((a, b) => a.date.localeCompare(b.date) || S(a.journalNo).localeCompare(S(b.journalNo)));
+    } if (c.statementType === 'unified') {
+        const g = UnifiedParty.groupById(c.id);
+        return g ? UnifiedParty.lines(g, c.from || '', c.to || '') : [];
     } if (c.statementType === 'treasury') {
         const t = byId(DB.data.treasuries, c.id), aid = t && Accounting.treasuryAccountId(t.id);
         return aid ? Accounting.lines(c.from || '', c.to || '').filter(l => l.accountId === aid && !l.baseOnly).sort((a, b) => a.date.localeCompare(b.date)) : [];
@@ -4610,6 +4792,7 @@ const Print = {
         html = Statements.agent(id, from, to, { level }); if (type === 'treasury')
         html = Statements.treasury(id, from, to, { level }); if (type === 'account')
         html = Statements.account(id, from, to, { level }); this.show(html, { type: 'statement', statementType: type, id, from, to, level }); },
+    showUnifiedStatement(groupId, from = '', to = '', level = 'short') { const html = Statements.unified(groupId, from, to, { level }); this.show(html, { type: 'statement', statementType: 'unified', id: groupId, from, to, level }); },
     _printLogoCacheKey: '', _printLogoCache: '',
     async compactPrintLogo(src) { src = S(src || ''); if (!src.startsWith('data:image/') || src.length < 120000 || typeof Image === 'undefined')
         return src; const key = `${src.length}:${src.slice(0, 48)}`; if (this._printLogoCacheKey === key && this._printLogoCache)
@@ -4658,7 +4841,10 @@ const Print = {
         const x = byId(DB.data.purchaseOrders, c.id);
         return x ? this.partyRecipient('supplier', x.supplierId) : null;
     } if (c.type === 'statement' && ['customer', 'supplier', 'agent'].includes(c.statementType))
-        return this.partyRecipient(c.statementType, c.id); if (c.type === 'booking') {
+        return this.partyRecipient(c.statementType, c.id); if (c.type === 'statement' && c.statementType === 'unified') {
+        const g = UnifiedParty.groupById(c.id), phone = Actions.normalizeWhatsApp(g?.whatsapp || g?.phone);
+        return g && phone ? { type: 'unified', id: g.id, name: S(g.name || ''), phone } : null;
+    } if (c.type === 'booking') {
         const x = byId(DB.data.bookings, c.id);
         return x ? this.partyRecipient('customer', x.customerId) : null;
     } if (c.type === 'umrahBooking') {
@@ -4689,7 +4875,7 @@ const Print = {
             toast(`جاري تجهيز ملف PDF لـ ${r.name || 'صاحب المستند'}...`, 'info');
             if (this.nativeShareTimer)
                 clearTimeout(this.nativeShareTimer);
-            this.nativeShareTimer = setTimeout(() => { this.nativeShareTimer = null; toast('لم يكتمل تجهيز PDF من تطبيق Android. حدّث التطبيق إلى الإصدار 32.5.43 ثم أعد المحاولة.', 'error'); }, 15000);
+            this.nativeShareTimer = setTimeout(() => { this.nativeShareTimer = null; toast('لم يكتمل تجهيز PDF من تطبيق Android. حدّث التطبيق إلى الإصدار 32.5.44 ثم أعد المحاولة.', 'error'); }, 15000);
             native.sharePdf(p.html, p.documentTitle, r.phone, message);
             return;
         }
@@ -4750,6 +4936,23 @@ const Statements = {
         return ''; const trade = PartyFinance.position('agent', id, to, ['1210']), dues = PartyFinance.position('agent', id, to, ['2200', '2410']), pieces = []; for (const [c, v] of Object.entries(trade).filter(([, v]) => Math.abs(N(v)) > EPS))
         pieces.push(`<div class="print-balance-alert ${PartyFinance.tone(v)}"><span>حساب المبيعات — ${PartyFinance.phrase(v)}</span><strong>${money(Math.abs(N(v)), c)}</strong></div>`); for (const [c, v] of Object.entries(dues).filter(([, v]) => Math.abs(N(v)) > EPS))
         pieces.push(`<div class="print-balance-alert ${PartyFinance.tone(v)}"><span>العمولات/الأرصدة — ${PartyFinance.phrase(v)}</span><strong>${money(Math.abs(N(v)), c)}</strong></div>`); return this.party('كشف حساب مندوب', x, 'agent', from, to, { summaryHtml: pieces.join('') || '<div class="print-balance-alert neutral"><span>موقف الحساب</span><strong>لا يوجد رصيد مستحق</strong></div>', note: 'يتم عرض مديونية المبيعات والعمولات بوضوح، ولا ينفذ النظام مقاصة محاسبية تلقائية بينهما.', level: opts.level || 'short' }); },
+    unified(groupId, from = '', to = '', opts = {}) { const g = UnifiedParty.groupById(groupId); if (!g)
+        return ''; const prev = this.previousDate(from), opening = from ? UnifiedParty.position(g, prev) : {}, running = { ...opening }, lines = UnifiedParty.lines(g, from, to), rows = [], dueTotals = {}, creditTotals = {}; if (from && Object.values(opening).some(v => Math.abs(N(v)) > EPS))
+        rows.push(`<tr><td>${formatDate(from)}</td><td>-</td><td><b>رصيد أول المدة</b></td><td>-</td><td>-</td><td>${Object.entries(opening).map(([c, v]) => PartyFinance.balanceHtml(v, c)).join('<br>')}</td></tr>`); for (const l of lines) {
+        const dr = N(l.debit), cr = N(l.credit), c = l.currency, role = l._role;
+        running[c] = (running[c] || 0) + dr - cr;
+        if (dr > EPS)
+            dueTotals[c] = (dueTotals[c] || 0) + dr;
+        if (cr > EPS)
+            creditTotals[c] = (creditTotals[c] || 0) + cr;
+        rows.push(`<tr><td>${formatDate(l.date)}</td><td>${esc(l.journalNo || '-')}</td><td><span class="statement-description-short">${esc(DocumentNarrative.statementLine(l, opts.level || 'short'))}</span>${opts.level === 'full' ? `<span class="statement-description-full">${esc(l.memo || '')}</span>` : ''}<div style="font-size:9px;color:#777;margin-top:2px">${esc(role?.label || UnifiedParty.roleLabel(l.partyType))} • ${esc(Accounting.account(l.accountId)?.name || l.accountId)}</div></td><td class="print-party-due">${dr > EPS ? money(dr, c) : '-'}</td><td class="print-party-credit">${cr > EPS ? money(cr, c) : '-'}</td><td>${PartyFinance.balanceHtml(running[c], c)}</td></tr>`);
+    } const currencies = [...new Set([...Object.keys(dueTotals), ...Object.keys(creditTotals), ...Object.keys(running)])], components = UnifiedParty.controlComponents(g, to || ''), gross = {}; for (const x of components) {
+        const r = gross[x.currency] || (gross[x.currency] = { له: 0, عليه: 0 });
+        if (x.kind === 'payable')
+            r.له += x.available;
+        else
+            r.عليه += x.available;
+    } const summary = Object.entries(gross).map(([c, r]) => { const net = N(r.عليه) - N(r.له); return `<div class="print-movement-summary"><div class="print-movement-card credit"><small>إجمالي له — ${c}</small><strong>${money(r.له, c)}</strong></div><div class="print-movement-card due"><small>إجمالي عليه — ${c}</small><strong>${money(r.عليه, c)}</strong></div><div class="print-movement-card balance ${PartyFinance.tone(net)}"><small>الصافي المعلوماتي — ${c}</small><strong>${Math.abs(net) <= EPS ? 'متعادل' : `${PartyFinance.phrase(net)} ${money(Math.abs(net), c)}`}</strong></div></div>`; }).join('') || '<div class="print-balance-alert neutral"><span>موقف الحساب</span><strong>لا يوجد رصيد مستحق</strong></div>', roles = UnifiedParty.allRoleEntries(g).map(r => `${r.label} ${r.x.no || ''}`).join(' • '), totalRows = currencies.map(c => `<tr><th colspan="3">إجمالي حركة ${c}</th><th class="print-party-due">${money(dueTotals[c] || 0, c)}</th><th class="print-party-credit">${money(creditTotals[c] || 0, c)}</th><th>${PartyFinance.balanceHtml(running[c] || 0, c)}</th></tr>`).join(''); return Print.wrap('كشف حساب شامل للطرف', `<div class="print-meta"><span>الطرف: <b>${esc(g.name || '-')}</b></span><span>الأدوار: <b>${esc(roles || '-')}</b></span><span>الفترة: <b>${from ? formatDate(from) : 'البداية'} — ${to ? formatDate(to) : 'اليوم'}</b></span></div>${summary}<div class="print-statement-note">الصافي المعروض لأغراض البيان فقط. ذمم العميل والمورد والمندوب تظل منفصلة محاسبيًا، ولا تعتبر مقاصة إلا عند اعتماد مستند مقاصة رسمي.</div>`, `<table class="print-table"><thead><tr><th>التاريخ</th><th>المستند</th><th>التفاصيل / الدور</th><th style="color:#b42318">عليه</th><th style="color:#08785b">له</th><th>الرصيد الصافي</th></tr></thead><tbody>${rows.join('') || '<tr><td colspan="6">لا توجد حركات</td></tr>'}</tbody>${totalRows ? `<tfoot>${totalRows}</tfoot>` : ''}</table>`); },
     treasury(id, from = '', to = '', opts = {}) { const t = byId(DB.data.treasuries, id); if (!t)
         return ''; const aid = Accounting.treasuryAccountId(id), prev = this.previousDate(from), opening = from ? Accounting.treasuryBalance(id, prev) : 0, ls = Accounting.lines(from, to).filter(l => l.accountId === aid && !l.baseOnly).sort((a, b) => a.date.localeCompare(b.date)), rows = []; let run = opening; if (from)
         rows.push(`<tr><td>${formatDate(from)}</td><td>-</td><td><b>رصيد أول المدة</b></td><td>-</td><td>-</td><td>${money(opening, t.currency)}</td></tr>`); for (const l of ls) {
@@ -7191,6 +7394,36 @@ const UIDelegatedActions = {
                 case 'attachment':
                     if (type)
                         Party360.child(() => Forms.open('attachment', { entityType: type, entityId: id }));
+                    else
+                        return false;
+                    break;
+                case 'unifiedCreateRole':
+                    if (type && key)
+                        UnifiedParty.createRole(type, id, key).then(() => { toast(`تم إنشاء دور ${UnifiedParty.roleLabel(key)}`); setTimeout(() => Party360.open(type, id), 30); }).catch(err => toast(err.message, 'error'));
+                    else
+                        return false;
+                    break;
+                case 'unifiedLinkRole':
+                    if (type && key)
+                        UnifiedParty.openLinkRole(type, id, key);
+                    else
+                        return false;
+                    break;
+                case 'unifiedStatement':
+                    if (type)
+                        UnifiedParty.openStatementOptions(type, id);
+                    else
+                        return false;
+                    break;
+                case 'unifiedNetting':
+                    if (type)
+                        UnifiedParty.openNetting(type, id);
+                    else
+                        return false;
+                    break;
+                case 'unifiedReverseNetting':
+                    if (type && ref)
+                        UnifiedParty.reversePrompt(type, id, ref);
                     else
                         return false;
                     break;
@@ -16655,7 +16888,7 @@ if (uxModal)
         if (init?.headers)
             new Headers(init.headers).forEach((v, k) => h.set(k, v));
         h.set('X-ERP-Mobile', 'android');
-        h.set('X-ERP-Mobile-Version', '32.5.43-OFFLINE');
+        h.set('X-ERP-Mobile-Version', '32.5.44-OFFLINE');
         return h;
     };
     if (!offlineEdition)
@@ -17176,7 +17409,7 @@ if (uxModal)
         releaseCheckBusy = true;
         lastReleaseCheck = now;
         try {
-            const response = await nativeFetch(`${API_BASE}/api/health?_=${now}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'X-ERP-Mobile': 'android', 'X-ERP-Mobile-Version': '32.5.43' } });
+            const response = await nativeFetch(`${API_BASE}/api/health?_=${now}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'X-ERP-Mobile': 'android', 'X-ERP-Mobile-Version': '32.5.44' } });
             if (!response.ok)
                 return false;
             const payload = await response.json();

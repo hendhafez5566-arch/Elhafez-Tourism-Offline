@@ -1,4 +1,4 @@
-Elhafez Technology — Tourism & Umrah ERP v32.5.43 — Modular + Entity-Backed Hardened Customer Runtime
+Elhafez Technology — Tourism & Umrah ERP v32.5.44 — Modular + Entity-Backed Hardened Customer Runtime
 Company code: CUSTOMER
 
 نسخة العميل لا تعمل بإخفاء زر Vendor فقط.

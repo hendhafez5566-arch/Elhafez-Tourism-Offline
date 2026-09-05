@@ -1,6 +1,6 @@
 # Elhafez Tourism — Full Offline Copy
 
-هذه نسخة مستقلة من Elhafez Tourism v32.5.43 تعمل محليًا على جهاز Android بدون Railway أو PostgreSQL أثناء التشغيل.
+هذه نسخة مستقلة من Elhafez Tourism v32.5.44 تعمل محليًا على جهاز Android بدون Railway أو PostgreSQL أثناء التشغيل.
 
 - نفس واجهة ووظائف النظام الأساسية والمحاسبة والحجوزات والحج والعمرة.
 - البيانات والمرفقات تحفظ على الجهاز نفسه (IndexedDB / Local WebView storage).
@@ -16,6 +16,6 @@
 2. افتح Actions.
 3. اختر **Elhafez Tourism Offline Android**.
 4. اضغط **Run workflow**.
-5. نزّل Artifact باسم **Elhafez-Tourism-OFFLINE-v32.5.43**.
+5. نزّل Artifact باسم **Elhafez-Tourism-OFFLINE-v32.5.44**.
 
 لا تحتاج Railway ولا `ELHAFEZ_TECHNOLOGY_URL` لهذه النسخة.

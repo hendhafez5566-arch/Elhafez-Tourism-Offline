@@ -1,14 +1,21 @@
-## v32.5.43 — إصلاح Native PDF Share
+## v32.5.44 — إصلاح إرسال PDF عبر واتساب
+
+- إنشاء PDF Native مباشرة مع WebView متصل مؤقتًا بالـActivity قبل الرندر.
+- FileProvider + ClipData + grantUriPermission.
+- المحاولة بالترتيب: WhatsApp ثم WhatsApp Business ثم قائمة المشاركة.
+- الواجهة تستقبل نجاح/فشل حقيقي بدل بقاء رسالة «جاري تجهيز».
+
+## v32.5.44 — إصلاح Native PDF Share
 
 تم إصلاح مسار تحويل المطبوع إلى PDF ومشاركته من تطبيق Android، مع lifecycle كامل للطباعة، تحقق من الملف، صلاحيات FileProvider، ورسائل نجاح/فشل حقيقية.
 
-# تطبيق Elhafez Tourism ERP للعميل — v32.5.43
+# تطبيق Elhafez Tourism ERP للعميل — v32.5.44
 
 هذه الحزمة هي **Customer Android فقط**. لوحة المالك لم تعد جزءًا من تطبيق السياحة؛ الإدارة المركزية أصبحت داخل **Elhafez Technology** المستقل.
 
 ## هوية التطبيق
 - App ID: `com.elhafez.tourism.erp.customer`
-- Android Version: `32.5.43` (`versionCode 32543`)
+- Android Version: `32.5.44` (`versionCode 32544`)
 - `capacitor.config.json` يستخدم `mobile-customer` كـResolver Shell فقط، ولا يحتوي رابط Runtime ثابت لشركة بعينها.
 
 ## ربط Elhafez Technology
@@ -30,7 +37,7 @@
 تحديثات Web/Server اليومية تصل من Railway Runtime الخاص بالعميل ولا تحتاج APK جديدًا. APK جديد مطلوب فقط عند تغيير Android/Capacitor/NativeShell نفسه، مع الحفاظ على نفس `applicationId` ونفس Release Signing Key وزيادة `versionCode`.
 
 
-## v32.5.43 — مشاركة مستندات PDF عبر واتساب
+## v32.5.44 — مشاركة مستندات PDF عبر واتساب
 - زر واتساب يظهر للمطبوعات المرتبطة بطرف واحد له رقم واتساب مسجل.
 - `NativePrint.sharePdf` ينشئ PDF من نفس HTML المستخدم في الطباعة ثم يشاركه عبر WhatsApp/WhatsApp Business باستخدام `FileProvider`.
 - التقارير العامة أو متعددة الأطراف لا تُشارك تلقائيًا ولا يتم تخمين المستلم.
