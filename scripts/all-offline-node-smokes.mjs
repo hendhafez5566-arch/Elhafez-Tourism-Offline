@@ -19,6 +19,7 @@ const scripts=[
   'v32550-android-pdf-build-smoke.mjs',
   'v32551-clean-pdf-share-smoke.mjs',
   'v32552-native-backup-delivery-smoke.mjs',
+  'v32553-party-comms-docs-print-smoke.mjs',
   'system-ux-smoke.mjs',
   'clean-ui-smoke.mjs',
   'rocket-360-performance-smoke.mjs'

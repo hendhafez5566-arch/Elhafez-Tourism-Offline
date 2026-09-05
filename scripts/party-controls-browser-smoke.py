@@ -27,7 +27,7 @@ async def main():
       ServerStore.available=false; ServerStore.authenticated=false;
       DB.data=deep(Seed); DB.data.meta.setupComplete=true; DB.ensure();
       const u={id:'qa-admin',name:'QA Admin',username:'qa',role:'admin',active:true,onboardingSeen:true,permissions:{all:true},allowedBranchIds:[]};
-      DB.data.users=[u]; DB.data.license={...(DB.data.license||{}),edition:'enterprise',modules:['whatsapp','umrah']}; Auth.user=u; Auth.enter(); document.documentElement.classList.add('native-android');
+      DB.data.users=[u]; DB.data.license={...(DB.data.license||{}),edition:'enterprise',modules:['whatsapp','umrah']}; Auth.user=u; Auth.enter(); document.documentElement.classList.add('native-android'); window.__waCalls=[]; window.NativeShell={...(window.NativeShell||{}),openWhatsAppChat:(phone,text)=>window.__waCalls.push({phone:String(phone||''),text:String(text||'')})};
       const customer={id:'qa-customer',no:'C-QA',name:'عميل اختبار الإجراءات',type:'individual',currency:'EGP',phone:'01000000001',whatsapp:'01000000001',active:true};
       const supplier={id:'qa-supplier',no:'S-QA',name:'مورد اختبار الإجراءات',type:'hotel',currency:'EGP',phone:'01000000002',whatsapp:'01000000002',active:true};
       const agent={id:'qa-agent',no:'A-QA',name:'مندوب اختبار الإجراءات',currency:'EGP',phone:'01000000003',whatsapp:'01000000003',active:true};
@@ -121,7 +121,7 @@ async def main():
         if loading: failed.append({'scope':ptype,'button':f'المزيد/{label}','reason':'tab still loading'})
         if len(errors)+len(console_errors)>e1: failed.append({'scope':ptype,'button':f'المزيد/{label}','reason':'runtime/console error'})
         results.append({'scope':ptype,'area':'more-tab','button':label,'ms':round(ms,1)})
-      # Management buttons: edit, WhatsApp, delete. Close child and verify More restores.
+      # Management buttons: edit, direct WhatsApp, documents, suspend and delete.
       await page.evaluate("([t,id])=>{UI.closeModalAll(true);Party360.openMore(t,id)}",[ptype,pid]); await page.wait_for_timeout(30)
       manage=await page.locator('#modalBody .party-more-manage').all_inner_texts()
       for label in manage:
@@ -141,13 +141,27 @@ async def main():
           await loc.dispatch_event('pointerdown'); await loc.evaluate('el=>el.click()'); await page.wait_for_timeout(40); ms=(time.perf_counter()-t)*1000
           if ms>900: failed.append({'scope':ptype,'button':f'المزيد/{label}','reason':f'slow child open {ms:.1f}ms'})
           if len(errors)+len(console_errors)>e1: failed.append({'scope':ptype,'button':f'المزيد/{label}','reason':'runtime/console error'})
-          title=await modal_title()
-          if title.startswith('المزيد'):
-            failed.append({'scope':ptype,'button':f'المزيد/{label}','reason':'child dialog did not open'})
-          await page.evaluate('UI.closeModal(true)'); await page.wait_for_timeout(25)
-          restored=await modal_title() if await page.locator('#modal').evaluate("e=>e.classList.contains('show')") else ''
-          if not restored.startswith('المزيد'):
-            failed.append({'scope':ptype,'button':f'المزيد/{label}','reason':f'More parent not restored: {restored}'})
+          if label.strip()=='واتساب':
+            calls=await page.evaluate('window.__waCalls||[]')
+            expected={'customer':'201000000001','supplier':'201000000002','agent':'201000000003'}[ptype]
+            if not calls or calls[-1].get('phone')!=expected:
+              failed.append({'scope':ptype,'button':'المزيد/واتساب','reason':f'direct saved-number chat not targeted: {calls[-1] if calls else None}'})
+            title=await modal_title()
+            if not title.startswith('المزيد'):
+              failed.append({'scope':ptype,'button':'المزيد/واتساب','reason':f'More should remain visible after direct chat launch: {title}'})
+          else:
+            title=await modal_title()
+            if title.startswith('المزيد'):
+              failed.append({'scope':ptype,'button':f'المزيد/{label}','reason':'child dialog did not open'})
+            # Documents is a real-document child. Ensure it exposes real categories.
+            if label.strip()=='المستندات':
+              doc_text=await page.locator('#modalBody').inner_text()
+              if 'كشف الحساب' not in doc_text or 'الفواتير' not in doc_text:
+                failed.append({'scope':ptype,'button':'المزيد/المستندات','reason':'real document categories missing'})
+            await page.evaluate('UI.closeModal(true)'); await page.wait_for_timeout(25)
+            restored=await modal_title() if await page.locator('#modal').evaluate("e=>e.classList.contains('show')") else ''
+            if not restored.startswith('المزيد'):
+              failed.append({'scope':ptype,'button':f'المزيد/{label}','reason':f'More parent not restored: {restored}'})
           results.append({'scope':ptype,'area':'more-manage','button':label,'ms':round(ms,1)})
           if label.strip()=='حذف':
             await page.evaluate("([t,id])=>{const cfg=Party360.config(t);const x=byId(DB.data[cfg.list],id);if(x)x.active=true;Party360.invalidate()}",[ptype,pid])
@@ -158,6 +172,32 @@ async def main():
     for ptype,pid in [('customer','qa-customer'),('supplier','qa-supplier'),('agent','qa-agent')]:
       print('TEST',ptype,'actions',flush=True); await test_action_menu(ptype,pid)
       print('TEST',ptype,'more',flush=True); await test_more(ptype,pid)
+
+    # Real-document regression: More -> Documents -> existing invoice -> Print preview,
+    # then close back through the exact modal ancestry without creating any accounting record.
+    before_counts=await page.evaluate("() => ({invoices:DB.data.invoices.length,receipts:DB.data.receipts.length,payments:DB.data.payments.length,journals:DB.data.journals.length})")
+    await page.evaluate("() => {UI.closeModalAll(true);Party360.openMore('customer','qa-customer')}"); await page.wait_for_timeout(25)
+    await page.locator('#modalBody .party-more-manage').filter(has_text='المستندات').first.click(); await page.wait_for_timeout(35)
+    await page.locator('#modalBody [data-party-document-group="invoices"]').first.click(); await page.wait_for_timeout(35)
+    await page.locator('#modalBody [data-party-document-open="invoices"]').first.click(); await page.wait_for_timeout(50)
+    if not await page.locator('#printModal').evaluate("e=>e.classList.contains('show')"):
+      failed.append({'scope':'customer','button':'المستندات/فاتورة','reason':'real invoice did not open Print preview'})
+    if 'فاتورة' not in await page.locator('#printBody').inner_text():
+      failed.append({'scope':'customer','button':'المستندات/فاتورة','reason':'print preview is not the real invoice document'})
+    await page.evaluate('Print.close()'); await page.wait_for_timeout(15)
+    if not (await modal_title()).startswith('الفواتير'):
+      failed.append({'scope':'customer','button':'المستندات/فاتورة','reason':'document list was not preserved under print preview'})
+    await page.evaluate('UI.closeModal(true)'); await page.wait_for_timeout(15)
+    if not (await modal_title()).startswith('المستندات'):
+      failed.append({'scope':'customer','button':'المستندات/فاتورة','reason':'documents parent was not restored'})
+    await page.evaluate('UI.closeModal(true)'); await page.wait_for_timeout(15)
+    if not (await modal_title()).startswith('المزيد'):
+      failed.append({'scope':'customer','button':'المستندات/فاتورة','reason':'More parent was not restored'})
+    after_counts=await page.evaluate("() => ({invoices:DB.data.invoices.length,receipts:DB.data.receipts.length,payments:DB.data.payments.length,journals:DB.data.journals.length})")
+    if before_counts!=after_counts:
+      failed.append({'scope':'customer','button':'المستندات/فاتورة','reason':f'document browsing mutated accounting/business counts: {before_counts} -> {after_counts}'})
+    results.append({'scope':'customer','area':'documents','button':'real-invoice-print','ms':0})
+    await page.evaluate('UI.closeModalAll(true)')
 
     # Regression: suspending a party from More must update both the restored More header
     # and the list behind it immediately; no manual refresh is allowed.

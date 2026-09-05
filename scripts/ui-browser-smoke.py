@@ -78,7 +78,7 @@ async def main():
     try:
       share=await page.evaluate("""async () => {
         const c=DB.data.customers[0]; c.phone='01012345678'; c.whatsapp='';
-        window.__qaPdfShare=null; window.NativePrint={shareDocumentPdf:(html,title,orientation)=>window.__qaPdfShare={html:html.length,title,orientation}};
+        window.__qaPdfShare=null; window.NativePrint={shareStructuredPdf:(modelJson,title,orientation)=>window.__qaPdfShare={model:JSON.parse(modelJson),title,orientation}};
         Print.show(Print.wrap('كشف حساب عميل','','<p>QA</p>'),{type:'statement',statementType:'customer',id:c.id});
         const partyVisible=!document.getElementById('printSharePdfBtn').classList.contains('hidden'), enabled=!document.getElementById('printSharePdfBtn').disabled;
         await Print.sharePdf(); const native=window.__qaPdfShare;

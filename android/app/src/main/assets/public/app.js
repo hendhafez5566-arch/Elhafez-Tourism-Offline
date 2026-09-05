@@ -86,7 +86,7 @@ const statusClass = s => ({ draft: 'gray', posted: 'green', paid: 'green', appro
 const accountTypeLabel = t => ({ asset: 'أصول', liability: 'خصوم', equity: 'حقوق ملكية', revenue: 'إيرادات', expense: 'مصروفات', group: 'مجموعة' })[t] || t;
 const natureLabel = n => ({ debit: 'مدين', credit: 'دائن' })[n] || n;
 const expenseModeLabel = m => ({ paid: 'مدفوع الآن', accrued: 'مستحق', prepaid: 'مصروف مقدم' })[m] || m;
-const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.52', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
+const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.53', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
 const Device = { isMobileHardware() { const coarse = matchMedia?.('(any-pointer: coarse)')?.matches || false, touch = N(navigator.maxTouchPoints) > 0, smallPhysical = Math.min(N(screen.width) || 9999, N(screen.height) || 9999) <= 900, ua = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent); return ua || (touch && coarse && smallPhysical); }, apply() { document.documentElement.classList.toggle('mobile-device', this.isMobileHardware()); } };
 Device.apply();
 const PrefixDefaults = { customer: 'C', supplier: 'S', agent: 'A', lead: 'L', quotation: 'Q', purchaseOrder: 'PO', program: 'U', booking: 'B', service: 'SV', salesInvoice: 'SI', purchaseInvoice: 'PI', creditNote: 'CN', debitNote: 'DN', receipt: 'R', payment: 'P', expense: 'E', journal: 'J', transfer: 'T', commission: 'M', costCenter: 'CC', treasury: 'TR', attachment: 'AT', approval: 'AP', cashCount: 'CT', reconciliation: 'BR', fxRevaluation: 'FX', partyNetting: 'NET' };
@@ -4377,13 +4377,51 @@ const Party360 = {
         if (predicate(x))
             out.push(x); out.sort(this.sortDate); return out.slice(0, limit); },
     child(fn) { const inMore = !!document.querySelector('#modal.show #modalBody .party360[data-party-more="1"]'); return inMore && UI?.modalChild ? UI.modalChild(fn) : fn(); },
-    manageButtons(type, id) { const { cfg, x } = this.base(type, id), edit = Auth.can(cfg.page, 'edit') ? `<button type="button" class="btn ghost party-more-manage" data-party-action="edit" data-party-form="${cfg.form}" data-party-id="${id}">${icon('edit', 'sm')} تعديل</button>` : '', suspend = Auth.can(cfg.page, 'edit') ? `<button type="button" class="btn ${x.active === false ? 'success' : 'warn'} party-more-manage" data-party-action="toggleSuspended" data-party-type="${type}" data-party-id="${id}">${icon(x.active === false ? 'check' : 'pause', 'sm')} ${x.active === false ? 'إلغاء التعليق' : 'تعليق'}</button>` : '', del = Auth.can(cfg.page, 'delete') ? `<button type="button" class="btn danger party-more-manage" ${x.active === false ? '' : 'disabled title="يجب تعليق السجل أولًا"'} data-party-action="delete" data-party-type="${type}" data-party-id="${id}">${icon('trash', 'sm')} حذف</button>` : '', wa = Commercial.moduleAllowed('whatsapp') ? `<button type="button" class="btn success party-more-manage" data-party-action="whatsapp" data-party-type="${type}" data-party-id="${id}">${icon('phone', 'sm')} واتساب</button>` : ''; return `${edit}${suspend}${wa}${del}`; },
+    manageButtons(type, id) { const { cfg, x } = this.base(type, id), edit = Auth.can(cfg.page, 'edit') ? `<button type="button" class="btn ghost party-more-manage" data-party-action="edit" data-party-form="${cfg.form}" data-party-id="${id}">${icon('edit', 'sm')} تعديل</button>` : '', suspend = Auth.can(cfg.page, 'edit') ? `<button type="button" class="btn ${x.active === false ? 'success' : 'warn'} party-more-manage" data-party-action="toggleSuspended" data-party-type="${type}" data-party-id="${id}">${icon(x.active === false ? 'check' : 'pause', 'sm')} ${x.active === false ? 'إلغاء التعليق' : 'تعليق'}</button>` : '', docs = Auth.can(cfg.page, 'print') ? `<button type="button" class="btn soft party-more-manage" data-party-action="documents" data-party-type="${type}" data-party-id="${id}">${icon('documents', 'sm')} المستندات</button>` : '', del = Auth.can(cfg.page, 'delete') ? `<button type="button" class="btn danger party-more-manage" ${x.active === false ? '' : 'disabled title="يجب تعليق السجل أولًا"'} data-party-action="delete" data-party-type="${type}" data-party-id="${id}">${icon('trash', 'sm')} حذف</button>` : '', wa = Commercial.moduleAllowed('whatsapp') ? `<button type="button" class="btn success party-more-manage" data-party-action="whatsapp" data-party-type="${type}" data-party-id="${id}">${icon('phone', 'sm')} واتساب</button>` : ''; return `${edit}${wa}${docs}${suspend}${del}`; },
     toggleSuspended(type, id) { const { cfg, x } = this.base(type, id); Auth.require(cfg.page, 'edit'); const action = x.active === false ? 'إلغاء تعليق' : 'تعليق'; return this.child(() => UI.confirmAction(action + ' ' + cfg.label, x.active === false ? 'سيعود السجل نشطًا ومتاحًا للعمليات الجديدة.' : 'سيتم إيقاف العمليات الجديدة مع الاحتفاظ بكل التاريخ. الحذف الآمن يصبح متاحًا بعد التعليق فقط.', async () => { MasterData.toggle(cfg.list, id); const saved = await DB.save(true); this.invalidate(); setTimeout(() => this.refreshVisibleHeader(type, id), 30); if (saved.serverAvailable && !saved.server)
         toast(`تم ${action} ${cfg.label} محليًا وسيتم اعتماد التعديل تلقائيًا عند استقرار الاتصال`, 'warning');
     else
         toast(`تم ${action} ${cfg.label}`); }, { label: action })); },
     whatsApp(type, id) { const x = this.base(type, id).x, phone = Actions.normalizeWhatsApp(x.whatsapp || x.phone); if (!phone)
-        return toast('لا يوجد رقم هاتف/واتساب صالح لهذا الطرف', 'warning'); return this.child(() => Actions.openWhatsApp(type, id)); },
+        return toast('لا يوجد رقم هاتف/واتساب صالح لهذا الطرف', 'warning'); return Actions.openWhatsApp(type, id); },
+    documentItems(type, id, key) { const d = DB.data, sort = (a, b) => this.sortDate(a, b); let items = []; if (key === 'invoices')
+        items = (d.invoices || []).filter(x => live(x) && x.partyId === id && ((type === 'supplier' && x.kind === 'supplier') || (type !== 'supplier' && x.kind !== 'supplier' && (x.partyType || 'customer') === type))).sort(sort);
+    else if (key === 'receipts')
+        items = (d.receipts || []).filter(x => live(x) && x.partyId === id && (x.partyType || 'customer') === type).sort(sort);
+    else if (key === 'payments')
+        items = (d.payments || []).filter(x => live(x) && x.partyId === id && (x.partyType || 'supplier') === type).sort(sort);
+    else if (key === 'purchaseOrders')
+        items = (d.purchaseOrders || []).filter(x => live(x) && x.supplierId === id).sort(sort);
+    else if (key === 'bookings')
+        items = (d.umrahBookings || []).filter(x => x.active !== false && x.customerId === id).sort(sort); return items; },
+    documentGroups(type, id) { const { cfg } = this.base(type, id), out = []; if (Auth.can(cfg.page, 'print'))
+        out.push({ key: 'statement', label: 'كشف الحساب', hint: 'الحركة والرصيد من الأستاذ العام', count: 1, icon: 'statement' }); const add = (key, label, hint, perm, ico) => { const count = this.documentItems(type, id, key).length; if (count && Auth.can(perm, 'print'))
+        out.push({ key, label, hint, count, icon: ico }); }; add('invoices', 'الفواتير', 'الفواتير الفعلية المسجلة', 'invoices', 'invoices'); if (type === 'customer') {
+        add('receipts', 'سندات القبض', 'المبالغ المقبوضة من العميل', 'receipts', 'receipts');
+        const bc = this.documentItems(type, id, 'bookings').length;
+        if (bc && Auth.can('bookings', 'print'))
+            out.push({ key: 'bookings', label: 'تأكيدات الحجز', hint: 'حجوزات الحج والعمرة الفعلية', count: bc, icon: 'bookings' });
+    }
+    else if (type === 'supplier') {
+        add('payments', 'سندات الصرف', 'المدفوعات الفعلية للمورد', 'payments', 'payments');
+        add('purchaseOrders', 'أوامر الشراء', 'أوامر الشراء المرتبطة بالمورد', 'purchaseorders', 'purchaseorders');
+    }
+    else {
+        add('receipts', 'سندات القبض', 'المبالغ المقبوضة من المندوب', 'receipts', 'receipts');
+        add('payments', 'سندات الصرف', 'المدفوعات المسجلة للمندوب', 'payments', 'payments');
+    } return out; },
+    documents(type, id) { return this.child(() => this.openDocuments(type, id)); },
+    openDocuments(type, id) { const { cfg, x } = this.base(type, id), groups = this.documentGroups(type, id), m = document.getElementById('modal'), f = document.getElementById('modalForm'); document.getElementById('modalTitle').textContent = `المستندات — ${x.name}`; document.getElementById('modalSubtitle').textContent = 'مستندات فعلية من النظام فقط؛ لا يتم إنشاء فاتورة أو سند شكلي من هنا.'; document.getElementById('modalIcon').innerHTML = icon('documents'); document.getElementById('modalSubmitText').textContent = 'إغلاق'; document.getElementById('modalBody').innerHTML = groups.length ? `<div class="party-document-grid">${groups.map(g => `<button type="button" class="party-document-card" data-party-document-group="${g.key}" data-party-type="${type}" data-party-id="${id}"><span class="party-document-icon">${icon(g.icon)}</span><span><b>${esc(g.label)}</b><small>${esc(g.hint)}</small></span><em>${g.count}</em></button>`).join('')}</div>` : '<div class="empty-state">لا توجد مستندات متاحة حسب الصلاحيات الحالية.</div>'; m.classList.add('show'); f.onsubmit = e => { e.preventDefault(); UI.closeModal(true); }; },
+    openDocumentGroup(type, id, key) { if (key === 'statement')
+        return UI.modalChild(() => Actions.statement(type, id)); const { x } = this.base(type, id), items = this.documentItems(type, id, key); if (!items.length)
+        return toast('لا توجد مستندات في هذا القسم', 'warning'); const labels = { invoices: 'الفواتير', receipts: 'سندات القبض', payments: 'سندات الصرف', purchaseOrders: 'أوامر الشراء', bookings: 'تأكيدات الحجز' }, m = document.getElementById('modal'), f = document.getElementById('modalForm'); UI.modalChild(() => { document.getElementById('modalTitle').textContent = `${labels[key] || 'المستندات'} — ${x.name}`; document.getElementById('modalSubtitle').textContent = 'اختر المستند الفعلي لفتح المعاينة، ثم اطبع أو نزّل أو شارك PDF.'; document.getElementById('modalIcon').innerHTML = icon('documents'); document.getElementById('modalSubmitText').textContent = 'رجوع'; document.getElementById('modalBody').innerHTML = `<div class="party-document-list">${items.slice(0, 80).map(doc => { const date = formatDate(doc.date || doc.createdAt || today()), amount = doc.amount != null ? money(doc.amount, doc.currency) : doc.total != null ? money(doc.total, doc.currency) : ''; return `<button type="button" class="party-document-row" data-party-document-open="${key}" data-party-type="${type}" data-party-id="${id}" data-party-document-id="${doc.id}"><span><b>${esc(doc.no || doc.name || 'مستند')}</b><small>${esc(date)}${amount ? ` • ${esc(amount)}` : ''}</small></span><span>${icon('chevronLeft', 'sm')}</span></button>`; }).join('')}</div>${items.length > 80 ? '<div class="field-hint mt-12">يتم عرض أحدث 80 مستندًا للحفاظ على سرعة الواجهة.</div>' : ''}`; m.classList.add('show'); f.onsubmit = e => { e.preventDefault(); UI.closeModal(true); }; }); },
+    openDocument(type, id, key, docId) { if (!docId)
+        return; if (key === 'invoices')
+        return Print.invoice(docId); if (key === 'receipts')
+        return Print.voucher('receipt', docId); if (key === 'payments')
+        return Print.voucher('payment', docId); if (key === 'purchaseOrders')
+        return Print.purchaseOrder(docId); if (key === 'bookings')
+        return UmrahCore_PrintView.bookingConfirmation(docId); },
     deletePrompt(type, id) { const { cfg, x } = this.base(type, id); Auth.require(cfg.page, 'delete'); if (x.active !== false)
         return toast(`يجب تعليق ${cfg.label} أولًا قبل الحذف`, 'warning'); return this.child(() => DeleteCenter.request(type, id)); },
     shell(type, id, { active = 'overview', detail = '' } = {}) { const { cfg, x } = this.base(type, id), tab = (key, label, ico) => `<button type="button" class="party360-tab ${active === key ? 'active' : ''}" data-party360-tab="${key}" data-party-action="tab" data-party-type="${type}" data-party-id="${id}" data-party-key="${key}"><span class="party360-tab-icon">${icon(ico, 'sm')}</span><span class="party360-tab-label">${label}</span></button>`, primaryLabel = type === 'customer' ? 'الحجوزات' : type === 'supplier' ? 'أوامر الشراء' : 'العمولات'; return `<div class="party360 party360-v3" data-party-more="1" data-no-page-empty-action="1" data-party360-type="${type}" data-party360-id="${id}"><div class="party360-head"><div class="party360-party"><span class="party360-avatar">${icon(cfg.icon)}</span><div><b data-party-more-name>${esc(x.name || x.no || '-')}</b><span>${esc(x.no || '')}${x.phone ? ` • ${esc(x.phone)}` : ''}</span></div></div><span data-party-more-status class="badge ${x.active === false ? 'gray' : 'green'}">${x.active === false ? 'معلّق' : 'نشط'}</span></div><div class="party-more-management"><div><b>إدارة ${cfg.label}</b></div><div class="party360-actions">${this.manageButtons(type, id)}</div></div><div class="party360-strip"><div><small>الفواتير</small><b data-party360-stat="invoices">…</b></div><div><small>${primaryLabel}</small><b data-party360-stat="primary">…</b></div><div><small>الحركات المالية</small><b data-party360-stat="moves">…</b></div><div><small>المرفقات</small><b data-party360-stat="attachments">…</b></div></div><div class="party360-tabs">${tab('overview', 'الملخص', 'dashboard')}${tab('financial', 'المالية', 'wallet')}${tab('operations', type === 'customer' ? 'الحجوزات والخدمات' : type === 'supplier' ? 'العقود والمشتريات' : 'العملاء والعمولات', 'bookings')}${tab('files', 'المرفقات والنشاط', 'documents')}${tab('unified', 'الحساب الشامل', 'statement')}</div><div class="party360-detail" id="party360-detail">${detail || '<div class="party360-loading">جاري تجهيز الملخص…</div>'}</div></div>`; },
@@ -4869,33 +4907,100 @@ const Print = {
         return src;
     } },
     renderShareButton() { const b = document.getElementById('printSharePdfBtn'), native = window.NativePrint; if (!b)
-        return; const available = !!native?.shareDocumentPdf; b.classList.toggle('hidden', !available); b.toggleAttribute('disabled', !available); b.title = available ? 'إنشاء ملف PDF ومشاركته عبر قائمة المشاركة في Android' : 'المشاركة المباشرة متاحة داخل تطبيق Android'; },
+        return; const available = !!native?.shareStructuredPdf; b.classList.toggle('hidden', !available); b.toggleAttribute('disabled', !available); b.title = available ? 'إنشاء PDF A4 نصي ومشاركته عبر قائمة Android' : 'المشاركة المباشرة متاحة داخل تطبيق Android'; },
     documentTitle() { return S(document.querySelector('#printBody .print-document-title h1')?.textContent || document.querySelector('#printBody h1')?.textContent || 'مستند') || 'مستند'; },
-    async printPayload() { const s = DB.data.settings, orientation = (s.printOrientation || 'portrait') === 'landscape' ? 'landscape' : 'portrait', nativeContentWidth = orientation === 'landscape' ? 1047 : 718, nativeContentHeight = orientation === 'landscape' ? 718 : 1047, title = `${APP.name} — ${APP.product}`, rawSource = document.getElementById('printBody').innerHTML, source = rawSource.replace(/<style[^>]*class=["']commercial-print-theme["'][^>]*>[\s\S]*?<\/style>/gi, ''), logo = DB.data.company?.logo || '', compact = logo ? await this.compactPrintLogo(logo) : '', body = logo && compact && compact !== logo ? source.split(logo).join(compact) : source, fontFamily = ({ default: 'Tahoma,"Noto Sans Arabic","Segoe UI",Arial,sans-serif', cairo: '"Cairo",Tahoma,Arial,sans-serif', tajawal: '"Tajawal",Tahoma,Arial,sans-serif', noto: '"Noto Sans Arabic",Tahoma,Arial,sans-serif', plex: '"IBM Plex Sans Arabic","Noto Sans Arabic",Tahoma,Arial,sans-serif', kufi: '"Noto Kufi Arabic","Noto Sans Arabic",Tahoma,Arial,sans-serif' }[s.fontFamily || 'default'] || 'Tahoma,Arial,sans-serif'), html = `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=${nativeContentWidth},initial-scale=1,maximum-scale=1"><title>${esc(`${APP.name} — ${APP.product}`)}</title><style>:root{--print-navy:#112745;--print-gold:#c9972f;--print-line:#d9e1eb;--print-soft:#f5f8fc}*{box-sizing:border-box;box-shadow:none!important;text-shadow:none!important;min-width:0}html,body{margin:0;padding:0;background:#fff;color:#17243a;direction:rtl;overflow-x:hidden}body{font-family:${fontFamily};font-size:calc(12px * ${N(s.fontScale || 1)});line-height:1.55;width:${nativeContentWidth}px;max-width:${nativeContentWidth}px}.print-document{position:relative;width:100%;max-width:100%;margin:0;padding:0;background:#fff;overflow:visible}.print-document:before{content:"";display:block;width:100%;height:7px;margin:0 0 14px;border-radius:3px;background:linear-gradient(90deg,var(--print-navy) 0 72%,var(--print-gold) 72%)}.print-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.75fr);align-items:start;gap:20px;border-bottom:1px solid var(--print-line);padding:0 0 14px;margin:0 0 14px}.print-company{display:flex;gap:12px;align-items:flex-start;min-width:0}.print-company>div{min-width:0}.print-company h2{font-size:18px;color:var(--print-navy);margin:0 0 4px;overflow-wrap:anywhere}.print-company small{display:block;color:#5d6b7e;line-height:1.55;overflow-wrap:anywhere}.print-logo{width:58px;height:58px;flex:0 0 58px;object-fit:contain;border:1px solid var(--print-line);border-radius:10px;background:#fff}.print-document-title{min-width:0;text-align:left}.print-document-title h1{margin:0;color:var(--print-navy);font-size:21px;line-height:1.35;overflow-wrap:anywhere}.print-document-title small{display:block;margin-top:6px;color:#66758a}.print-document-title:after{content:"";display:block;width:54px;height:3px;margin:9px 0 0 auto;background:var(--print-gold);border-radius:5px}.print-meta{display:flex;gap:8px 18px;flex-wrap:wrap;width:100%;max-width:100%;background:var(--print-soft);border:1px solid var(--print-line);border-right:4px solid var(--print-gold);border-radius:10px;padding:9px 11px;margin:10px 0 14px;overflow:hidden}.print-meta span{min-width:0;max-width:100%;overflow-wrap:anywhere}.print-table{width:100%;max-width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;border:1px solid #cdd7e3;border-radius:9px;overflow:hidden;margin-top:10px}.print-table th,.print-table td{border:0;border-bottom:1px solid #dfe6ee;border-left:1px solid #e6ebf1;padding:7px 7px;text-align:right;font-size:11px;line-height:1.45;vertical-align:top;overflow-wrap:anywhere;word-break:normal}.print-table th{background:var(--print-navy);color:#fff;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact}.print-table tr:last-child td{border-bottom:0}.print-table th:last-child,.print-table td:last-child{border-left:0}.print-table tbody tr:nth-child(even) td{background:#f8fafc}.print-summary,.print-movement-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;width:100%;margin:10px 0}.print-summary>div,.print-movement-card{min-width:0;border:1px solid var(--print-line);border-radius:10px;background:#fff;padding:9px;overflow:hidden}.print-summary small,.print-movement-card small{display:block;color:#66758a;margin-bottom:4px;overflow-wrap:anywhere}.print-summary b,.print-movement-card strong{display:block;overflow-wrap:anywhere}.print-description-block{width:100%;border:1px solid var(--print-line);border-right:4px solid var(--print-gold);background:#fbfcfe;border-radius:10px;padding:9px 11px;margin:9px 0;line-height:1.65;overflow-wrap:anywhere}.print-description-block b{display:block;margin-bottom:3px}.print-balance-alert{display:flex;justify-content:space-between;gap:12px;width:100%;border:2px solid;padding:10px 12px;border-radius:10px;margin:10px 0;font-weight:800;overflow:hidden}.print-balance-alert>*{min-width:0;overflow-wrap:anywhere}.print-balance-alert.red{border-color:#b42318;background:#fff1f0;color:#8f1b13}.print-balance-alert.green{border-color:#08785b;background:#edf9f4;color:#06634a}.print-balance-alert.neutral{border-color:#777;background:#f5f5f5;color:#333}.print-party-due{color:#b42318;font-weight:800}.print-party-credit{color:#08785b;font-weight:800}.print-party-balance{display:inline-block;padding:3px 7px;border-radius:6px;font-weight:800;white-space:normal}.print-party-balance.red{color:#8f1b13;background:#fff1f0}.print-party-balance.green{color:#06634a;background:#edf9f4}.print-party-balance.neutral{color:#555;background:#f3f4f6}.print-total{margin-top:12px;font-weight:700;overflow-wrap:anywhere}.print-movement-card.due,.print-movement-card.balance.red{background:#fff1f0;border-color:#dca9a5;color:#8f1b13}.print-movement-card.credit,.print-movement-card.balance.green{background:#edf9f4;border-color:#abd7c6;color:#06634a}.print-movement-card.balance.neutral{background:#f5f5f5;color:#444}.print-balance-breakdown{display:grid;gap:6px;margin:8px 0}.print-balance-total{border-top:2px solid #bbb;padding-top:7px;margin-top:8px}.print-statement-note{font-size:10px;color:#555;margin:7px 0}.statement-description-full{display:block;font-size:9.5px;color:#555;margin-top:3px;line-height:1.5}.statement-description-short{font-weight:700}.print-role-chip{display:inline-block;padding:2px 7px;border:1px solid var(--print-line);border-radius:999px;background:var(--print-soft);font-size:9px;font-weight:700;color:#46556a;white-space:normal}.print-internal-detail{display:block;font-size:8.7px;color:#7b8797;margin-top:3px}.print-compact-note{font-size:9.5px;color:#66758a;line-height:1.55}.signature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin-top:38px;text-align:center}.signature-grid div{border-top:1px solid #8290a3;padding-top:8px;color:#46556a}.print-footer{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-top:25px;padding-top:9px;border-top:1px solid var(--print-line);font-size:9.5px;color:#69778a}.print-footer>*{min-width:0;overflow-wrap:anywhere}.print-confidential{font-size:8.5px;color:#8793a4}img{max-width:100%;height:auto}@page{size:${s.printPaper || 'A4'} ${orientation};margin:10mm}@media print{html,body{width:auto;max-width:none;overflow:visible}.print-document{break-inside:auto}.print-table thead{display:table-header-group}.print-table tr{break-inside:avoid}.signature-grid,.print-footer,.print-summary>div,.print-movement-card{break-inside:avoid}}</style></head><body>${body}</body></html>`; const documentTitle = this.documentTitle(), fileName = (documentTitle || 'مستند').replace(/[\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) + '.pdf'; return { html, title, documentTitle, fileName, nativeContentWidth, nativeContentHeight, orientation }; },
+    async nativePdfModel() {
+        const root = (document.querySelector('#printBody .print-document') || document.getElementById('printBody'));
+        if (!root)
+            throw new Error('محتوى المستند غير جاهز');
+        const text = (el) => S(el?.textContent || '').replace(/\s+/g, ' ').trim();
+        const blocks = [];
+        const selector = '.print-meta,.print-description-block,table.print-table,.print-summary,.print-movement-summary,.print-balance-alert,.print-total,.print-statement-note,.signature-grid,.print-footer';
+        for (const el of Array.from(root.querySelectorAll(selector))) {
+            if (el.classList.contains('print-meta')) {
+                const items = Array.from(el.querySelectorAll('span')).map(text).filter(Boolean);
+                if (items.length)
+                    blocks.push({ type: 'meta', items });
+                continue;
+            }
+            if (el.matches('table.print-table')) {
+                const thead = el.querySelector('thead'), first = el.querySelector('tr'), headerRow = thead?.querySelector('tr') || (!thead ? first : null);
+                const headers = headerRow ? Array.from(headerRow.querySelectorAll('th')).map(text).filter(Boolean) : [];
+                let rowNodes = Array.from(el.querySelectorAll('tbody tr,tfoot tr'));
+                if (!rowNodes.length)
+                    rowNodes = Array.from(el.querySelectorAll('tr')).filter(tr => tr !== headerRow);
+                const rows = rowNodes.map(tr => Array.from(tr.querySelectorAll('td,th')).map(text)).filter(r => r.some(Boolean));
+                if (headers.length || rows.length)
+                    blocks.push({ type: 'table', headers, rows });
+                continue;
+            }
+            if (el.classList.contains('print-summary') || el.classList.contains('print-movement-summary')) {
+                const items = Array.from(el.children).map((card) => ({ label: text(card.querySelector('small')) || text(card.querySelector('span')) || text(card).split(' ').slice(0, 4).join(' '), value: text(card.querySelector('b,strong')) })).filter((x) => x.label || x.value);
+                if (items.length)
+                    blocks.push({ type: 'summary', items });
+                continue;
+            }
+            if (el.classList.contains('print-balance-alert')) {
+                blocks.push({ type: 'alert', label: text(el.querySelector('span')) || text(el), value: text(el.querySelector('strong')) });
+                continue;
+            }
+            if (el.classList.contains('signature-grid')) {
+                const items = Array.from(el.children).map(text).filter(Boolean);
+                if (items.length)
+                    blocks.push({ type: 'signatures', items });
+                continue;
+            }
+            if (el.classList.contains('print-footer')) {
+                const items = Array.from(el.children).map(text).filter(Boolean);
+                if (items.length)
+                    blocks.push({ type: 'footer', items });
+                continue;
+            }
+            const value = text(el);
+            if (value)
+                blocks.push({ type: el.classList.contains('print-total') ? 'total' : 'note', text: value });
+        }
+        if (!blocks.length) {
+            const fallback = text(root);
+            if (fallback)
+                blocks.push({ type: 'note', text: fallback });
+        }
+        const c = DB.data.company || {}, company = document.querySelector('#printBody .print-company'), logo = c.logo ? await this.compactPrintLogo(c.logo) : '';
+        return { schema: 2, title: this.documentTitle(), issue: text(document.querySelector('#printBody .print-document-title small')), company: { name: text(company?.querySelector('h2')) || S(c.name || 'الشركة'), lines: Array.from(company?.querySelectorAll('small') || []).map(text).filter(Boolean), logo }, blocks };
+    },
+    async printPayload() { const s = DB.data.settings, orientation = (s.printOrientation || 'portrait') === 'landscape' ? 'landscape' : 'portrait', nativeContentWidth = orientation === 'landscape' ? 1047 : 718, nativeContentHeight = orientation === 'landscape' ? 718 : 1047, title = `${APP.name} — ${APP.product}`, rawSource = document.getElementById('printBody').innerHTML, source = rawSource.replace(/<style[^>]*class=["']commercial-print-theme["'][^>]*>[\s\S]*?<\/style>/gi, ''), logo = DB.data.company?.logo || '', compact = logo ? await this.compactPrintLogo(logo) : '', body = logo && compact && compact !== logo ? source.split(logo).join(compact) : source, fontFamily = ({ default: 'Tahoma,"Noto Sans Arabic","Segoe UI",Arial,sans-serif', cairo: '"Cairo",Tahoma,Arial,sans-serif', tajawal: '"Tajawal",Tahoma,Arial,sans-serif', noto: '"Noto Sans Arabic",Tahoma,Arial,sans-serif', plex: '"IBM Plex Sans Arabic","Noto Sans Arabic",Tahoma,Arial,sans-serif', kufi: '"Noto Kufi Arabic","Noto Sans Arabic",Tahoma,Arial,sans-serif' }[s.fontFamily || 'default'] || 'Tahoma,Arial,sans-serif'), html = `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=${nativeContentWidth},initial-scale=1,maximum-scale=1"><title>${esc(`${APP.name} — ${APP.product}`)}</title><style>:root{--print-navy:#112745;--print-gold:#c9972f;--print-line:#d9e1eb;--print-soft:#f5f8fc}*{box-sizing:border-box;box-shadow:none!important;text-shadow:none!important;min-width:0}html,body{margin:0;padding:0;background:#fff;color:#17243a;direction:rtl;overflow-x:hidden}body{font-family:${fontFamily};font-size:calc(12px * ${N(s.fontScale || 1)});line-height:1.55;width:${nativeContentWidth}px;max-width:${nativeContentWidth}px}.print-document{position:relative;width:100%;max-width:100%;margin:0;padding:0;background:#fff;overflow:visible}.print-document:before{content:"";display:block;width:100%;height:7px;margin:0 0 14px;border-radius:3px;background:linear-gradient(90deg,var(--print-navy) 0 72%,var(--print-gold) 72%)}.print-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.75fr);align-items:start;gap:20px;border-bottom:1px solid var(--print-line);padding:0 0 14px;margin:0 0 14px}.print-company{display:flex;gap:12px;align-items:flex-start;min-width:0}.print-company>div{min-width:0}.print-company h2{font-size:18px;color:var(--print-navy);margin:0 0 4px;overflow-wrap:anywhere}.print-company small{display:block;color:#5d6b7e;line-height:1.55;overflow-wrap:anywhere}.print-logo{width:58px;height:58px;flex:0 0 58px;object-fit:contain;border:1px solid var(--print-line);border-radius:10px;background:#fff}.print-document-title{min-width:0;text-align:left}.print-document-title h1{margin:0;color:var(--print-navy);font-size:21px;line-height:1.35;overflow-wrap:anywhere}.print-document-title small{display:block;margin-top:6px;color:#66758a}.print-document-title:after{content:"";display:block;width:54px;height:3px;margin:9px 0 0 auto;background:var(--print-gold);border-radius:5px}.print-meta{display:flex;gap:8px 18px;flex-wrap:wrap;width:100%;max-width:100%;background:var(--print-soft);border:1px solid var(--print-line);border-right:4px solid var(--print-gold);border-radius:10px;padding:9px 11px;margin:10px 0 14px;overflow:hidden}.print-meta span{min-width:0;max-width:100%;overflow-wrap:anywhere}.print-table{width:100%;max-width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;border:1px solid #cdd7e3;border-radius:9px;overflow:hidden;margin-top:10px}.print-table th,.print-table td{border:0;border-bottom:1px solid #dfe6ee;border-left:1px solid #e6ebf1;padding:7px 7px;text-align:right;font-size:11px;line-height:1.45;vertical-align:top;overflow-wrap:anywhere;word-break:normal}.print-table th{background:var(--print-navy);color:#fff;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact}.print-table tr:last-child td{border-bottom:0}.print-table th:last-child,.print-table td:last-child{border-left:0}.print-table tbody tr:nth-child(even) td{background:#f8fafc}.print-summary,.print-movement-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;width:100%;margin:10px 0}.print-summary>div,.print-movement-card{min-width:0;border:1px solid var(--print-line);border-radius:10px;background:#fff;padding:9px;overflow:hidden}.print-summary small,.print-movement-card small{display:block;color:#66758a;margin-bottom:4px;overflow-wrap:anywhere}.print-summary b,.print-movement-card strong{display:block;overflow-wrap:anywhere}.print-description-block{width:100%;border:1px solid var(--print-line);border-right:4px solid var(--print-gold);background:#fbfcfe;border-radius:10px;padding:9px 11px;margin:9px 0;line-height:1.65;overflow-wrap:anywhere}.print-description-block b{display:block;margin-bottom:3px}.print-balance-alert{display:flex;justify-content:space-between;gap:12px;width:100%;border:2px solid;padding:10px 12px;border-radius:10px;margin:10px 0;font-weight:800;overflow:hidden}.print-balance-alert>*{min-width:0;overflow-wrap:anywhere}.print-balance-alert.red{border-color:#b42318;background:#fff1f0;color:#8f1b13}.print-balance-alert.green{border-color:#08785b;background:#edf9f4;color:#06634a}.print-balance-alert.neutral{border-color:#777;background:#f5f5f5;color:#333}.print-party-due{color:#b42318;font-weight:800}.print-party-credit{color:#08785b;font-weight:800}.print-party-balance{display:inline-block;padding:3px 7px;border-radius:6px;font-weight:800;white-space:normal}.print-party-balance.red{color:#8f1b13;background:#fff1f0}.print-party-balance.green{color:#06634a;background:#edf9f4}.print-party-balance.neutral{color:#555;background:#f3f4f6}.print-total{margin-top:12px;font-weight:700;overflow-wrap:anywhere}.print-movement-card.due,.print-movement-card.balance.red{background:#fff1f0;border-color:#dca9a5;color:#8f1b13}.print-movement-card.credit,.print-movement-card.balance.green{background:#edf9f4;border-color:#abd7c6;color:#06634a}.print-movement-card.balance.neutral{background:#f5f5f5;color:#444}.print-balance-breakdown{display:grid;gap:6px;margin:8px 0}.print-balance-total{border-top:2px solid #bbb;padding-top:7px;margin-top:8px}.print-statement-note{font-size:10px;color:#555;margin:7px 0}.statement-description-full{display:block;font-size:9.5px;color:#555;margin-top:3px;line-height:1.5}.statement-description-short{font-weight:700}.print-role-chip{display:inline-block;padding:2px 7px;border:1px solid var(--print-line);border-radius:999px;background:var(--print-soft);font-size:9px;font-weight:700;color:#46556a;white-space:normal}.print-internal-detail{display:block;font-size:8.7px;color:#7b8797;margin-top:3px}.print-compact-note{font-size:9.5px;color:#66758a;line-height:1.55}.signature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin-top:38px;text-align:center}.signature-grid div{border-top:1px solid #8290a3;padding-top:8px;color:#46556a}.print-footer{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-top:25px;padding-top:9px;border-top:1px solid var(--print-line);font-size:9.5px;color:#69778a}.print-footer>*{min-width:0;overflow-wrap:anywhere}.print-confidential{font-size:8.5px;color:#8793a4}img{max-width:100%;height:auto}@page{size:A4 ${orientation};margin:10mm}@media print{html,body{width:auto;max-width:none;overflow:visible}.print-document{break-inside:auto}.print-table thead{display:table-header-group}.print-table tr{break-inside:avoid}.signature-grid,.print-footer,.print-summary>div,.print-movement-card{break-inside:avoid}}</style></head><body>${body}</body></html>`; const documentTitle = this.documentTitle(), fileName = (documentTitle || 'مستند').replace(/[\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) + '.pdf'; return { html, title, documentTitle, fileName, nativeContentWidth, nativeContentHeight, orientation }; },
     async sharePdf() { try {
         const native = window.NativePrint;
-        if (!native?.shareDocumentPdf)
+        if (!native?.shareStructuredPdf)
             throw new Error('مشاركة PDF المباشرة متاحة من تطبيق Android فقط. استخدم طباعة / حفظ PDF من المتصفح.');
         this.bindNativeShareListener();
-        const p = await this.printPayload();
-        toast('جاري إنشاء ملف PDF...', 'info');
+        const p = await this.printPayload(), model = await this.nativePdfModel();
+        toast('جاري إنشاء ملف PDF A4...', 'info');
         if (this.nativeShareTimer)
             clearTimeout(this.nativeShareTimer);
-        this.nativeShareTimer = setTimeout(() => { this.nativeShareTimer = null; toast('لم يكتمل إنشاء ملف PDF. أعد المحاولة بعد إغلاق شاشة الطباعة وفتحها من جديد.', 'error'); }, 15000);
-        native.shareDocumentPdf(p.html, p.documentTitle, p.orientation);
+        this.nativeShareTimer = setTimeout(() => { this.nativeShareTimer = null; toast('لم يكتمل إنشاء ملف PDF. أعد المحاولة من المعاينة.', 'error'); }, 15000);
+        native.shareStructuredPdf(JSON.stringify(model), p.documentTitle, p.orientation);
     }
     catch (e) {
         toast(e.message || 'تعذر تجهيز ملف PDF للمشاركة', 'error');
     } },
-    async doPrint() { const { html, title } = await this.printPayload(); const native = window.NativePrint; if (native?.printHtml) {
+    async doPrint() { const p = await this.printPayload(); const native = window.NativePrint; if (native?.printHtmlA4) {
         try {
-            native.printHtml(html, title);
+            native.printHtmlA4(p.html, p.title, p.orientation);
+            return;
+        }
+        catch (e) {
+            console.error('[print] native A4 print failed', e);
+        }
+    } if (native?.printHtml) {
+        try {
+            native.printHtml(p.html, p.title);
             return;
         }
         catch (e) {
             console.error('[print] native print failed', e);
         }
-    } const f = document.getElementById('printFrame'), doc = f.contentWindow.document; doc.open(); doc.write(html); doc.close(); const run = () => { f.contentWindow.focus(); f.contentWindow.print(); }; if (doc.fonts?.ready)
+    } const f = document.getElementById('printFrame'), doc = f.contentWindow.document; doc.open(); doc.write(p.html); doc.close(); const run = () => { f.contentWindow.focus(); f.contentWindow.print(); }; if (doc.fonts?.ready)
         doc.fonts.ready.then(() => setTimeout(run, 40)).catch(() => setTimeout(run, 80));
     else
         setTimeout(run, 80); },
@@ -7213,21 +7318,6 @@ const UIDelegatedActions = {
                     else
                         return false;
                     break;
-                case 'whatsAppTemplate':
-                    if (type && id && key) {
-                        const input = document.querySelector('[name=waMessage]');
-                        if (input)
-                            input.value = A.whatsAppMessage(type, id, key);
-                    }
-                    else
-                        return false;
-                    break;
-                case 'sendWhatsApp':
-                    if (type && id)
-                        C.sendWhatsAppApi(type, id);
-                    else
-                        return false;
-                    break;
                 case 'customerService':
                     if (id)
                         Forms.open('service', { customerId: id });
@@ -7354,6 +7444,22 @@ const UIDelegatedActions = {
             ui.goBack();
             return true;
         }
+        if ((el = hit('[data-party-document-group]'))) {
+            const key = el.dataset.partyDocumentGroup, type = el.dataset.partyType, id = el.dataset.partyId;
+            if (key && type && id) {
+                e.preventDefault();
+                Party360.openDocumentGroup(type, id, key);
+                return true;
+            }
+        }
+        if ((el = hit('[data-party-document-open]'))) {
+            const key = el.dataset.partyDocumentOpen, type = el.dataset.partyType, id = el.dataset.partyId, docId = el.dataset.partyDocumentId;
+            if (key && type && id && docId) {
+                e.preventDefault();
+                Party360.openDocument(type, id, key, docId);
+                return true;
+            }
+        }
         if ((el = hit('[data-party-action]'))) {
             const action = el.dataset.partyAction, type = el.dataset.partyType, id = el.dataset.partyId, ref = el.dataset.partyRef, key = el.dataset.partyKey, form = el.dataset.partyForm;
             e.preventDefault();
@@ -7381,6 +7487,12 @@ const UIDelegatedActions = {
                 case 'whatsapp':
                     if (type)
                         Party360.whatsApp(type, id);
+                    else
+                        return false;
+                    break;
+                case 'documents':
+                    if (type)
+                        Party360.documents(type, id);
                     else
                         return false;
                     break;
@@ -15342,23 +15454,7 @@ const Actions = {
         for (const [c, v] of Object.entries(Accounting.agentPayable(id)))
             if (Math.abs(v) > EPS)
                 rows.push(v > 0 ? `لكم عمولات ${money(v, c)}` : '');
-    } return rows.filter(Boolean).join('، ') || 'لا يوجد رصيد مستحق حاليًا'; }, whatsAppOptions(type) { const common = [['balance', 'تذكير بالرصيد'], ['statement', 'ملخص كشف الحساب'], ['followup', 'طلب متابعة'], ['documents', 'طلب مستندات'], ['thanks', 'شكر وتأكيد']]; if (type === 'customer')
-        return [...common, ['payment', 'طلب سداد المستحق'], ['service', 'متابعة خدمة / حجز']]; if (type === 'supplier')
-        return [...common, ['payment', 'متابعة سداد المورد'], ['invoice', 'طلب فاتورة / مستند مالي']]; return [...common, ['collection', 'متابعة التحصيلات'], ['commission', 'متابعة العمولة']]; }, whatsAppMessage(type, id, mode = 'balance') { const x = this.partyRecord(type, id), company = DB.data.company.name || 'الشركة', name = x?.name || '', balance = this.partyBalanceSummary(type, id), date = formatDate(today()); if (mode === 'balance')
-        return `السيد/ ${name}، تحية طيبة. نحيطكم علمًا بأن موقف الحساب لدى ${company} حتى ${date} هو: ${balance}. برجاء التكرم بالمراجعة، وشكرًا لتعاونكم.`; if (mode === 'statement')
-        return `السيد/ ${name}، تحية طيبة من ${company}. ملخص موقف حسابكم حتى ${date}: ${balance}. ويمكننا تزويدكم بكشف حساب تفصيلي عند الطلب.`; if (mode === 'followup')
-        return `السيد/ ${name}، تحية طيبة من ${company}. نرجو التكرم بالتواصل معنا لاستكمال المتابعة الخاصة بحسابكم/خدماتكم. مع خالص الشكر.`; if (mode === 'documents')
-        return `السيد/ ${name}، تحية طيبة من ${company}. نرجو التكرم بإرسال/استكمال المستندات المطلوبة حتى نتمكن من إنهاء الإجراء دون تأخير. شكرًا لتعاونكم.`; if (mode === 'thanks')
-        return `السيد/ ${name}، نشكركم على تعاونكم وثقتكم في ${company}. يسعدنا دائمًا خدمتكم، وتفضلوا بقبول خالص التحية.`; if (mode === 'payment') {
-        if (type === 'customer')
-            return `السيد/ ${name}، تحية طيبة. طبقًا لحسابكم لدى ${company}: ${balance}. نرجو التكرم بتسوية المبلغ المستحق في أقرب وقت، وفي حالة السداد يرجى تجاهل الرسالة وإرسال ما يفيد السداد.`;
-        if (type === 'supplier')
-            return `السادة/ ${name}، تحية طيبة من ${company}. نتابع معكم موقف الحساب الحالي: ${balance}. برجاء موافاتنا بأي مستندات أو بيانات لازمة لاستكمال إجراءات السداد والمطابقة.`;
-    } if (mode === 'service')
-        return `السيد/ ${name}، تحية طيبة من ${company}. هذه رسالة متابعة بخصوص الخدمة/الحجز الخاص بكم. برجاء التواصل معنا إذا كانت هناك أي بيانات أو تعديلات مطلوبة لاستكمال التنفيذ.`; if (mode === 'invoice')
-        return `السادة/ ${name}، تحية طيبة من ${company}. نرجو التكرم بإرسال الفاتورة/المستند المالي المطلوب ومراجعة بياناته حتى نتمكن من استكمال المطابقة والسداد.`; if (mode === 'collection')
-        return `السيد/ ${name}، تحية طيبة من ${company}. نرجو موافاتنا بموقف التحصيلات الخاصة بالعملاء المسندين إليكم وتسوية أي مبالغ محصلة في أقرب وقت. موقف الحساب الحالي: ${balance}.`; if (mode === 'commission')
-        return `السيد/ ${name}، تحية طيبة من ${company}. بخصوص العمولات وموقف الحساب، الرصيد الحالي: ${balance}. برجاء التواصل معنا في حالة وجود أي استفسار أو عملية تحتاج مراجعة.`; return `السيد/ ${name}، تحية طيبة من ${company}.`; }, openWhatsApp(type, id) { try {
+    } return rows.filter(Boolean).join('، ') || 'لا يوجد رصيد مستحق حاليًا'; }, openWhatsApp(type, id, text = '') { try {
         Commercial.requireModule('whatsapp');
         const x = this.partyRecord(type, id);
         if (!x)
@@ -15366,14 +15462,13 @@ const Actions = {
         const phone = this.normalizeWhatsApp(x.whatsapp || x.phone);
         if (!phone)
             throw new Error('لا يوجد رقم هاتف/واتساب صالح لهذا الطرف');
-        const modal = ActionsDocument.getElementById('modal'), form = ActionsDocument.getElementById('modalForm'), msg = this.whatsAppMessage(type, id, 'balance'), opts = this.whatsAppOptions(type);
-        ActionsDocument.getElementById('modalTitle').textContent = `واتساب — ${x.name}`;
-        ActionsDocument.getElementById('modalSubtitle').textContent = 'اختر قالبًا مناسبًا، ويمكنك تعديل النص بالكامل قبل الإرسال.';
-        ActionsDocument.getElementById('modalIcon').innerHTML = icon('phone');
-        ActionsDocument.getElementById('modalSubmitText').textContent = 'فتح واتساب';
-        ActionsDocument.getElementById('modalBody').innerHTML = `<div class="action-menu-grid">${opts.map(([key, label], i) => `<button type="button" class="btn ${i === 0 ? 'soft' : 'ghost'}" data-action-panel="whatsAppTemplate" data-action-type="${type}" data-action-id="${id}" data-action-key="${key}">${esc(label)}</button>`).join('')}</div><div class="field mt-12"><label>نص الرسالة</label><textarea name="waMessage">${esc(msg)}</textarea></div>${ServerStore.available === true ? `<button type="button" class="btn success mt-12" data-action-panel="sendWhatsApp" data-action-type="${type}" data-action-id="${id}">إرسال عبر Cloud API</button>` : ''}`;
-        modal.classList.add('show');
-        form.onsubmit = e => { e.preventDefault(); const text = S(new FormData(form).get('waMessage')); window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank', 'noopener'); UI.closeModal(true); };
+        const native = window.NativeShell;
+        if (native?.openWhatsAppChat) {
+            native.openWhatsAppChat(phone, S(text || ''));
+            return;
+        }
+        const url = `https://wa.me/${phone}${text ? `?text=${encodeURIComponent(S(text))}` : ''}`;
+        window.open(url, '_blank', 'noopener');
     }
     catch (e) {
         toast(e.message, 'error');
@@ -15384,7 +15479,7 @@ const Actions = {
         const modal = ActionsDocument.getElementById('modal'), form = ActionsDocument.getElementById('modalForm'), page = type === 'customer' ? 'customers' : type === 'supplier' ? 'suppliers' : 'agents';
         Auth.require(page, 'view');
         ActionsDocument.getElementById('modalTitle').textContent = `إجراءات — ${x.name}`;
-        ActionsDocument.getElementById('modalSubtitle').textContent = 'كل العمليات اليومية هنا. التعديل والحذف وواتساب موجودة فقط داخل «المزيد» لتجنب التكرار.';
+        ActionsDocument.getElementById('modalSubtitle').textContent = 'العمليات اليومية فقط. المستندات وواتساب وإدارة الطرف موجودة داخل «المزيد» لتجنب التكرار.';
         ActionsDocument.getElementById('modalIcon').innerHTML = icon('activity');
         ActionsDocument.getElementById('modalSubmitText').textContent = 'إغلاق';
         let buttons = '';
@@ -15422,8 +15517,6 @@ const Actions = {
             if (c && Auth.can('agents', 'approve'))
                 buttons += `<button type="button" class="btn danger" data-action-panel="commissionPay" data-action-id="${c.id}" data-action-amount="${Math.max(0, N(c.amount) - N(c.paidAmount))}" data-action-currency="${c.currency}">سداد عمولة مستحقة</button>`;
         }
-        if (Auth.can(page, 'print'))
-            buttons += `<button type="button" class="btn ghost" data-statement-type="${type}" data-statement-id="${id}">كشف حساب</button>`;
         ActionsDocument.getElementById('modalBody').innerHTML = `<div class="action-menu-grid">${buttons || '<div class="empty-state">لا توجد إجراءات متاحة حسب صلاحياتك.</div>'}</div>`;
         modal.classList.add('show');
         form.onsubmit = e => { e.preventDefault(); UI.closeModal(true); };
@@ -16390,20 +16483,6 @@ const CommercialActions = {
     catch (e) {
         toast(e.message, 'error');
     } },
-    async sendWhatsAppApi(type, id) { try {
-        Commercial.requireModule('whatsapp');
-        const x = Actions.partyRecord(type, id);
-        if (!x)
-            throw new Error('السجل غير موجود');
-        const to = Actions.normalizeWhatsApp(x.whatsapp || x.phone), text = S(document.querySelector('[name=waMessage]')?.value || '');
-        if (!to || !text)
-            throw new Error('رقم الهاتف أو الرسالة غير مكتمل');
-        const r = await CommercialSupport.sendWhatsApp(to, text);
-        toast(`تم إرسال الرسالة${r.messageId ? ' — ' + r.messageId : ''}`, 'ok');
-    }
-    catch (e) {
-        toast(e.message, 'error');
-    } },
     async showServerAudit() { try {
         const b = await CommercialSupport.audit(), m = document.getElementById('modal'), f = document.getElementById('modalForm'), actionLabels = { setup: 'إعداد النظام', 'setup-after-reset': 'إعداد النظام بعد إعادة التهيئة', 'state-write': 'حفظ تغييرات النظام', 'whatsapp-send': 'إرسال رسالة واتساب', 'vendor-entitlement': 'تحديث ترخيص الشركة', 'reset-existing-login': 'استعادة دخول المدير', 'vendor-force-password-change': 'إجبار تغيير كلمة المرور', 'login': 'تسجيل دخول', 'logout': 'تسجيل خروج', 'backup-create': 'إنشاء نسخة احتياطية', 'backup-restore': 'استعادة نسخة احتياطية', 'archive-close': 'إغلاق وأرشفة فترة' }, rows = (b.items || []).map(x => `<tr><td>${formatDateTime(x.created_at)}</td><td>${esc(byId(DB.data.users, x.user_id)?.name || x.user_id || 'نظام')}</td><td>${esc(actionLabels[x.action] || 'إجراء نظام')}</td><td>${esc(x.ip_address || '-')}</td><td>${esc(S(x.user_agent || '').slice(0, 55))}</td><td>${esc(JSON.stringify(x.changes || []).slice(0, 180))}</td></tr>`);
         document.getElementById('modalTitle').textContent = 'سجل الخادم المحمي';
@@ -16956,7 +17035,7 @@ if (uxModal)
         if (init?.headers)
             new Headers(init.headers).forEach((v, k) => h.set(k, v));
         h.set('X-ERP-Mobile', 'android');
-        h.set('X-ERP-Mobile-Version', '32.5.52-OFFLINE');
+        h.set('X-ERP-Mobile-Version', '32.5.53-OFFLINE');
         return h;
     };
     if (!offlineEdition)
@@ -17477,7 +17556,7 @@ if (uxModal)
         releaseCheckBusy = true;
         lastReleaseCheck = now;
         try {
-            const response = await nativeFetch(`${API_BASE}/api/health?_=${now}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'X-ERP-Mobile': 'android', 'X-ERP-Mobile-Version': '32.5.52' } });
+            const response = await nativeFetch(`${API_BASE}/api/health?_=${now}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'X-ERP-Mobile': 'android', 'X-ERP-Mobile-Version': '32.5.53' } });
             if (!response.ok)
                 return false;
             const payload = await response.json();

@@ -6,9 +6,9 @@ ok('Sidebar accordion closes only sibling details in the same group',ui.includes
 ok('Sidebar no longer forces scrollTop on open',!ui.includes('sidebar.scrollTop=0')&&!ui.includes("sidebar.scrollTo({top:0"));
 ok('Sidebar decorative layer is anchored to sidebar, not viewport',css.includes('.sidebar:before{content:"";position:absolute;'));
 ok('Android sidebar uses stable compositor layer',css.includes('.native-android .sidebar{will-change:transform'));
-ok('Generic PDF share is public A4 PDF-canvas generated',java.includes('PrintedPdfDocument')&&java.includes('PrintAttributes.MediaSize.ISO_A4')&&java.includes('view.draw(canvas)'));
-ok('No full-document screenshot PDF remains',!java.includes('Bitmap.createBitmap')&&!java.includes('view.draw(bitmapCanvas)')&&!java.includes('drawBitmap(bitmap'));
-ok('PDF path uses public PrintedPdfDocument canvas',java.includes('PrintedPdfDocument')&&java.includes('view.draw(canvas)')&&!java.includes('LayoutResultCallback()')&&!java.includes('WriteResultCallback()'));
+ok('Android print explicitly requests ISO A4',java.includes('PrintAttributes.MediaSize.ISO_A4')&&java.includes('manager.print(safeJob, adapter, buildPdfAttributes(landscape))'));
+ok('PDF share is structured and not a WebView screenshot',java.includes('new PdfDocument()')&&java.includes('StaticLayout')&&java.includes('shareStructuredPdf')&&!java.includes('PrintedPdfDocument')&&!java.includes('view.draw(canvas)')&&!java.includes('Bitmap.createBitmap'));
+ok('Framework callback constructor hacks remain absent',!java.includes('LayoutResultCallback()')&&!java.includes('WriteResultCallback()'));
 ok('Java regex is escaped safely',java.includes('replaceAll("[^\\\\p{L}\\\\p{N}._-]+", "_")'));
 ok('Print HTML is network-independent for fonts',!printing.includes('fonts.googleapis.com'));
-const failed=checks.filter(x=>!x[1]); console.log(`v32.5.48 clean print/sidebar smoke: ${checks.length-failed.length}/${checks.length}`); if(failed.length)process.exit(1);
+const failed=checks.filter(x=>!x[1]); console.log(`v32.5.48+ clean print/sidebar smoke: ${checks.length-failed.length}/${checks.length}`); if(failed.length)process.exit(1);

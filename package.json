@@ -1,8 +1,8 @@
 {
   "name": "erp-professional-suite-commercial",
   "private": true,
-  "version": "32.5.52",
-  "description": "Elhafez Tourism v32.5.52 — clean native backup download/share delivery with verified restorable files.",
+  "version": "32.5.53",
+  "description": "Elhafez Tourism v32.5.53 — direct party WhatsApp, clean real-document center, fixed A4 printing and structured PDF sharing.",
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-static.mjs && tsc -p server/tsconfig.json",
     "start": "node server/dist/server.js",
@@ -66,7 +66,7 @@
   },
   "erpRelease": {
     "channel": "offline-copy",
-    "notes": "Full offline v32.5.52: rebuilds external backup delivery cleanly. Android saves real .erpbackup/.erparchive files to Downloads and shares the same verified file through the system Share Sheet; browser/laptop keeps native download/share fallback. Restore/data/accounting logic is unchanged.",
+    "notes": "Full offline v32.5.53: removes legacy WhatsApp text-template clutter from party More, opens the saved party WhatsApp chat directly, adds a clean real-document center for statements/invoices/vouchers/orders/bookings, and replaces raster/Letter PDF delivery with one explicit A4 print path plus structured Android PDF sharing. Backup delivery, restore, data and accounting logic are unchanged.",
     "migrationRequired": false
   },
   "dependencies": {

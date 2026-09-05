@@ -2,7 +2,7 @@ import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const checks=[]; const ok=(name,cond)=>{checks.push([name,!!cond]);console.log(`${cond?'PASS':'FAIL'} ${name}`)};
 const printing=read('src/reports/printing.ts'), ui=read('src/ui/ui.ts'), forms=read('src/ui/forms.ts'), defs=read('src/ui/forms-definitions.ts'), delegated=read('src/ui/delegated-actions.ts'), java=read('android/app/src/main/java/com/elhafez/tourism/erp/customer/MainActivity.java'), manifest=read('android/app/src/main/AndroidManifest.xml'), css=read('src/styles.css');
-ok('Native generic PDF share bridge exists',java.includes('shareDocumentPdf(')&&printing.includes('native?.shareDocumentPdf'));
+ok('Native generic PDF share bridge exists',java.includes('shareStructuredPdf(')&&printing.includes('native?.shareStructuredPdf'));
 ok('Legacy WhatsApp print bridge is removed',!java.includes('sharePdfA4(')&&!printing.includes('shareWhatsApp'));
 ok('Native print HTML has fixed A4 CSS viewport',printing.includes('nativeContentWidth=orientation')&&printing.includes('width=${nativeContentWidth},initial-scale=1'));
 ok('Keyboard suggestions are explicit',forms.includes('spellcheck="true" autocorrect="on"')&&ui.includes("el.setAttribute('autocorrect','on')"));

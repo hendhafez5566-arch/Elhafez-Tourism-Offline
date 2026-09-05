@@ -16,14 +16,21 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.graphics.Color;
 import android.graphics.Canvas;
-import android.graphics.Rect;
+import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.text.Layout;
+import android.text.StaticLayout;
+import android.text.TextPaint;
+import android.text.TextDirectionHeuristics;
+import android.text.TextUtils;
 import android.graphics.pdf.PdfDocument;
 import android.os.Bundle;
 import android.os.Build;
 import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
-import android.print.pdf.PrintedPdfDocument;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -45,6 +52,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.json.JSONObject;
+import org.json.JSONArray;
 
 public class MainActivity extends BridgeActivity {
     private static final int PICK_PHONE_REQUEST = 4317;
@@ -130,6 +138,28 @@ public class MainActivity extends BridgeActivity {
                     pendingContactField = fieldName == null ? "" : fieldName.trim();
                     Intent pick = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
                     startActivityForResult(pick, PICK_PHONE_REQUEST);
+                } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface
+        public void openWhatsAppChat(String phone, String text) {
+            runOnUiThread(() -> {
+                String normalized = phone == null ? "" : phone.replaceAll("\\D", "");
+                if (normalized.isEmpty()) return;
+                String suffix = (text == null || text.trim().isEmpty()) ? "" : "?text=" + Uri.encode(text.trim());
+                Uri uri = Uri.parse("https://wa.me/" + normalized + suffix);
+                String[] packages = new String[]{"com.whatsapp", "com.whatsapp.w4b"};
+                for (String pkg : packages) {
+                    try {
+                        Intent direct = new Intent(Intent.ACTION_VIEW, uri);
+                        direct.setPackage(pkg);
+                        startActivity(direct);
+                        return;
+                    } catch (Exception ignored) { }
+                }
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, uri));
                 } catch (Exception ignored) { }
             });
         }
@@ -408,10 +438,15 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void startPrint(WebView webView, String jobName) {
+        startPrint(webView, jobName, "portrait");
+    }
+
+    private void startPrint(WebView webView, String jobName, String orientation) {
         PrintManager manager = (PrintManager) getSystemService(Context.PRINT_SERVICE);
-        PrintDocumentAdapter adapter = webView.createPrintDocumentAdapter(
-                (jobName == null || jobName.trim().isEmpty()) ? "Elhafez ERP" : jobName.trim());
-        manager.print("Elhafez ERP", adapter, new PrintAttributes.Builder().build());
+        String safeJob = (jobName == null || jobName.trim().isEmpty()) ? "Elhafez ERP" : jobName.trim();
+        PrintDocumentAdapter adapter = webView.createPrintDocumentAdapter(safeJob);
+        boolean landscape = "landscape".equalsIgnoreCase(orientation);
+        manager.print(safeJob, adapter, buildPdfAttributes(landscape));
     }
 
     private void notifyPdfShare(String status, String message) {
@@ -501,90 +536,311 @@ public class MainActivity extends BridgeActivity {
         return new PrintAttributes.Builder()
                 .setMediaSize(media)
                 .setResolution(new PrintAttributes.Resolution("elhafez_pdf", "Elhafez PDF", 600, 600))
-                .setMinMargins(new PrintAttributes.Margins(394, 394, 394, 394))
+                .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
                 .setColorMode(PrintAttributes.COLOR_MODE_COLOR)
                 .build();
     }
 
-    /**
-     * Creates a generic Android share attachment with the public PDF canvas API.
-     * The WebView is drawn directly onto PDF pages: there is no intermediate
-     * Bitmap/screenshot and no direct construction of framework-only
-     * PrintDocumentAdapter callbacks.
-     */
-    private void createAndSharePdf(WebView view, String jobName, String orientation) {
-        final String safe = (jobName == null || jobName.trim().isEmpty())
-                ? "document"
-                : jobName.replaceAll("[^\\p{L}\\p{N}._-]+", "_");
-        final File file = new File(getCacheDir(), safe + "_" + System.currentTimeMillis() + ".pdf");
-        final boolean landscape = "landscape".equalsIgnoreCase(orientation);
-        final int cssContentWidth = landscape ? 1047 : 718;
-        final float density = Math.max(1f, getResources().getDisplayMetrics().density);
-        final int renderWidth = Math.max(cssContentWidth, Math.round(cssContentWidth * density));
-        final PrintAttributes attributes = buildPdfAttributes(landscape);
-        PrintedPdfDocument document = null;
+    private static class StructuredPdfState {
+        final PdfDocument document;
+        final JSONObject model;
+        final int pageWidth;
+        final int pageHeight;
+        final float margin = 28.35f;
+        PdfDocument.Page page;
+        Canvas canvas;
+        int pageNumber = 0;
+        float y = 0f;
+        Bitmap logo;
 
+        StructuredPdfState(PdfDocument document, JSONObject model, int pageWidth, int pageHeight) {
+            this.document = document;
+            this.model = model;
+            this.pageWidth = pageWidth;
+            this.pageHeight = pageHeight;
+        }
+    }
+
+    private TextPaint pdfTextPaint(float size, boolean bold, int color) {
+        TextPaint paint = new TextPaint(Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG);
+        paint.setColor(color);
+        paint.setTextSize(size);
+        paint.setTypeface(Typeface.create("sans-serif", bold ? Typeface.BOLD : Typeface.NORMAL));
+        return paint;
+    }
+
+    private StaticLayout pdfTextLayout(String raw, float width, float size, boolean bold, int color, int maxLines) {
+        String text = raw == null ? "" : raw.trim();
+        TextPaint paint = pdfTextPaint(size, bold, color);
+        StaticLayout.Builder builder = StaticLayout.Builder.obtain(text, 0, text.length(), paint, Math.max(1, Math.round(width)))
+                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                .setTextDirection(TextDirectionHeuristics.RTL)
+                .setIncludePad(false)
+                .setLineSpacing(0f, 1.05f);
+        if (maxLines > 0) {
+            builder.setMaxLines(maxLines);
+            builder.setEllipsize(TextUtils.TruncateAt.END);
+            builder.setEllipsizedWidth(Math.max(1, Math.round(width)));
+        }
+        return builder.build();
+    }
+
+    private float drawPdfText(Canvas canvas, String text, float x, float y, float width,
+                              float size, boolean bold, int color, int maxLines) {
+        StaticLayout layout = pdfTextLayout(text, width, size, bold, color, maxLines);
+        int save = canvas.save();
+        canvas.translate(x, y);
+        layout.draw(canvas);
+        canvas.restoreToCount(save);
+        return layout.getHeight();
+    }
+
+    private Bitmap decodePdfLogo(String raw) {
         try {
-            // Lay the hidden print WebView out at a stable print width and its
-            // full document height before recording it into the PDF canvas.
-            ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
-            if (layoutParams != null) {
-                layoutParams.width = renderWidth;
-                view.setLayoutParams(layoutParams);
-            }
-            int widthSpec = View.MeasureSpec.makeMeasureSpec(renderWidth, View.MeasureSpec.EXACTLY);
-            int measuredHeightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-            view.measure(widthSpec, measuredHeightSpec);
-            int measuredHeight = Math.max(1, view.getMeasuredHeight());
-            int chromiumHeight = Math.max(1, Math.round(view.getContentHeight() * density));
-            int contentHeight = Math.max(measuredHeight, chromiumHeight);
-            if (contentHeight <= 2) throw new IllegalStateException("pdf_content_not_ready");
-            view.measure(widthSpec, View.MeasureSpec.makeMeasureSpec(contentHeight, View.MeasureSpec.EXACTLY));
-            view.layout(0, 0, renderWidth, contentHeight);
-            view.scrollTo(0, 0);
+            if (raw == null || !raw.startsWith("data:image/")) return null;
+            int comma = raw.indexOf(',');
+            if (comma < 0) return null;
+            byte[] bytes = Base64.decode(raw.substring(comma + 1), Base64.DEFAULT);
+            return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
 
-            document = new PrintedPdfDocument(MainActivity.this, attributes);
-            Rect contentRect = document.getPageContentRect();
-            if (contentRect.width() <= 0 || contentRect.height() <= 0) {
-                throw new IllegalStateException("pdf_page_invalid");
-            }
+    private void finishStructuredPage(StructuredPdfState st) {
+        if (st.page != null) {
+            st.document.finishPage(st.page);
+            st.page = null;
+            st.canvas = null;
+        }
+    }
 
-            final float scale = contentRect.width() / (float) renderWidth;
-            final float sourcePageHeight = contentRect.height() / scale;
-            final int pageCount = Math.max(1, (int) Math.ceil(contentHeight / sourcePageHeight));
+    private void beginStructuredPage(StructuredPdfState st, boolean continuation) {
+        finishStructuredPage(st);
+        st.pageNumber++;
+        PdfDocument.PageInfo info = new PdfDocument.PageInfo.Builder(st.pageWidth, st.pageHeight, st.pageNumber).create();
+        st.page = st.document.startPage(info);
+        st.canvas = st.page.getCanvas();
+        st.canvas.drawColor(Color.WHITE);
 
-            for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-                PdfDocument.Page page = document.startPage(pageIndex);
-                Canvas canvas = page.getCanvas();
-                canvas.drawColor(Color.WHITE);
-                int save = canvas.save();
-                canvas.clipRect(contentRect);
-                canvas.translate(contentRect.left, contentRect.top);
-                canvas.scale(scale, scale);
-                canvas.translate(0f, -(pageIndex * sourcePageHeight));
-                view.draw(canvas);
-                canvas.restoreToCount(save);
-                document.finishPage(page);
-            }
+        final int NAVY = Color.rgb(17, 39, 69);
+        final int GOLD = Color.rgb(201, 151, 47);
+        final int MUTED = Color.rgb(96, 111, 132);
+        Paint rule = new Paint(Paint.ANTI_ALIAS_FLAG);
+        rule.setColor(NAVY);
+        st.canvas.drawRect(st.margin, 20f, st.pageWidth - st.margin - 115f, 25f, rule);
+        rule.setColor(GOLD);
+        st.canvas.drawRect(st.pageWidth - st.margin - 115f, 20f, st.pageWidth - st.margin, 25f, rule);
 
-            try (FileOutputStream out = new FileOutputStream(file)) {
-                document.writeTo(out);
-                out.flush();
+        JSONObject company = st.model.optJSONObject("company");
+        String companyName = company == null ? "الشركة" : company.optString("name", "الشركة");
+        String title = st.model.optString("title", "مستند");
+        if (continuation) title += " — تابع";
+        float logoW = 0f;
+        if (st.logo != null) {
+            float box = 40f;
+            float ratio = Math.min(box / Math.max(1f, st.logo.getWidth()), box / Math.max(1f, st.logo.getHeight()));
+            float w = st.logo.getWidth() * ratio, h = st.logo.getHeight() * ratio;
+            st.canvas.drawBitmap(st.logo, null,
+                    new android.graphics.RectF(st.pageWidth - st.margin - w, 34f, st.pageWidth - st.margin, 34f + h), null);
+            logoW = w + 8f;
+        }
+        drawPdfText(st.canvas, companyName, st.margin + (st.pageWidth - 2 * st.margin) * .52f, 35f,
+                (st.pageWidth - 2 * st.margin) * .48f - logoW, 13f, true, NAVY, 2);
+        if (company != null) {
+            JSONArray lines = company.optJSONArray("lines");
+            if (lines != null && lines.length() > 0) {
+                StringBuilder small = new StringBuilder();
+                for (int i = 0; i < Math.min(3, lines.length()); i++) {
+                    if (i > 0) small.append(" • ");
+                    small.append(lines.optString(i));
+                }
+                drawPdfText(st.canvas, small.toString(), st.margin + (st.pageWidth - 2 * st.margin) * .52f, 54f,
+                        (st.pageWidth - 2 * st.margin) * .48f - logoW, 7.6f, false, MUTED, 2);
             }
-            document.close();
-            document = null;
-            destroyPrintView(view);
+        }
+        drawPdfText(st.canvas, title, st.margin, 35f, (st.pageWidth - 2 * st.margin) * .44f,
+                14f, true, NAVY, 2);
+        String issue = st.model.optString("issue", "");
+        if (!issue.isEmpty()) drawPdfText(st.canvas, issue, st.margin, 58f,
+                (st.pageWidth - 2 * st.margin) * .44f, 7.5f, false, MUTED, 1);
+        st.y = 88f;
+    }
 
-            if (!file.isFile() || file.length() < 512) {
-                try { file.delete(); } catch (Exception ignored) { }
-                notifyPdfShare("error", "تم إنشاء ملف PDF غير صالح");
-                return;
+    private void ensureStructuredSpace(StructuredPdfState st, float need) {
+        if (st.y + need > st.pageHeight - 42f) beginStructuredPage(st, true);
+    }
+
+    private void drawStructuredMeta(StructuredPdfState st, JSONArray items) {
+        if (items == null || items.length() == 0) return;
+        final int LINE = Color.rgb(217, 225, 235), SOFT = Color.rgb(245, 248, 252), INK = Color.rgb(40, 55, 76);
+        float gap = 7f, colW = (st.pageWidth - 2 * st.margin - gap) / 2f;
+        int rows = (items.length() + 1) / 2;
+        ensureStructuredSpace(st, rows * 31f + 8f);
+        Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG); fill.setColor(SOFT);
+        Paint stroke = new Paint(Paint.ANTI_ALIAS_FLAG); stroke.setStyle(Paint.Style.STROKE); stroke.setStrokeWidth(.7f); stroke.setColor(LINE);
+        for (int i = 0; i < items.length(); i++) {
+            int row = i / 2, col = i % 2;
+            float x = st.margin + col * (colW + gap), y = st.y + row * 31f;
+            st.canvas.drawRoundRect(x, y, x + colW, y + 25f, 5f, 5f, fill);
+            st.canvas.drawRoundRect(x, y, x + colW, y + 25f, 5f, 5f, stroke);
+            drawPdfText(st.canvas, items.optString(i), x + 6f, y + 6f, colW - 12f, 8.2f, true, INK, 2);
+        }
+        st.y += rows * 31f + 3f;
+    }
+
+    private void drawStructuredNote(StructuredPdfState st, String text, boolean total) {
+        if (text == null || text.trim().isEmpty()) return;
+        final int LINE = Color.rgb(217, 225, 235), SOFT = Color.rgb(250, 252, 254), INK = Color.rgb(40, 55, 76);
+        float width = st.pageWidth - 2 * st.margin;
+        StaticLayout layout = pdfTextLayout(text, width - 16f, total ? 9.5f : 8.8f, total, INK, 0);
+        float h = Math.max(30f, layout.getHeight() + 14f);
+        ensureStructuredSpace(st, h + 7f);
+        Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG); fill.setColor(SOFT);
+        Paint stroke = new Paint(Paint.ANTI_ALIAS_FLAG); stroke.setStyle(Paint.Style.STROKE); stroke.setStrokeWidth(.8f); stroke.setColor(LINE);
+        st.canvas.drawRoundRect(st.margin, st.y, st.pageWidth - st.margin, st.y + h, 6f, 6f, fill);
+        st.canvas.drawRoundRect(st.margin, st.y, st.pageWidth - st.margin, st.y + h, 6f, 6f, stroke);
+        int save = st.canvas.save(); st.canvas.translate(st.margin + 8f, st.y + 7f); layout.draw(st.canvas); st.canvas.restoreToCount(save);
+        st.y += h + 7f;
+    }
+
+    private void drawStructuredSummary(StructuredPdfState st, JSONArray items) {
+        if (items == null || items.length() == 0) return;
+        final int LINE = Color.rgb(217, 225, 235), SOFT = Color.rgb(250, 252, 254), INK = Color.rgb(30, 46, 68), MUTED = Color.rgb(102, 117, 138);
+        float gap = 6f, colW = (st.pageWidth - 2 * st.margin - 2 * gap) / 3f;
+        int rows = (items.length() + 2) / 3;
+        ensureStructuredSpace(st, rows * 48f + 7f);
+        Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG); fill.setColor(SOFT);
+        Paint stroke = new Paint(Paint.ANTI_ALIAS_FLAG); stroke.setStyle(Paint.Style.STROKE); stroke.setStrokeWidth(.7f); stroke.setColor(LINE);
+        for (int i = 0; i < items.length(); i++) {
+            JSONObject item = items.optJSONObject(i); if (item == null) continue;
+            int row = i / 3, col = i % 3;
+            float x = st.margin + col * (colW + gap), y = st.y + row * 48f;
+            st.canvas.drawRoundRect(x, y, x + colW, y + 42f, 6f, 6f, fill);
+            st.canvas.drawRoundRect(x, y, x + colW, y + 42f, 6f, 6f, stroke);
+            drawPdfText(st.canvas, item.optString("label"), x + 6f, y + 5f, colW - 12f, 7.2f, false, MUTED, 1);
+            drawPdfText(st.canvas, item.optString("value"), x + 6f, y + 20f, colW - 12f, 9f, true, INK, 2);
+        }
+        st.y += rows * 48f + 2f;
+    }
+
+    private void drawStructuredAlert(StructuredPdfState st, JSONObject block) {
+        final int RED = Color.rgb(180, 35, 24), PALE = Color.rgb(255, 245, 244);
+        float h = 38f, width = st.pageWidth - 2 * st.margin;
+        ensureStructuredSpace(st, h + 7f);
+        Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG); fill.setColor(PALE);
+        Paint stroke = new Paint(Paint.ANTI_ALIAS_FLAG); stroke.setStyle(Paint.Style.STROKE); stroke.setStrokeWidth(1.2f); stroke.setColor(RED);
+        st.canvas.drawRoundRect(st.margin, st.y, st.pageWidth - st.margin, st.y + h, 6f, 6f, fill);
+        st.canvas.drawRoundRect(st.margin, st.y, st.pageWidth - st.margin, st.y + h, 6f, 6f, stroke);
+        drawPdfText(st.canvas, block.optString("label"), st.margin + width * .42f, st.y + 10f, width * .56f - 8f, 8.5f, true, RED, 2);
+        drawPdfText(st.canvas, block.optString("value"), st.margin + 8f, st.y + 10f, width * .35f, 9.2f, true, RED, 1);
+        st.y += h + 7f;
+    }
+
+    private float measureTableRow(JSONArray row, float cellW, float fontSize, boolean bold, int color, int maxLines) {
+        float max = 0f;
+        for (int i = 0; i < row.length(); i++) {
+            StaticLayout layout = pdfTextLayout(row.optString(i), cellW - 8f, fontSize, bold, color, maxLines);
+            max = Math.max(max, layout.getHeight());
+        }
+        return Math.max(24f, max + 10f);
+    }
+
+    private void drawTableRow(StructuredPdfState st, JSONArray row, int cols, float y, float h,
+                              boolean header, int rowIndex) {
+        final int NAVY = Color.rgb(17, 39, 69), LINE = Color.rgb(217, 225, 235), SOFT = Color.rgb(248, 250, 252), INK = Color.rgb(36, 52, 74);
+        float width = st.pageWidth - 2 * st.margin, cellW = width / Math.max(1, cols);
+        Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG); fill.setColor(header ? NAVY : (rowIndex % 2 == 1 ? SOFT : Color.WHITE));
+        Paint stroke = new Paint(Paint.ANTI_ALIAS_FLAG); stroke.setStyle(Paint.Style.STROKE); stroke.setStrokeWidth(.55f); stroke.setColor(LINE);
+        for (int col = 0; col < cols; col++) {
+            float x = st.margin + col * cellW;
+            st.canvas.drawRect(x, y, x + cellW, y + h, fill);
+            st.canvas.drawRect(x, y, x + cellW, y + h, stroke);
+            drawPdfText(st.canvas, col < row.length() ? row.optString(col) : "", x + 4f, y + 5f,
+                    cellW - 8f, header ? 7.8f : 7.5f, header, header ? Color.WHITE : INK, header ? 2 : 4);
+        }
+    }
+
+    private void drawStructuredTable(StructuredPdfState st, JSONObject block) {
+        JSONArray headers = block.optJSONArray("headers"), rows = block.optJSONArray("rows");
+        int cols = headers == null ? 0 : headers.length();
+        if (rows != null) for (int i = 0; i < rows.length(); i++) cols = Math.max(cols, rows.optJSONArray(i) == null ? 0 : rows.optJSONArray(i).length());
+        if (cols <= 0) return;
+        float width = st.pageWidth - 2 * st.margin, cellW = width / cols;
+        JSONArray headerRow = headers != null && headers.length() > 0 ? headers : new JSONArray();
+        float headerH = headerRow.length() > 0 ? measureTableRow(headerRow, cellW, 7.8f, true, Color.WHITE, 2) : 0f;
+        ensureStructuredSpace(st, Math.max(48f, headerH + 28f));
+        if (headerH > 0f) { drawTableRow(st, headerRow, cols, st.y, headerH, true, 0); st.y += headerH; }
+        if (rows != null) {
+            for (int i = 0; i < rows.length(); i++) {
+                JSONArray row = rows.optJSONArray(i); if (row == null) continue;
+                float h = measureTableRow(row, cellW, 7.5f, false, Color.BLACK, 4);
+                if (st.y + h > st.pageHeight - 42f) {
+                    beginStructuredPage(st, true);
+                    if (headerH > 0f) { drawTableRow(st, headerRow, cols, st.y, headerH, true, 0); st.y += headerH; }
+                }
+                drawTableRow(st, row, cols, st.y, h, false, i);
+                st.y += h;
             }
+        }
+        st.y += 7f;
+    }
+
+    private void drawStructuredSignatures(StructuredPdfState st, JSONArray items) {
+        if (items == null || items.length() == 0) return;
+        ensureStructuredSpace(st, 62f);
+        float gap = 18f, width = st.pageWidth - 2 * st.margin, colW = (width - gap * 2) / 3f;
+        Paint line = new Paint(Paint.ANTI_ALIAS_FLAG); line.setColor(Color.rgb(130, 144, 163)); line.setStrokeWidth(.7f);
+        st.y += 22f;
+        for (int i = 0; i < Math.min(3, items.length()); i++) {
+            float x = st.margin + i * (colW + gap);
+            st.canvas.drawLine(x, st.y, x + colW, st.y, line);
+            drawPdfText(st.canvas, items.optString(i), x, st.y + 7f, colW, 7.5f, false, Color.rgb(70, 85, 106), 1);
+        }
+        st.y += 34f;
+    }
+
+    private File createStructuredPdf(String modelJson, String jobName, String orientation) throws Exception {
+        JSONObject model = new JSONObject(modelJson == null ? "{}" : modelJson);
+        boolean landscape = "landscape".equalsIgnoreCase(orientation);
+        int pageWidth = landscape ? 842 : 595, pageHeight = landscape ? 595 : 842;
+        PdfDocument document = new PdfDocument();
+        StructuredPdfState st = new StructuredPdfState(document, model, pageWidth, pageHeight);
+        JSONObject company = model.optJSONObject("company");
+        if (company != null) st.logo = decodePdfLogo(company.optString("logo", ""));
+        beginStructuredPage(st, false);
+        JSONArray blocks = model.optJSONArray("blocks");
+        if (blocks != null) {
+            for (int i = 0; i < blocks.length(); i++) {
+                JSONObject block = blocks.optJSONObject(i); if (block == null) continue;
+                String type = block.optString("type", "");
+                if ("meta".equals(type)) drawStructuredMeta(st, block.optJSONArray("items"));
+                else if ("table".equals(type)) drawStructuredTable(st, block);
+                else if ("summary".equals(type)) drawStructuredSummary(st, block.optJSONArray("items"));
+                else if ("alert".equals(type)) drawStructuredAlert(st, block);
+                else if ("signatures".equals(type)) drawStructuredSignatures(st, block.optJSONArray("items"));
+                else if ("footer".equals(type)) {
+                    JSONArray items = block.optJSONArray("items");
+                    if (items != null) for (int j = 0; j < items.length(); j++) drawStructuredNote(st, items.optString(j), false);
+                } else drawStructuredNote(st, block.optString("text", ""), "total".equals(type));
+            }
+        }
+        finishStructuredPage(st);
+        String safe = (jobName == null || jobName.trim().isEmpty()) ? "document" : jobName.trim();
+        safe = safe.replaceAll("[^\\p{L}\\p{N}._-]+", "_");
+        File file = new File(getCacheDir(), safe + "_" + System.currentTimeMillis() + ".pdf");
+        try (FileOutputStream out = new FileOutputStream(file)) { document.writeTo(out); out.flush(); }
+        document.close();
+        if (st.logo != null) try { st.logo.recycle(); } catch (Exception ignored) { }
+        if (!file.isFile() || file.length() < 512) throw new IllegalStateException("pdf_invalid");
+        return file;
+    }
+
+    private void createAndShareStructuredPdf(String modelJson, String jobName, String orientation) {
+        try {
+            File file = createStructuredPdf(modelJson, jobName, orientation);
             sharePdfFile(file);
         } catch (Exception e) {
-            try { if (document != null) document.close(); } catch (Exception ignored) { }
-            try { file.delete(); } catch (Exception ignored) { }
-            destroyPrintView(view);
             notifyPdfShare("error", "تعذر إنشاء ملف PDF للمشاركة");
         }
     }
@@ -617,10 +873,10 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
-        public void shareDocumentPdf(String html, String jobName, String orientation) {
+        public void printHtmlA4(String html, String jobName, String orientation) {
             runOnUiThread(() -> {
-                final boolean landscape = "landscape".equalsIgnoreCase(orientation);
-                final int cssWidth = landscape ? 1047 : 718;
+                final String resolvedOrientation = "landscape".equalsIgnoreCase(orientation) ? "landscape" : "portrait";
+                final int cssWidth = "landscape".equals(resolvedOrientation) ? 1047 : 718;
                 final WebView printView = new WebView(MainActivity.this);
                 attachPrintView(printView, cssWidth);
                 printView.getSettings().setJavaScriptEnabled(false);
@@ -629,15 +885,20 @@ public class MainActivity extends BridgeActivity {
                 printView.getSettings().setUseWideViewPort(true);
                 printView.getSettings().setLoadWithOverviewMode(false);
                 printView.setWebViewClient(new WebViewClient() {
-                    private boolean shared = false;
+                    private boolean printed = false;
                     @Override public void onPageFinished(WebView view, String url) {
-                        if (shared) return;
-                        shared = true;
-                        afterVisualReady(view, () -> createAndSharePdf(view, jobName, landscape ? "landscape" : "portrait"));
+                        if (printed) return;
+                        printed = true;
+                        afterVisualReady(view, () -> startPrint(view, jobName, resolvedOrientation));
                     }
                 });
                 printView.loadDataWithBaseURL("https://localhost/", html == null ? "" : html, "text/html", "UTF-8", null);
             });
+        }
+
+        @JavascriptInterface
+        public void shareStructuredPdf(String modelJson, String jobName, String orientation) {
+            runOnUiThread(() -> createAndShareStructuredPdf(modelJson, jobName, orientation));
         }
     }
 }

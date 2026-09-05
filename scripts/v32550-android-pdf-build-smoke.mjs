@@ -3,8 +3,8 @@ const java=fs.readFileSync(new URL('../android/app/src/main/java/com/elhafez/tou
 const checks=[
  ['no inaccessible LayoutResultCallback constructor',!java.includes('new PrintDocumentAdapter.LayoutResultCallback()')],
  ['no inaccessible WriteResultCallback constructor',!java.includes('new PrintDocumentAdapter.WriteResultCallback()')],
- ['uses public PrintedPdfDocument',java.includes('new PrintedPdfDocument')&&java.includes('document.startPage(pageIndex)')&&java.includes('document.writeTo(out)')],
- ['PDF renders WebView directly without Bitmap',java.includes('view.draw(canvas)')&&!java.includes('Bitmap.createBitmap')&&!java.includes('drawBitmap(bitmap')],
+ ['structured PDF uses public PdfDocument',java.includes('new PdfDocument()')&&java.includes('document.startPage(info)')&&java.includes('document.writeTo(out)')],
+ ['PDF no longer renders a WebView or Bitmap screenshot',!java.includes('view.draw(canvas)')&&!java.includes('Bitmap.createBitmap')&&!java.includes('drawBitmap(bitmap')],
  ['Java regex escapes are compiler-safe',java.includes('"[^\\\\p{L}\\\\p{N}._-]+"')],
 ];
 for(const [name,pass] of checks)console.log(`${pass?'PASS':'FAIL'} ${name}`);
