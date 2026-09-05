@@ -10,7 +10,7 @@ const css=read('src/styles.css');
 const commercialActions=read('src/commercial/actions.ts');
 const accounting=read('src/accounting/engine.ts')+read('src/accounting/transactions.ts')+read('src/accounting/invoices.ts');
 const checks=[]; const ok=(name,pass)=>{checks.push([name,!!pass]);console.log(`${pass?'PASS':'FAIL'} ${name}`)};
-ok('release is v32.5.53',pkg.version==='32.5.53');
+ok('release retains v32.5.53+ party communications/documents/print behavior',Number(pkg.version.split('.').at(-1))>=53);
 ok('dead legacy WhatsApp template sender is removed',!commercialActions.includes('sendWhatsAppApi'));
 ok('legacy WhatsApp text-template UI is removed',!actions.includes('whatsAppOptions')&&!actions.includes('whatsAppMessage')&&!actions.includes('اختر قالبًا مناسبًا')&&!delegated.includes('whatsAppTemplate')&&!delegated.includes("case 'sendWhatsApp'"));
 ok('party WhatsApp opens the saved number directly',actions.includes('openWhatsApp(type,id,text=')&&actions.includes('native?.openWhatsAppChat')&&actions.includes('https://wa.me/')&&java.includes('openWhatsAppChat(String phone, String text)')&&java.includes('com.whatsapp')&&java.includes('com.whatsapp.w4b'));

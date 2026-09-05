@@ -86,7 +86,7 @@ const statusClass = s => ({ draft: 'gray', posted: 'green', paid: 'green', appro
 const accountTypeLabel = t => ({ asset: 'أصول', liability: 'خصوم', equity: 'حقوق ملكية', revenue: 'إيرادات', expense: 'مصروفات', group: 'مجموعة' })[t] || t;
 const natureLabel = n => ({ debit: 'مدين', credit: 'دائن' })[n] || n;
 const expenseModeLabel = m => ({ paid: 'مدفوع الآن', accrued: 'مستحق', prepaid: 'مصروف مقدم' })[m] || m;
-const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.53', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
+const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.54', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
 const Device = { isMobileHardware() { const coarse = matchMedia?.('(any-pointer: coarse)')?.matches || false, touch = N(navigator.maxTouchPoints) > 0, smallPhysical = Math.min(N(screen.width) || 9999, N(screen.height) || 9999) <= 900, ua = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent); return ua || (touch && coarse && smallPhysical); }, apply() { document.documentElement.classList.toggle('mobile-device', this.isMobileHardware()); } };
 Device.apply();
 const PrefixDefaults = { customer: 'C', supplier: 'S', agent: 'A', lead: 'L', quotation: 'Q', purchaseOrder: 'PO', program: 'U', booking: 'B', service: 'SV', salesInvoice: 'SI', purchaseInvoice: 'PI', creditNote: 'CN', debitNote: 'DN', receipt: 'R', payment: 'P', expense: 'E', journal: 'J', transfer: 'T', commission: 'M', costCenter: 'CC', treasury: 'TR', attachment: 'AT', approval: 'AP', cashCount: 'CT', reconciliation: 'BR', fxRevaluation: 'FX', partyNetting: 'NET' };
@@ -3544,6 +3544,34 @@ const Auth = { user: null, setupMode: false, _loginTemplate: '', _screenDelegati
             localStorage.setItem(APP.session + '_last_username', u);
     }
     catch (_) { } return u; },
+    nativeSessionBridge() { if (APP.offlineEdition !== true)
+        return null; try {
+        const bridge = window.NativeShell;
+        if (bridge?.isNative?.() === true && typeof bridge.getPersistentSessionUserId === 'function')
+            return bridge;
+    }
+    catch (_) { } return null; },
+    persistentSessionId() { try {
+        return S(this.nativeSessionBridge()?.getPersistentSessionUserId?.() || '').trim();
+    }
+    catch (_) {
+        return '';
+    } },
+    persistSession(userId) { const id = S(userId).trim(); if (!id)
+        return this.clearSession(); try {
+        sessionStorage.setItem(APP.session, id);
+    }
+    catch (_) { } try {
+        this.nativeSessionBridge()?.setPersistentSessionUserId?.(id);
+    }
+    catch (_) { } return id; },
+    clearSession() { try {
+        sessionStorage.removeItem(APP.session);
+    }
+    catch (_) { } try {
+        this.nativeSessionBridge()?.clearPersistentSession?.();
+    }
+    catch (_) { } },
     setupHost() { document.getElementById('authBootBrand')?.classList.add('hidden'); const loginForm = document.getElementById('loginForm'); let panel = document.getElementById('setupPanel'); if (!panel) {
         panel = document.createElement('div');
         panel.id = 'setupPanel';
@@ -3607,10 +3635,10 @@ const Auth = { user: null, setupMode: false, _loginTemplate: '', _screenDelegati
                 if (activeBranches.length && this.user.role !== 'admin' && !this.user.permissions?.all && !BranchScope.allowedIds().length) {
                     await ServerStore.logout().catch(() => { });
                     this.user = null;
-                    sessionStorage.removeItem(APP.session);
+                    this.clearSession();
                     return this.showLogin('لا يوجد فرع نشط مسموح لهذا المستخدم. راجع مسؤول النظام');
                 }
-                sessionStorage.setItem(APP.session, this.user.id);
+                this.persistSession(this.user.id);
                 License.check();
                 return this.enter();
             }
@@ -3618,13 +3646,20 @@ const Auth = { user: null, setupMode: false, _loginTemplate: '', _screenDelegati
                 console.error('[auth] authenticated session enter failed', e);
                 await ServerStore.logout().catch(() => { });
                 this.user = null;
-                sessionStorage.removeItem(APP.session);
+                this.clearSession();
                 return this.showLogin('تم التحقق من جلسة الدخول، لكن تعذر تجهيز واجهة النظام. تم إغلاق الجلسة بأمان: ' + (e?.message || e));
             }
         }
     } if (DB.data.meta.setupComplete !== true)
-        return this.showSetup(); const sid = sessionStorage.getItem(APP.session); this.user = byId(DB.data.users, sid); if (this.user && this.user.active !== false) {
+        return this.showSetup(); const sid = sessionStorage.getItem(APP.session) || this.persistentSessionId(); this.user = byId(DB.data.users, sid); if (this.user && this.user.active !== false) {
         try {
+            const activeBranches = (DB.data.branches || []).filter(b => b.active !== false);
+            if (activeBranches.length && this.user.role !== 'admin' && !this.user.permissions?.all && !BranchScope.allowedIds().length) {
+                this.user = null;
+                this.clearSession();
+                return this.showLogin('لا يوجد فرع نشط مسموح لهذا المستخدم. راجع مسؤول النظام');
+            }
+            this.persistSession(this.user.id);
             License.check();
             return this.enter();
         }
@@ -3634,8 +3669,11 @@ const Auth = { user: null, setupMode: false, _loginTemplate: '', _screenDelegati
             toast(e.message, 'error');
         }
     }
-    else
-        this.showLogin(); },
+    else {
+        if (sid)
+            this.clearSession();
+        this.showLogin();
+    } },
     showServerUnavailable(message = 'تعذر الاتصال بخادم الشركة') { const offline = typeof navigator !== 'undefined' && navigator.onLine === false; this.setupMode = false; document.getElementById('login').classList.remove('hidden'); document.getElementById('app').classList.add('hidden'); const f = this.restoreLoginForm(false); if (!f)
         return; f.classList.remove('regular-auth'); f.classList.add('offline-auth'); f.noValidate = true; f.innerHTML = `<div class="offline-auth-card"><div class="offline-product-brand"><img src="./icons/erp-192.png" alt="Elhafez Tourism"><div><small>${esc(APP.manufacturer)}</small><b>${esc(APP.name)}</b><span>${esc(APP.product)}</span></div></div><div class="offline-state-icon">${icon(offline ? 'warning' : 'info', 'md')}</div><span class="login-step">${offline ? 'وضع عدم الاتصال' : 'حالة الاتصال'}</span><h2>${offline ? 'لا يوجد اتصال بالإنترنت' : 'تعذر الوصول إلى خادم الشركة'}</h2><p>${offline ? 'يحتاج النظام للاتصال بالخادم لتحميل ومزامنة بيانات شركتك بأمان.' : 'الخادم غير متاح الآن. لن يفتح النظام نسخة محلية قديمة حفاظًا على سلامة بيانات الشركة.'}</p><div class="offline-company auth-company-brand"><div class="logo auth-company-logo" id="loginFormLogo">ش</div><div class="auth-company-copy"><span>بيانات الشركة</span><b id="loginFormCompanyName">اسم الشركة</b><small>${offline ? 'البيانات محفوظة بأمان — لم يتم فتحها أو تعديلها بدون الخادم' : 'سيتم فتح مساحة العمل عند عودة الخادم'}</small></div></div><div class="offline-status">${icon(offline ? 'warning' : 'info', 'sm')}<span>${esc(message || (offline ? 'لا يوجد اتصال بالإنترنت' : 'تعذر الاتصال بالخادم'))}</span></div><button class="btn primary login-submit" type="button" data-auth-action="retry-init">إعادة المحاولة</button><small class="offline-auto-note">${offline ? 'سيحاول النظام الفتح تلقائيًا عند رجوع الإنترنت.' : 'جرّب مرة أخرى بعد لحظات.'}</small></div>`; f.onsubmit = e => e.preventDefault(); UI.applyBrand(true); UI.injectStaticIcons?.(); f.classList.remove('hidden'); if (offline && !this._onlineRetryBound) {
         this._onlineRetryBound = true;
@@ -3785,7 +3823,7 @@ const Auth = { user: null, setupMode: false, _loginTemplate: '', _screenDelegati
                 this.user = u;
             }
             VendorOwner.applyStatus(ServerStore.vendor, false);
-            sessionStorage.setItem(APP.session, this.user.id);
+            this.persistSession(this.user.id);
             this.rememberUsername(u.username);
             this.enter();
             if (ServerStore.available === true) {
@@ -3943,7 +3981,7 @@ const Auth = { user: null, setupMode: false, _loginTemplate: '', _screenDelegati
             await ServerStore.logout().catch(() => { });
             throw new Error('لا يوجد فرع نشط مسموح لهذا المستخدم. راجع مسؤول النظام');
         }
-        sessionStorage.setItem(APP.session, x.id);
+        this.persistSession(x.id);
         this.rememberUsername(username);
         License.check();
         try {
@@ -3961,13 +3999,13 @@ const Auth = { user: null, setupMode: false, _loginTemplate: '', _screenDelegati
         throw new Error('اسم المستخدم أو كلمة المرور غير صحيحة'); this.user = x; const activeBranches = (DB.data.branches || []).filter(b => b.active !== false); if (activeBranches.length && x.role !== 'admin' && !x.permissions?.all && !BranchScope.allowedIds().length) {
         this.user = null;
         throw new Error('لا يوجد فرع نشط مسموح لهذا المستخدم. راجع مسؤول النظام');
-    } sessionStorage.setItem(APP.session, x.id); this.rememberUsername(username); try {
+    } this.persistSession(x.id); this.rememberUsername(username); try {
         this.enter();
     }
     catch (e) {
         console.error('[auth] local login UI boot failed', e);
         this.user = null;
-        sessionStorage.removeItem(APP.session);
+        this.clearSession();
         this.showLogin();
         throw new Error('تم التحقق من بيانات الدخول، لكن تعذر تجهيز واجهة النظام: ' + (e?.message || e));
     } x.lastLogin = now(); DB.log('login', 'user', x.id, 'تسجيل دخول'); DB.save(false).catch(e => console.error('[auth] local post-login audit save failed', e)); if (x.mustChangePassword)
@@ -3990,7 +4028,7 @@ const Auth = { user: null, setupMode: false, _loginTemplate: '', _screenDelegati
         DB.log('logout', 'user', this.user.id, 'تسجيل خروج');
         DB.save(false);
     } if (ServerStore.available === true)
-        await ServerStore.logout(); sessionStorage.removeItem(APP.session); this.user = null; location.reload(); },
+        await ServerStore.logout(); this.clearSession(); this.user = null; location.reload(); },
     can(page, action = 'view') { if ((page === 'vendorowner' || page === 'market-readiness') && !VendorOwner.enabled)
         return false; if (!Commercial.pageAllowed(page))
         return false; if (action !== 'view' && License.expired())
@@ -17035,7 +17073,7 @@ if (uxModal)
         if (init?.headers)
             new Headers(init.headers).forEach((v, k) => h.set(k, v));
         h.set('X-ERP-Mobile', 'android');
-        h.set('X-ERP-Mobile-Version', '32.5.53-OFFLINE');
+        h.set('X-ERP-Mobile-Version', '32.5.54-OFFLINE');
         return h;
     };
     if (!offlineEdition)
@@ -17556,7 +17594,7 @@ if (uxModal)
         releaseCheckBusy = true;
         lastReleaseCheck = now;
         try {
-            const response = await nativeFetch(`${API_BASE}/api/health?_=${now}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'X-ERP-Mobile': 'android', 'X-ERP-Mobile-Version': '32.5.53' } });
+            const response = await nativeFetch(`${API_BASE}/api/health?_=${now}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'X-ERP-Mobile': 'android', 'X-ERP-Mobile-Version': '32.5.54' } });
             if (!response.ok)
                 return false;
             const payload = await response.json();

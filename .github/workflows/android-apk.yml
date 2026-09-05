@@ -20,6 +20,7 @@ on:
       - 'scripts/v32551-clean-pdf-share-smoke.mjs'
       - 'scripts/v32552-native-backup-delivery-smoke.mjs'
       - 'scripts/v32553-party-comms-docs-print-smoke.mjs'
+      - 'scripts/v32554-persistent-android-session-smoke.mjs'
       - 'scripts/all-offline-node-smokes.mjs'
       - '.github/workflows/android-apk.yml'
 jobs:
@@ -54,6 +55,7 @@ jobs:
           node scripts/v32551-clean-pdf-share-smoke.mjs
           node scripts/v32552-native-backup-delivery-smoke.mjs
           node scripts/v32553-party-comms-docs-print-smoke.mjs
+          node scripts/v32554-persistent-android-session-smoke.mjs
       - name: Restore release signing key
         if: env.KEYSTORE_B64 != ''
         shell: bash

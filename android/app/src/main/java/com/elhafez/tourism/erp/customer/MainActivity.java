@@ -57,6 +57,8 @@ import org.json.JSONArray;
 public class MainActivity extends BridgeActivity {
     private static final int PICK_PHONE_REQUEST = 4317;
     private static final int BACKUP_STORAGE_PERMISSION_REQUEST = 4318;
+    private static final String AUTH_PREFS = "elhafez_offline_auth";
+    private static final String AUTH_USER_KEY = "persistent_user_id";
     private String pendingContactField = "";
     private final Map<String, BackupTransfer> backupTransfers = new HashMap<>();
     private String pendingBackupDownloadId = "";
@@ -125,6 +127,31 @@ public class MainActivity extends BridgeActivity {
 
         @JavascriptInterface
         public String platform() { return "android"; }
+
+        @JavascriptInterface
+        public String getPersistentSessionUserId() {
+            try {
+                return getSharedPreferences(AUTH_PREFS, MODE_PRIVATE).getString(AUTH_USER_KEY, "");
+            } catch (Exception ignored) {
+                return "";
+            }
+        }
+
+        @JavascriptInterface
+        public void setPersistentSessionUserId(String userId) {
+            String clean = userId == null ? "" : userId.trim();
+            if (clean.isEmpty() || clean.length() > 160 || !clean.matches("[A-Za-z0-9._:-]+")) return;
+            try {
+                getSharedPreferences(AUTH_PREFS, MODE_PRIVATE).edit().putString(AUTH_USER_KEY, clean).commit();
+            } catch (Exception ignored) { }
+        }
+
+        @JavascriptInterface
+        public void clearPersistentSession() {
+            try {
+                getSharedPreferences(AUTH_PREFS, MODE_PRIVATE).edit().remove(AUTH_USER_KEY).commit();
+            } catch (Exception ignored) { }
+        }
 
         @JavascriptInterface
         public void openRuntime(String url) {

@@ -6,7 +6,7 @@ const pages=read('src/commercial/pages.ts');
 const main=read('android/app/src/main/java/com/elhafez/tourism/erp/customer/MainActivity.java');
 const manifest=read('android/app/src/main/AndroidManifest.xml');
 const checks=[
-  ['release version advanced while backup behavior remains protected', pkg.version==='32.5.53'],
+  ['release version advanced while backup behavior remains protected', Number(pkg.version.split('.').at(-1))>=53],
   ['one canonical restorable backup builder preserved', portable.includes('formatVersion:4') && portable.includes('async verifyPackage(pkg)') && portable.includes('async restorePackage(pkg)')],
   ['android native backup bridge registered', main.includes('addJavascriptInterface(new NativeBackupBridge(), "NativeBackup")')],
   ['chunked backup transfer avoids giant single bridge payload', portable.includes('chunkSize=192*1024') && portable.includes('appendBackupChunk') && main.includes('appendBackupChunk(String id, String base64Chunk)')],
