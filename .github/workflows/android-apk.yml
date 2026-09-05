@@ -14,6 +14,7 @@ on:
       - 'scripts/offline-whatsapp-pdf-smoke.mjs'
       - 'scripts/unified-party-accounting-smoke.mjs'
       - 'scripts/v32546-print-shortcuts-smoke.mjs'
+      - 'scripts/v32547-mobile-clean-smoke.mjs'
       - 'scripts/all-offline-node-smokes.mjs'
       - '.github/workflows/android-apk.yml'
 jobs:
@@ -39,8 +40,10 @@ jobs:
         run: npm run test:offline-all
       - name: Build bundled ERP and sync Android
         run: npm run mobile:sync
-      - name: Verify print and shortcut regression guards
-        run: node scripts/v32546-print-shortcuts-smoke.mjs
+      - name: Verify print, keyboard, shortcuts and contacts regression guards
+        run: |
+          node scripts/v32546-print-shortcuts-smoke.mjs
+          node scripts/v32547-mobile-clean-smoke.mjs
       - name: Restore release signing key
         if: env.KEYSTORE_B64 != ''
         shell: bash

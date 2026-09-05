@@ -863,3 +863,12 @@ body.sidebar-auto .sidebar:not(:hover) .workspace-nav-section>summary{display:no
 .umrah-nav-group-title{display:flex;align-items:center;gap:8px;justify-content:space-between}
 .umrah-nav-group-body{padding-top:3px}
 @media(max-width:780px){.workspace-nav-chevron{width:10px;height:10px}.workspace-accordion details>summary{min-height:44px;display:flex;align-items:center}}
+
+/* v32.5.47 — clean native contact picker + collapsible per-user shortcuts. */
+.phone-input-wrap{display:flex;align-items:stretch;gap:8px;width:100%}
+.phone-input-wrap>input{flex:1;min-width:0}
+.phone-contact-pick{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;border:1px solid var(--line,#d7dce3);background:var(--surface,#fff);color:var(--ink,#1d2a3b);border-radius:10px;padding:0 11px;font:inherit;cursor:pointer}
+.phone-contact-pick .svg-icon{width:17px;height:17px}
+.shortcut-nav-group{padding-top:0}
+.shortcut-nav-details{margin-top:0}
+@media(max-width:780px){.phone-input-wrap{gap:6px}.phone-contact-pick{padding:0 10px}.phone-contact-pick span{display:none}}

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
+import android.database.Cursor;
+import android.provider.ContactsContract;
 import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +32,8 @@ import java.io.FileOutputStream;
 import org.json.JSONObject;
 
 public class MainActivity extends BridgeActivity {
+    private static final int PICK_PHONE_REQUEST = 4317;
+    private String pendingContactField = "";
     @Override
     public void onCreate(Bundle savedInstanceState) {
         // Required when a WebView is rendered into an off-screen bitmap/PDF.
@@ -101,6 +105,17 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
+        public void pickContactPhone(String fieldName) {
+            runOnUiThread(() -> {
+                try {
+                    pendingContactField = fieldName == null ? "" : fieldName.trim();
+                    Intent pick = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
+                    startActivityForResult(pick, PICK_PHONE_REQUEST);
+                } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface
         public void reload() {
             runOnUiThread(() -> getBridge().getWebView().reload());
         }
@@ -109,6 +124,32 @@ public class MainActivity extends BridgeActivity {
         public void exitApp() {
             runOnUiThread(MainActivity.this::finishAndRemoveTask);
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != PICK_PHONE_REQUEST || resultCode != RESULT_OK || data == null || data.getData() == null) return;
+        Uri uri = data.getData();
+        String phone = "", name = "";
+        try (Cursor cursor = getContentResolver().query(uri,
+                new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME},
+                null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int phoneIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+                int nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
+                if (phoneIndex >= 0) phone = cursor.getString(phoneIndex);
+                if (nameIndex >= 0) name = cursor.getString(nameIndex);
+            }
+        } catch (Exception ignored) { }
+        try {
+            JSONObject detail = new JSONObject();
+            detail.put("field", pendingContactField == null ? "" : pendingContactField);
+            detail.put("phone", phone == null ? "" : phone);
+            detail.put("name", name == null ? "" : name);
+            dispatchNativeEvent("erp:native-contact-picked", detail.toString());
+        } catch (Exception ignored) { }
+        pendingContactField = "";
     }
 
     private void startPrint(WebView webView, String jobName) {
@@ -136,18 +177,19 @@ public class MainActivity extends BridgeActivity {
         try { if (view != null) view.destroy(); } catch (Exception ignored) { }
     }
 
-    private void attachPrintView(WebView view) {
+    private void attachPrintView(WebView view) { attachPrintView(view, 794); }
+
+    private void attachPrintView(WebView view, int initialWidth) {
         try {
             ViewGroup root = findViewById(android.R.id.content);
             if (root == null || view.getParent() != null) return;
-            // Keep the print WebView VISIBLE and attached so Chromium actually paints it.
-            // Put it behind the main Capacitor view instead of translating it off-screen.
+            // Keep the print WebView attached and visible behind the app so Chromium paints it.
             view.setBackgroundColor(Color.WHITE);
             view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
             view.setClickable(false);
             view.setFocusable(false);
             int initialHeight = Math.max(1200, root.getHeight() > 0 ? root.getHeight() : 1200);
-            root.addView(view, 0, new ViewGroup.LayoutParams(794, initialHeight));
+            root.addView(view, 0, new ViewGroup.LayoutParams(Math.max(320, initialWidth), initialHeight));
         } catch (Exception ignored) { }
     }
 
@@ -229,36 +271,48 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void shareHtmlAsPdf(WebView view, String jobName, String phone, String message) {
-        shareHtmlAsPdf(view, jobName, phone, message, 0);
+        shareHtmlAsPdf(view, jobName, phone, message, "portrait", 0);
     }
 
-    private void shareHtmlAsPdf(WebView view, String jobName, String phone, String message, int attempt) {
-        String safe = (jobName == null || jobName.trim().isEmpty()) ? "document" : jobName.replaceAll("[^\\p{L}\\p{N}._-]+", "_");
+    private void shareHtmlAsPdf(WebView view, String jobName, String phone, String message, String orientation) {
+        shareHtmlAsPdf(view, jobName, phone, message, orientation, 0);
+    }
+
+    private void shareHtmlAsPdf(WebView view, String jobName, String phone, String message, String orientation, int attempt) {
+        String safe = (jobName == null || jobName.trim().isEmpty()) ? "document" : jobName.replaceAll("[^\p{L}\p{N}._-]+", "_");
         File file = new File(getCacheDir(), safe + "_" + System.currentTimeMillis() + ".pdf");
-        final int pageWidth = 595, pageHeight = 842, margin = 28, renderWidth = pageWidth - (margin * 2);
+        final boolean landscape = "landscape".equalsIgnoreCase(orientation);
+        final int pageWidth = landscape ? 842 : 595;
+        final int pageHeight = landscape ? 595 : 842;
+        final int margin = 28;
+        final int cssContentWidth = landscape ? 1047 : 718;
+        final float density = Math.max(1f, getResources().getDisplayMetrics().density);
+        final int renderWidth = Math.max(cssContentWidth, Math.round(cssContentWidth * density));
+        final float pdfContentWidth = pageWidth - (margin * 2f);
+        final float pdfContentHeight = pageHeight - (margin * 2f);
+        final float scale = pdfContentWidth / renderWidth;
+        final float sourcePageHeight = pdfContentHeight / scale;
         PdfDocument pdf = new PdfDocument();
         try {
             view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+            view.getSettings().setUseWideViewPort(true);
+            view.getSettings().setLoadWithOverviewMode(false);
             ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
             if (layoutParams != null) { layoutParams.width = renderWidth; view.setLayoutParams(layoutParams); }
             int widthSpec = View.MeasureSpec.makeMeasureSpec(renderWidth, View.MeasureSpec.EXACTLY);
             int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
             view.measure(widthSpec, heightSpec);
             int measuredHeight = Math.max(1, view.getMeasuredHeight());
-            int chromiumHeight = Math.max(1, Math.round(view.getContentHeight() * view.getScale()));
+            int chromiumHeight = Math.max(1, Math.round(view.getContentHeight() * density));
             int contentHeight = Math.max(measuredHeight, chromiumHeight);
             if (contentHeight <= 2) throw new IllegalStateException("pdf_content_not_ready");
             view.measure(widthSpec, View.MeasureSpec.makeMeasureSpec(contentHeight, View.MeasureSpec.EXACTLY));
             view.layout(0, 0, renderWidth, contentHeight);
+            view.scrollTo(0, 0);
 
-            float scale = 1f;
-            float sourcePageHeight = pageHeight - (margin * 2f);
             int pageCount = Math.max(1, (int) Math.ceil(contentHeight / sourcePageHeight));
             boolean firstPageHasInk = false;
-
             for (int i = 0; i < pageCount; i++) {
-                // Rasterize the WebView into a software bitmap first. Chromium/WebView can
-                // otherwise return an empty frame when drawn directly into PdfDocument.
                 Bitmap bitmap = Bitmap.createBitmap(pageWidth, pageHeight, Bitmap.Config.ARGB_8888);
                 Canvas bitmapCanvas = new Canvas(bitmap);
                 bitmapCanvas.drawColor(Color.WHITE);
@@ -269,7 +323,6 @@ public class MainActivity extends BridgeActivity {
                 bitmapCanvas.translate(0, -(i * sourcePageHeight));
                 view.draw(bitmapCanvas);
                 bitmapCanvas.restore();
-
                 if (i == 0) firstPageHasInk = bitmapHasInk(bitmap);
 
                 PdfDocument.PageInfo info = new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, i + 1).create();
@@ -283,7 +336,7 @@ public class MainActivity extends BridgeActivity {
             if (!firstPageHasInk) {
                 try { pdf.close(); } catch (Exception ignored) { }
                 if (attempt < 2) {
-                    view.postDelayed(() -> afterVisualReady(view, () -> shareHtmlAsPdf(view, jobName, phone, message, attempt + 1)), 220);
+                    view.postDelayed(() -> afterVisualReady(view, () -> shareHtmlAsPdf(view, jobName, phone, message, orientation, attempt + 1)), 220);
                     return;
                 }
                 throw new IllegalStateException("pdf_render_blank");
@@ -297,7 +350,7 @@ public class MainActivity extends BridgeActivity {
         } catch (Exception e) {
             try { pdf.close(); } catch (Exception ignored) { }
             if (attempt < 2 && "pdf_content_not_ready".equals(e.getMessage())) {
-                view.postDelayed(() -> afterVisualReady(view, () -> shareHtmlAsPdf(view, jobName, phone, message, attempt + 1)), 220);
+                view.postDelayed(() -> afterVisualReady(view, () -> shareHtmlAsPdf(view, jobName, phone, message, orientation, attempt + 1)), 220);
                 return;
             }
             destroyPrintView(view);
@@ -327,6 +380,32 @@ public class MainActivity extends BridgeActivity {
                         if (printed) return;
                         printed = true;
                         afterVisualReady(view, () -> startPrint(view, jobName));
+                    }
+                });
+                printView.loadDataWithBaseURL("https://localhost/", html == null ? "" : html, "text/html", "UTF-8", null);
+            });
+        }
+
+        @JavascriptInterface
+        public void sharePdfA4(String html, String jobName, String phone, String message, String orientation) {
+            runOnUiThread(() -> {
+                final boolean landscape = "landscape".equalsIgnoreCase(orientation);
+                final int cssWidth = landscape ? 1047 : 718;
+                final float density = Math.max(1f, getResources().getDisplayMetrics().density);
+                final WebView printView = new WebView(MainActivity.this);
+                attachPrintView(printView, Math.round(cssWidth * density));
+                printView.getSettings().setJavaScriptEnabled(false);
+                printView.getSettings().setDomStorageEnabled(false);
+                printView.getSettings().setLoadsImagesAutomatically(true);
+                printView.getSettings().setUseWideViewPort(true);
+                printView.getSettings().setLoadWithOverviewMode(false);
+                printView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+                printView.setWebViewClient(new WebViewClient() {
+                    private boolean shared = false;
+                    @Override public void onPageFinished(WebView view, String url) {
+                        if (shared) return;
+                        shared = true;
+                        afterVisualReady(view, () -> shareHtmlAsPdf(view, jobName, phone, message, landscape ? "landscape" : "portrait"));
                     }
                 });
                 printView.loadDataWithBaseURL("https://localhost/", html == null ? "" : html, "text/html", "UTF-8", null);

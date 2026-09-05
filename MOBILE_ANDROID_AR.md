@@ -1,8 +1,8 @@
-# Elhafez Tourism Offline Android — v32.5.46
+# Elhafez Tourism Offline Android — v32.5.47
 
 ## هوية التطبيق
 - App ID: `com.elhafez.tourism.erp.offline`
-- Version: `32.5.46`
+- Version: `32.5.47`
 - Version Code: `32546`
 - Web bundle: `dist` كامل داخل التطبيق.
 - لا Company Code ولا Owner Center ولا Railway أثناء التشغيل.

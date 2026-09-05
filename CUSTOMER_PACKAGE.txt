@@ -1,4 +1,4 @@
-Elhafez Technology — Tourism & Umrah ERP v32.5.46 — Full Offline Android Release
+Elhafez Technology — Tourism & Umrah ERP v32.5.47 — Full Offline Android Release
 Mode: OFFLINE ONLY
 App ID: com.elhafez.tourism.erp.offline
 Runtime: local device storage (IndexedDB / WebView)

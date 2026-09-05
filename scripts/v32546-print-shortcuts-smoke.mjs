@@ -13,7 +13,7 @@ const checks=[
  ['statement narrative has explicit compact party-netting wording',narratives.includes("l.refType==='party-netting'")&&narratives.includes('عكس مقاصة')],
  ['unified statement separates role into its own print column',printing.includes('<th>البيان</th><th>الدور</th>')&&printing.includes('class="print-role-chip"')],
  ['internal control account appears only in full statement mode',printing.includes('print-internal-detail')&&printing.includes("opts.level==='full'" )],
- ['WhatsApp PDF uses native A4 content width without desktop scale-down',android.includes('renderWidth = pageWidth - (margin * 2)')&&android.includes('float scale = 1f')],
+ ['WhatsApp PDF uses A4 CSS viewport without desktop scale-down',android.includes('cssContentWidth = landscape ? 1047 : 718')&&android.includes('pdfContentWidth / renderWidth')&&android.includes('getDisplayMetrics().density')],
  ['WhatsApp PDF retains multi-page rendering',android.includes('Math.ceil(contentHeight / sourcePageHeight)')&&android.includes('for (int i = 0; i < pageCount; i++)')],
  ['shortcut toggle exists in topbar and is delegated',html.includes('data-ui-toggle-shortcut="1"')&&delegated.includes("[data-ui-toggle-shortcut]" )],
  ['shortcuts are per-user and capped',ui.includes('elhafez-shortcuts:${Auth.user?.id')&&ui.includes('.slice(0,12)')&&ui.includes('اختصاراتي')],

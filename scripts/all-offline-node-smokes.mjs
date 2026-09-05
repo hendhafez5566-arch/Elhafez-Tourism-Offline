@@ -13,6 +13,7 @@ const scripts=[
   'offline-whatsapp-pdf-smoke.mjs',
   'unified-party-accounting-smoke.mjs',
   'v32546-print-shortcuts-smoke.mjs',
+  'v32547-mobile-clean-smoke.mjs',
   'system-ux-smoke.mjs',
   'clean-ui-smoke.mjs',
   'rocket-360-performance-smoke.mjs'

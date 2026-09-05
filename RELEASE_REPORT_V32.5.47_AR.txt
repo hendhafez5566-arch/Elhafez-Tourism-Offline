@@ -1,0 +1,67 @@
+Elhafez Tourism v32.5.47 OFFLINE — تقرير الإصدار النظيف
+=========================================================
+
+القاعدة
+------
+تم تطوير نفس نسخة v32.5.46 OFFLINE بدون إعادة بناء المشروع من الصفر، وبدون تغيير دورة المحاسبة أو بيانات الطرف الموحد أو منطق المقاصة.
+
+التعديلات المنفذة
+-----------------
+1) WhatsApp PDF / A4
+- إصلاح سبب القص/الصفحة شبه البيضاء على شاشات Android عالية الكثافة.
+- WebView الخاص بالـPDF أصبح يستخدم عرض CSS ثابتًا متوافقًا مع A4 ثم يحوله إلى نقاط PDF حسب كثافة الشاشة.
+- دعم Portrait وLandscape.
+- المستند الطويل يظل متعدد الصفحات.
+- استمرار فحص الصفحة البيضاء وإعادة المحاولة قبل المشاركة.
+- لم تتم العودة إلى PrintDocumentAdapter callbacks التي سببت أخطاء Java سابقًا.
+
+2) لوحة مفاتيح Android
+- حقول الاسم والنص تطلب صراحة autocomplete/spellcheck/autocorrect/autocapitalize/inputmode المناسب.
+- نفس السياسة تطبق مركزيًا عند إنشاء الحقول وعند تحسين DOM لاحقًا.
+- ملاحظة: ظهور شريط الاقتراحات نفسه يظل خاضعًا أيضًا لإعدادات لوحة المفاتيح (مثل Gboard) على الجهاز.
+
+3) اختصاراتي
+- أصبحت قائمة قابلة للفتح/الطي بنفس نمط مجموعات الحج والعمرة.
+- عند فتح مجموعة Sidebar أخرى تغلق المجموعة المفتوحة السابقة.
+- لا يوجد "آخر استخدام".
+- الاختصارات ما زالت محفوظة لكل مستخدم وبحد أقصى 12.
+
+4) الهاتف / واتساب
+- حقول الهاتف وواتساب للعميل والمورد والمندوب تدعم الكتابة اليدوية كما هي.
+- داخل Android يظهر زر لاختيار رقم من منتقي جهات الاتصال الرسمي للنظام.
+- لا توجد صلاحية READ_CONTACTS ولا READ_CALL_LOG؛ التطبيق يحصل فقط على الرقم الذي يختاره المستخدم.
+- تمت إضافة حقل واتساب للمندوب أيضًا ليتطابق مع العميل والمورد والطرف الموحد.
+
+ما لم يتغير
+-----------
+- المحاسبة والقيود والمقاصة.
+- منطق العميل/المورد/المندوب والطرف الموحد.
+- سجل النشاط ما زال يعرض 1000 حركة كحد أقصى كما تم الاتفاق.
+- النسخة Offline فقط، ولا يوجد Railway أو Owner Center dependency.
+- App ID: com.elhafez.tourism.erp.offline
+
+الاختبارات المنفذة
+------------------
+- TypeScript build: PASS
+- Offline Node suites: 13/13 PASS
+- Browser suites: 6/6 PASS
+- Routes tested: 49/49 PASS
+- Browser console/page errors: 0
+- Accounting smoke: 31 journals / 0 imbalanced
+- Advanced accounting: 28 journals / 0 imbalanced
+- Umrah workflow: 9 journals / 0 imbalanced
+- Unified party + netting + delete/recreate role: PASS
+- v32.5.47 focused mobile clean gate: 10/10 PASS
+- Source/dist parity: PASS
+- Module size gate: PASS
+
+Android native compile gate
+---------------------------
+تمت محاولة تشغيل Gradle compileDebugJavaWithJavac محليًا، لكن بيئة التنفيذ لم تستطع تنزيل Gradle 8.14.3 بسبب عدم وجود اتصال إنترنت (UnknownHost services.gradle.org).
+لذلك الـJava/APK compile النهائي يبقى بوابة GitHub Actions الموجودة داخل المشروع؛ الـWorkflow محدث ليشغل اختبارات v32.5.47 قبل بناء APK.
+
+الإصدار
+-------
+Package: 32.5.47
+Android versionCode: 32547
+Android versionName: 32.5.47
