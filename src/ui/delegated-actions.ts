@@ -5,6 +5,7 @@ const UIDelegatedActions:any={
   let el:HTMLElement|null;
   if((el=hit('[data-remove-parent]'))){e.preventDefault();el.parentElement?.remove();return true}
   if((el=hit('[data-ui-back-home]'))){e.preventDefault();ui.backHome();return true}
+  if((el=hit('[data-ui-toggle-shortcut]'))){e.preventDefault();ui.toggleShortcut();return true}
   if((el=hit('[data-ui-page]'))){const page=el.dataset.uiPage;if(page){e.preventDefault();ui.openPage(page);return true}}
   if((el=hit('[data-settings-tab]'))){const tab=el.dataset.settingsTab;if(tab){e.preventDefault();ui.openSettingsTab(tab);return true}}
   if((el=hit('[data-ui-filter-scope]'))){const scope=el.dataset.uiFilterScope,key=el.dataset.uiFilterKey||'all',targetScope=el.dataset.uiFilterTargetScope,targetKey=el.dataset.uiFilterTargetKey||key,targetPage=el.dataset.uiFilterTargetPage,targetKind=el.dataset.uiFilterTargetKind;if(scope){e.preventDefault();ui.listFilters=ui.listFilters||{};ui.listFilters[scope]=key;if(targetScope)ui.listFilters[targetScope]=targetKey;if(targetPage){if(targetKind==='umrah')UmrahCore_UI.openPage(targetPage);else ui.openPage(targetPage)}else ui.renderCurrent();return true}}

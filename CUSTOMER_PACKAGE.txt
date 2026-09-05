@@ -1,14 +1,6 @@
-Elhafez Technology — Tourism & Umrah ERP v32.5.45 — Modular + Entity-Backed Hardened Customer Runtime
-Company code: CUSTOMER
-
-نسخة العميل لا تعمل بإخفاء زر Vendor فقط.
-عند بناء Customer runtime بواسطة Dockerfile.customer يتم تشغيل scripts/prepare-customer-build.mjs قبل TypeScript compilation، فيتم استبدال Vendor Admin server/UI بنسخ Stub غير إدارية ثم يُنسخ إلى صورة التشغيل النهائية compiled runtime فقط.
-
-غير موجود في Runtime العميل:
-- Vendor Center / Owner UI
-- Vendor Admin API
-- Railway provisioning/deployment administration
-- مفاتيح المالك الخاصة
-
-الموجود فقط هو License/Update Agent اللازم للتحقق من الترخيص واستقبال التحديث/الحالة من مركز المالك.
-بيانات كل شركة تبقى في قاعدة بياناتها المعزولة ولا تُنقل إلى شركة أخرى.
+Elhafez Technology — Tourism & Umrah ERP v32.5.46 — Full Offline Android Release
+Mode: OFFLINE ONLY
+App ID: com.elhafez.tourism.erp.offline
+Runtime: local device storage (IndexedDB / WebView)
+No Railway / Owner Center / Company Code required during operation.
+Key release changes: concise centralized printing, A4 multi-page WhatsApp PDF, unified-party accounting preserved, per-user shortcuts, activity UI cap remains 1000.

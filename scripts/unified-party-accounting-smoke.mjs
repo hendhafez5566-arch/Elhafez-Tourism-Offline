@@ -38,7 +38,7 @@ const ar=Number(Accounting.partyReceivable('customer',customer.id).EGP||0),ap=Nu
 if(Math.abs(ar)>.01||Math.abs(ap-10000)>.01)throw new Error('Control accounts are incorrect after netting');
 const journal=DB.data.journals.find(j=>j.id===net.journalId);const jd=(journal?.lines||[]).reduce((z,l)=>z+Number(l.baseDebit||0),0),jc=(journal?.lines||[]).reduce((z,l)=>z+Number(l.baseCredit||0),0);
 if(!journal||Math.abs(jd-jc)>.01||!journal.lines.some(l=>l.accountId==='2100'&&Number(l.debit)===15000)||!journal.lines.some(l=>l.accountId==='1200'&&Number(l.credit)===15000))throw new Error('Netting journal is not the expected balanced Dr AP / Cr AR entry');
-const statement=Statements.unified(group.id,'',date,{level:'short'});if(!statement.includes('كشف حساب شامل للطرف')||!statement.includes('الصافي المعروض لأغراض البيان فقط')||!statement.includes('مقاصة اختبار'))throw new Error('Unified statement is missing roles/netting disclosure');
+const statement=Statements.unified(group.id,'',date,{level:'short'});if(!statement.includes('كشف حساب شامل للطرف')||!statement.includes('الصافي للعرض فقط')||!statement.includes('مقاصة')||!statement.includes('<th>الدور</th>'))throw new Error('Unified statement is missing compact role/netting disclosure');
 await UnifiedParty.reverseNetting(net.id,'اختبار عكس المقاصة');
 if(net.status!=='reversed')throw new Error('Netting reversal status failed');
 if(Math.abs(Invoices.remaining(sale)-15000)>.01||sale.status!=='open')throw new Error('Customer invoice did not reopen after netting reversal');

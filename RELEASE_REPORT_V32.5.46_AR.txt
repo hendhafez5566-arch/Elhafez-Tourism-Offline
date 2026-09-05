@@ -1,0 +1,107 @@
+Elhafez Tourism v32.5.46 OFFLINE — تقرير الإصدار النظيف
+=========================================================
+
+المرجع:
+- مبني على v32.5.45 OFFLINE PDF/Role Fix.
+- نفس المشروع؛ لا إعادة بناء من الصفر.
+- لا Database Migration.
+- لا تغيير في CSS أو التصميم العام.
+
+التعديلات المقبولة
+------------------
+1) طبقة طباعة مركزية مختصرة:
+- الفواتير والسندات وأوامر الشراء والتقارير تستخدم بيانًا مختصرًا افتراضيًا بدل تكرار رقم المستند والطرف والحساب داخل نفس السطر.
+- البيانات المحاسبية الأصلية لم تتغير؛ التعديل في العرض/الطباعة فقط.
+- كشف الحساب الشامل يفصل «الدور» في عمود مستقل.
+- الحساب الرقابي/التفاصيل الداخلية تظهر فقط في الوضع التفصيلي عند الحاجة.
+- الصافي الشامل يظل معلوماتيًا ولا يعتبر مقاصة إلا بعد مستند مقاصة رسمي.
+
+2) WhatsApp PDF A4:
+- رندر Android أصبح بعرض A4 الحقيقي 595x842 مع هوامش 28.
+- لا يوجد تصغير لعرض Desktop طويل داخل صفحة واحدة.
+- المستند الطويل يقسم إلى عدة صفحات A4.
+- حماية PDF الأبيض وRetry وFileProvider/WhatsApp/WhatsApp Business/Share chooser باقية.
+
+3) «اختصاراتي» فقط:
+- زر نجمة للصفحة الحالية.
+- حتى 12 اختصارًا لكل مستخدم.
+- التخزين محلي لكل مستخدم.
+- الاختصارات تظهر أعلى القائمة بعد الرئيسية.
+- لم تتم إضافة «آخر استخدام» منعًا للتكرار والزحمة.
+
+4) سجل النشاط:
+- لم يتم توسيعه.
+- حد العرض في الواجهة ما زال 1000 حركة كما تم الاتفاق.
+
+5) Party / المحاسبة:
+- العميل/المورد/المندوب الموحد والمقاصة الرسمية محفوظان كما هما.
+- حذف دور بلا حركات ثم إعادة إنشائه ما زال يعمل.
+- الدور صاحب القيود/المستندات يظل محميًا من الحذف.
+
+الملفات المصدرية الأساسية المعدلة
+---------------------------------
+- index.html
+- src/finance/insights.ts
+- src/reports/printing.ts
+- src/ui/ui.ts
+- src/ui/delegated-actions.ts
+- src/core/runtime.ts (رفع الإصدار فقط)
+- src/mobile.ts (رفع الإصدار فقط)
+- android/app/src/main/java/com/elhafez/tourism/erp/customer/MainActivity.java
+- android/app/build.gradle (versionCode/versionName)
+- .github/workflows/android-apk.yml
+- package.json / package-lock.json
+- وثائق Offline النشطة
+- scripts/v32546-print-shortcuts-smoke.mjs
+- scripts/all-offline-node-smokes.mjs
+- تحديث اختبارات Regression القائمة الخاصة بالمقاصة وWhatsApp PDF
+
+الملفات المولدة
+---------------
+- dist/* أعيد بناؤها من Source.
+- android/app/src/main/assets/public/* تمت مزامنتها مع dist النهائي.
+- تم التأكد من تطابق Android web assets مع dist.
+
+نتائج الفحص
+-----------
+- npm run build:offline: PASS
+- Offline Node QA Gate: 12/12 suites PASS
+  * accounting-smoke
+  * advanced-accounting-smoke
+  * contracts-inventory-smoke
+  * umrah-workflow-smoke
+  * cancel-integrity-smoke
+  * offline-copy-smoke
+  * offline-whatsapp-pdf-smoke
+  * unified-party-accounting-smoke
+  * v32546-print-shortcuts-smoke
+  * system-ux-smoke
+  * clean-ui-smoke
+  * rocket-360-performance-smoke
+- Browser QA: 6/6 PASS
+- Routes tested: 49/49 PASS
+- Console Errors: 0
+- Page Errors: 0
+- Accounting: 31 journals / 0 imbalanced / 0 critical audit
+- Advanced Accounting: 28 journals / 0 imbalanced / 0 critical audit
+- Umrah workflow: 9 journals / 0 imbalanced
+- Contracts/Inventory: PASS / 0 imbalanced
+- Cancellation integrity: PASS
+- Unified-party netting + reversal + role delete/recreate: PASS / 0 imbalanced
+- src/dist parity: PASS
+- Module size gate: PASS
+- Android web asset parity with dist: PASS
+- Activity visible cap 1000: PASS
+- Login guards 4/4: PASS
+- !important: 37 in src/styles.css / 39 in src total
+- CSS SHA-256 unchanged from v32.5.45:
+  c4732aeb5f2e5d0903bb8df7bea6506707bb8f0aae8994b6555f76536a251ce6
+
+ملاحظة Android
+--------------
+- لم يتم تشغيل Gradle الكامل داخل بيئة إعداد الحزمة لأن Gradle 8.14.3 غير موجود محليًا والبيئة لا تستخدم تنزيلات خارجية لهذه البوابة.
+- GitHub Action محدثة لتشغل بوابة Offline QA ثم mobile:sync ثم assembleDebug/assembleRelease، ولذلك يجب اعتماد نجاح GitHub Actions قبل تثبيت APK النهائي على أجهزة العملاء.
+
+الحكم
+-----
+الإصدار v32.5.46 هو Checkpoint Offline نظيف لهذه الحزمة. لا توجد تغييرات محاسبية جديدة ولا ترقيعات شاشة-بشاشة؛ الطباعة والاختصارات منفذتان من طبقات مركزية مشتركة.

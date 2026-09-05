@@ -1,8 +1,8 @@
-Elhafez Tourism v32.5.45 OFFLINE FULL COPY
-- Full local Android copy derived from v32.5.45.
-- No Railway runtime, Owner Center URL, or Company Code required at runtime.
-- Same business modules, unified party/AR-AP netting, accounting and Umrah logic.
-- WhatsApp PDF sharing uses the v32.5.45 native Android implementation.
-- Separate Android applicationId: com.elhafez.tourism.erp.offline
-- Local storage namespace is separate from the online customer app.
-- GitHub Actions builds APK without Railway variables.
+Elhafez Tourism v32.5.46 OFFLINE FULL COPY
+- Full local Android copy; no Railway required at runtime.
+- Unified Party roles and official AR/AP netting preserved.
+- Central print formatting is concise by default; accounting source data is unchanged.
+- WhatsApp PDF renders at native A4 content width with multi-page output.
+- Per-user My Shortcuts enabled; no Recent Use section.
+- Activity Log UI remains capped at 1000 visible movements.
+- No database migration and no CSS change in this release.

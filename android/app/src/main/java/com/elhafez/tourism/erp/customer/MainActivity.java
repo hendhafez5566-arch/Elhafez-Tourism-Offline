@@ -235,10 +235,12 @@ public class MainActivity extends BridgeActivity {
     private void shareHtmlAsPdf(WebView view, String jobName, String phone, String message, int attempt) {
         String safe = (jobName == null || jobName.trim().isEmpty()) ? "document" : jobName.replaceAll("[^\\p{L}\\p{N}._-]+", "_");
         File file = new File(getCacheDir(), safe + "_" + System.currentTimeMillis() + ".pdf");
-        final int pageWidth = 595, pageHeight = 842, margin = 24, renderWidth = 794;
+        final int pageWidth = 595, pageHeight = 842, margin = 28, renderWidth = pageWidth - (margin * 2);
         PdfDocument pdf = new PdfDocument();
         try {
             view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+            ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+            if (layoutParams != null) { layoutParams.width = renderWidth; view.setLayoutParams(layoutParams); }
             int widthSpec = View.MeasureSpec.makeMeasureSpec(renderWidth, View.MeasureSpec.EXACTLY);
             int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
             view.measure(widthSpec, heightSpec);
@@ -249,8 +251,8 @@ public class MainActivity extends BridgeActivity {
             view.measure(widthSpec, View.MeasureSpec.makeMeasureSpec(contentHeight, View.MeasureSpec.EXACTLY));
             view.layout(0, 0, renderWidth, contentHeight);
 
-            float scale = (pageWidth - (margin * 2f)) / renderWidth;
-            float sourcePageHeight = (pageHeight - (margin * 2f)) / scale;
+            float scale = 1f;
+            float sourcePageHeight = pageHeight - (margin * 2f);
             int pageCount = Math.max(1, (int) Math.ceil(contentHeight / sourcePageHeight));
             boolean firstPageHasInk = false;
 

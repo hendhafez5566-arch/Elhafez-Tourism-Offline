@@ -11,6 +11,10 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'scripts/offline-copy-smoke.mjs'
+      - 'scripts/offline-whatsapp-pdf-smoke.mjs'
+      - 'scripts/unified-party-accounting-smoke.mjs'
+      - 'scripts/v32546-print-shortcuts-smoke.mjs'
+      - 'scripts/all-offline-node-smokes.mjs'
       - '.github/workflows/android-apk.yml'
 jobs:
   apk:
@@ -31,14 +35,12 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-      - name: Verify full offline architecture
-        run: npm run test:offline
+      - name: Verify full offline release gates
+        run: npm run test:offline-all
       - name: Build bundled ERP and sync Android
         run: npm run mobile:sync
-      - name: Verify role recreation and WhatsApp PDF rendering guards
-        run: |
-          node scripts/unified-party-accounting-smoke.mjs
-          node scripts/offline-whatsapp-pdf-smoke.mjs
+      - name: Verify print and shortcut regression guards
+        run: node scripts/v32546-print-shortcuts-smoke.mjs
       - name: Restore release signing key
         if: env.KEYSTORE_B64 != ''
         shell: bash

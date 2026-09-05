@@ -1,8 +1,8 @@
 {
   "name": "erp-professional-suite-commercial",
   "private": true,
-  "version": "32.5.45",
-  "description": "Elhafez Tourism v32.5.45 — full standalone offline Android copy with unified parties, AR/AP netting and WhatsApp PDF sharing.",
+  "version": "32.5.46",
+  "description": "Elhafez Tourism v32.5.46 — clean full offline Android release with concise professional printing, A4 WhatsApp PDF sharing, unified-party accounting and per-user shortcuts.",
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-static.mjs && tsc -p server/tsconfig.json",
     "start": "node server/dist/server.js",
@@ -55,7 +55,8 @@
     "test:all-node-smokes": "node scripts/all-node-smokes.mjs",
     "test:browser-smokes": "python scripts/all-browser-smokes.py",
     "build:offline": "tsc -p tsconfig.json && node scripts/copy-static.mjs",
-    "test:offline": "node scripts/offline-copy-smoke.mjs"
+    "test:offline": "node scripts/offline-copy-smoke.mjs",
+    "test:offline-all": "node scripts/all-offline-node-smokes.mjs"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.0",
@@ -65,7 +66,7 @@
   },
   "erpRelease": {
     "channel": "offline-copy",
-    "notes": "Full offline copy of v32.5.45. Local device storage only; unified party accounting and WhatsApp PDF share included.",
+    "notes": "Full offline v32.5.46: centralized concise print formatting, native A4 multi-page WhatsApp PDF rendering, unified-party accounting and per-user shortcuts. Activity log remains capped at 1000 visible entries.",
     "migrationRequired": false
   },
   "dependencies": {
