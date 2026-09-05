@@ -124,7 +124,7 @@ const UIDelegatedActions:any={
   if((el=hit('[data-work-action]'))){const action=el.dataset.workAction,page=el.dataset.workPage,id=el.dataset.workId||'';e.preventDefault();if(action==='expand')WorkCenter.expand();else if(action==='collapse'){WorkCenter._expanded=false;ui.renderCurrent()}else if(action==='open'&&page)WorkCenter.open(page,id);else return false;return true}
   if((el=hit('[data-commercial-ux-action]'))){const action=el.dataset.commercialUxAction,id=el.dataset.commercialUxId,page=el.dataset.commercialUxPage;e.preventDefault();if(action==='exitTraining')CommercialUX.exitTraining();else if(action==='enterTraining')CommercialUX.enterTraining();else if(action==='showOnboarding'){ui.closeMenus();CommercialUX.showOnboarding(0)}else if(action==='filterNotifications'&&id)CommercialUX.filterNotifications(id);else if(action==='markRead'&&id&&page)CommercialUX.markRead(id,page);else return false;return true}
   if((el=hit('[data-umrah-guided-host]'))){const page=el.dataset.umrahGuidedHost;if(page){e.preventDefault();UmrahCore_Wizard.capture();UmrahCore_Guided.hostPage(page);return true}}
-  if((el=hit('[data-print-whatsapp]'))){e.preventDefault();Print.shareWhatsApp();return true}
+  if((el=hit('[data-print-share-pdf]'))){e.preventDefault();Print.sharePdf();return true}
   if((el=hit('[data-print-save-description]'))){e.preventDefault();Print.saveDescriptionEdits();return true}
   if((el=hit('[data-delete-kind][data-delete-id]'))){const kind=el.dataset.deleteKind,id=el.dataset.deleteId;if(kind&&id){e.preventDefault();DeleteCenter.request(kind,id);return true}}
   if((el=hit('[data-window-print]'))){e.preventDefault();window.print();return true}

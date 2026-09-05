@@ -1,0 +1,27 @@
+Elhafez Tourism Offline v32.5.52 — Clean Backup Delivery
+
+النطاق:
+- إعادة بناء تسليم النسخ الاحتياطية فقط.
+- لا تعديل على المحاسبة أو القيود أو الحجوزات أو المخزون أو قاعدة البيانات.
+
+التنزيل:
+- Android: حفظ Native حقيقي في Downloads / Elhafez Tourism عبر MediaStore على Android 10+.
+- Android 7–9: حفظ في Downloads مع إذن التخزين القديم المحدود حتى API 28 فقط.
+- Laptop/Browser: تنزيل ملف .erpbackup بالطريقة القياسية للمتصفح.
+
+المشاركة:
+- Android: نفس ملف .erpbackup يمر عبر Android Share Sheet باستخدام FileProvider.
+- يمكن اختيار WhatsApp أو Google Drive أو البريد أو أي تطبيق يدعم الملفات.
+- Browser: Web Share API عند دعمه، وإلا يتم تنزيل الملف إلى Downloads.
+
+السلامة:
+- لم يتغير بناء محتوى النسخة أو checksum أو verifyPackage أو restorePackage.
+- الاستعادة ما زالت تفحص البصمة والمرفقات وهوية الشركة قبل التنفيذ.
+- حالة «آخر نسخة محفوظة على الجهاز» لا تتحدث إلا بعد نجاح الحفظ الحقيقي.
+
+QA:
+- Offline node smokes: 18/18 PASS.
+- Browser smokes: 6/6 PASS.
+- accounting-smoke: imbalanced=0, criticalAudit=0.
+- advanced-accounting-smoke: imbalanced=0, criticalAudit=0.
+- Java source syntax parse: لا أخطاء syntax/illegal escape مثبتة؛ Gradle الكامل غير متاح محليًا لأن بيئة الفحص لا تصل إلى services.gradle.org، لذلك GitHub Actions يظل بوابة Android compile النهائية.

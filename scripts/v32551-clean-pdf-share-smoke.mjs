@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
+const printing=read('src/reports/printing.ts');
+const java=read('android/app/src/main/java/com/elhafez/tourism/erp/customer/MainActivity.java');
+const html=read('index.html');
+const delegated=read('src/ui/delegated-actions.ts');
+const checks=[]; const ok=(name,cond)=>{checks.push([name,!!cond]);console.log(`${cond?'PASS':'FAIL'} ${name}`)};
+ok('legacy print WhatsApp button is deleted',!html.includes('printWhatsAppBtn')&&!html.includes('data-print-whatsapp')&&!printing.includes('shareWhatsApp')&&!printing.includes('shareRecipient'));
+ok('generic PDF share button is wired',html.includes('id="printSharePdfBtn"')&&html.includes('data-print-share-pdf="1"')&&delegated.includes('[data-print-share-pdf]')&&printing.includes('async sharePdf()'));
+ok('Android share is generic chooser only',java.includes('shareDocumentPdf(')&&java.includes('Intent.createChooser')&&!java.includes('com.whatsapp')&&!java.includes('s.whatsapp.net')&&!java.includes('putExtra("jid"'));
+ok('one canonical PDF stylesheet owns export layout',printing.includes("rawSource.replace(/<style[^>]*class=[\"']commercial-print-theme")&&printing.includes('table-layout:fixed')&&printing.includes('grid-template-columns:repeat(3,minmax(0,1fr))')&&printing.includes('overflow-x:hidden'));
+ok('A4 geometry remains explicit',java.includes('PrintAttributes.MediaSize.ISO_A4')&&java.includes('new PrintAttributes.Margins(394, 394, 394, 394)')&&printing.includes('margin:10mm'));
+ok('share PDF stays screenshot-free',java.includes('view.draw(canvas)')&&!java.includes('Bitmap.createBitmap')&&!java.includes('drawBitmap(bitmap'));
+const accounting=read('src/accounting/engine.ts')+read('src/accounting/transactions.ts')+read('src/accounting/invoices.ts');
+ok('accounting source not coupled to PDF share',!accounting.includes('shareDocumentPdf')&&!accounting.includes('printSharePdfBtn'));
+const failed=checks.filter(x=>!x[1]); console.log(`v32.5.51 clean PDF share smoke: ${checks.length-failed.length}/${checks.length}`); if(failed.length)process.exit(1);

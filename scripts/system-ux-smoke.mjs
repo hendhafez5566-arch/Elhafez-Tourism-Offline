@@ -22,8 +22,8 @@ assert(commercialPages.includes('نسبة الجاهزية')&&commercialPages.in
 assert(product.includes('v32440MarketReady')&&product.includes('adminWorkspace.pages=deep(adminDefault.pages)'),'Existing installations will not receive the new admin pages');
 for(const x of ['programSummary','manifest','roomingList','hotelVoucher','flightReport','dispatchList','transportOrder','supplierDues','bookingConfirmation'])assert(outputs.includes(x)||uprint.includes(`${x}(`),`Output missing: ${x}`);
 assert(pages.includes('OutputCenter.render()'),'Central documents page does not expose the output hub');
-assert(printing.includes('shareRecipient(c=this.currentContext)')&&printing.includes('async shareWhatsApp()')&&index.includes('id="printWhatsAppBtn"'),'Central print WhatsApp/PDF share action is missing');
-assert(uprint.includes("{type:'umrahBooking',id:b.id}"),'Umrah booking confirmation is not linked to its customer for WhatsApp sharing');
+assert(printing.includes('renderShareButton()')&&printing.includes('async sharePdf()')&&printing.includes('native?.shareDocumentPdf')&&index.includes('id="printSharePdfBtn"')&&!index.includes('printWhatsAppBtn'),'Central generic PDF share action is missing or legacy WhatsApp print share remains');
+assert(uprint.includes("{type:'umrahBooking',id:b.id}"),'Umrah booking confirmation lost its print context');
 assert(store.includes('auditChanges(before,after)')&&store.includes('changes:this.auditChanges')===false&&store.includes('changes});'),'Structured old/new audit changes are missing');
 assert(pages.includes("x.summary||x.details")&&pages.includes('ما الذي تغير؟'),'Human-readable audit change display is missing');
 assert(server.includes('lastConflict:false')&&server.includes('this.lastConflict=true'),'Server sync no longer distinguishes real conflicts from transient failures');

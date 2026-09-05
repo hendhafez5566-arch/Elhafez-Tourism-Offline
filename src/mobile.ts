@@ -30,7 +30,7 @@
   const h=new Headers(input instanceof Request?input.headers:undefined);
   if(init?.headers)new Headers(init.headers).forEach((v,k)=>h.set(k,v));
   h.set('X-ERP-Mobile','android');
-  h.set('X-ERP-Mobile-Version','32.5.50-OFFLINE');
+  h.set('X-ERP-Mobile-Version','32.5.52-OFFLINE');
   return h;
  };
  if(!offlineEdition)window.fetch=(async(input:any,init:any={})=>{
@@ -291,7 +291,7 @@
   const now=Date.now();if(releaseCheckBusy||(source==='timer'&&now-lastReleaseCheck<120000)||document.visibilityState==='hidden')return false;
   releaseCheckBusy=true;lastReleaseCheck=now;
   try{
-   const response=await nativeFetch(`${API_BASE}/api/health?_=${now}`,{cache:'no-store',headers:{'Cache-Control':'no-cache','X-ERP-Mobile':'android','X-ERP-Mobile-Version':'32.5.50'}});
+   const response=await nativeFetch(`${API_BASE}/api/health?_=${now}`,{cache:'no-store',headers:{'Cache-Control':'no-cache','X-ERP-Mobile':'android','X-ERP-Mobile-Version':'32.5.52'}});
    if(!response.ok)return false;
    const payload=await response.json();const remote=String(payload?.version||'').match(/\d+\.\d+\.\d+/)?.[0]||'';
    if(!remote||!loadedRelease||remote===loadedRelease){pendingServerRelease='';releaseNotice='';return true}

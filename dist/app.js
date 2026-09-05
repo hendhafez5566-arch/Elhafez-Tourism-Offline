@@ -86,7 +86,7 @@ const statusClass = s => ({ draft: 'gray', posted: 'green', paid: 'green', appro
 const accountTypeLabel = t => ({ asset: 'أصول', liability: 'خصوم', equity: 'حقوق ملكية', revenue: 'إيرادات', expense: 'مصروفات', group: 'مجموعة' })[t] || t;
 const natureLabel = n => ({ debit: 'مدين', credit: 'دائن' })[n] || n;
 const expenseModeLabel = m => ({ paid: 'مدفوع الآن', accrued: 'مستحق', prepaid: 'مصروف مقدم' })[m] || m;
-const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.50', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
+const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.52', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
 const Device = { isMobileHardware() { const coarse = matchMedia?.('(any-pointer: coarse)')?.matches || false, touch = N(navigator.maxTouchPoints) > 0, smallPhysical = Math.min(N(screen.width) || 9999, N(screen.height) || 9999) <= 900, ua = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent); return ua || (touch && coarse && smallPhysical); }, apply() { document.documentElement.classList.toggle('mobile-device', this.isMobileHardware()); } };
 Device.apply();
 const PrefixDefaults = { customer: 'C', supplier: 'S', agent: 'A', lead: 'L', quotation: 'Q', purchaseOrder: 'PO', program: 'U', booking: 'B', service: 'SV', salesInvoice: 'SI', purchaseInvoice: 'PI', creditNote: 'CN', debitNote: 'DN', receipt: 'R', payment: 'P', expense: 'E', journal: 'J', transfer: 'T', commission: 'M', costCenter: 'CC', treasury: 'TR', attachment: 'AT', approval: 'AP', cashCount: 'CT', reconciliation: 'BR', fxRevaluation: 'FX', partyNetting: 'NET' };
@@ -3362,27 +3362,55 @@ const Backup = {
         if (!blobMap.has(hash))
             blobMap.set(hash, { sha256: hash, mime: a.mime || f.type || '', size: f.size, data: await this.blobToBase64(f) });
     } const blobs = [...blobMap.values()], payload = JSON.stringify({ data, attachments, blobs }), pkg = { format: kind === 'archive' ? 'erp-professional-suite-archive' : 'erp-professional-suite-backup', formatVersion: 4, kind: kind === 'archive' ? 'archive' : 'backup', schema: APP.schema, appVersion: APP.version, companyId: S(data.company?.companyId || data.license?.companyId || ''), companyName: S(data.company?.name || ''), archiveThrough: S(opts.archiveThrough || ''), label: S(opts.label || ''), exportedAt: now(), checksum: await this.checksum(payload), data, attachments, blobs }; return pkg; },
-    async deliver(pkg, mode = 'download') { const text = JSON.stringify(pkg), name = this.filename(pkg.kind, pkg.archiveThrough), type = pkg.kind === 'archive' ? 'application/x-erp-archive' : 'application/x-erp-backup', blob = new Blob([text], { type }), save = () => { const a = document.createElement('a'), url = URL.createObjectURL(blob); a.href = url; a.download = name; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2500); return { name, shared: false, fallback: mode === 'share' }; }; if (mode === 'share') {
-        const file = new File([blob], name, { type });
-        if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
-            try {
-                await navigator.share({ title: pkg.kind === 'archive' ? 'أرشيف النظام' : 'نسخة احتياطية للنظام', text: pkg.kind === 'archive' ? `أرشيف ${pkg.archiveThrough || ''}` : 'نسخة احتياطية كاملة للنظام', files: [file] });
-                return { name, shared: true };
-            }
-            catch (e) {
-                if (e?.name === 'AbortError') {
-                    toast('تم إلغاء المشاركة ولم يتم حذف أو تغيير النسخة.', 'info');
-                    return { name, shared: false, cancelled: true };
-                }
-                toast('لم يدعم المتصفح مشاركة الملف مباشرة؛ تم حفظه على الجهاز ويمكن مشاركته إلى خدمة التخزين السحابي من التنزيلات.', 'warning');
-                return save();
-            }
+    bytesBase64(bytes) { let bin = ''; const step = 0x8000; for (let i = 0; i < bytes.length; i += step)
+        bin += String.fromCharCode(...bytes.subarray(i, i + step)); return btoa(bin); },
+    nativeBridge() { const bridge = globalThis.NativeBackup; return bridge && typeof bridge.beginBackupTransfer === 'function' && typeof bridge.appendBackupChunk === 'function' && typeof bridge.finishBackupTransfer === 'function' ? bridge : null; },
+    waitNativeDelivery(id, timeoutMs = 120000) { return new Promise((resolve, reject) => { let timer = null; const done = (e) => { const d = e?.detail || {}; if (S(d.id) !== S(id))
+        return; window.removeEventListener('erp:native-backup-delivery', done); if (timer)
+        clearTimeout(timer); if (d.status === 'success')
+        resolve(d);
+    else
+        reject(new Error(S(d.message || 'تعذر تسليم ملف النسخة الاحتياطية'))); }; window.addEventListener('erp:native-backup-delivery', done); timer = setTimeout(() => { window.removeEventListener('erp:native-backup-delivery', done); reject(new Error('انتهت مهلة حفظ أو مشاركة ملف النسخة الاحتياطية')); }, timeoutMs); }); },
+    async nativeDeliver(blob, name, type, mode) { const bridge = this.nativeBridge(); if (!bridge)
+        throw new Error('واجهة حفظ النسخ على Android غير متاحة'); const id = S(bridge.beginBackupTransfer(name, type, mode)); if (!id)
+        throw new Error('تعذر بدء إنشاء ملف النسخة على الجهاز'); try {
+        const chunkSize = 192 * 1024;
+        for (let offset = 0; offset < blob.size; offset += chunkSize) {
+            const bytes = new Uint8Array(await blob.slice(offset, Math.min(blob.size, offset + chunkSize)).arrayBuffer()), chunk = this.bytesBase64(bytes);
+            if (bridge.appendBackupChunk(id, chunk) !== true)
+                throw new Error('تعذر كتابة ملف النسخة على الجهاز');
         }
-        toast('المشاركة المباشرة غير مدعومة هنا؛ تم حفظ النسخة على الجهاز ويمكن مشاركتها إلى خدمة التخزين السحابي من التنزيلات.', 'warning');
-        return save();
-    } return save(); },
+        const result = this.waitNativeDelivery(id);
+        if (bridge.finishBackupTransfer(id) !== true)
+            throw new Error('تعذر إكمال ملف النسخة على الجهاز');
+        const detail = await result;
+        return { name, shared: mode === 'share', saved: mode === 'download', native: true, detail };
+    }
+    catch (e) {
+        try {
+            bridge.cancelBackupTransfer?.(id);
+        }
+        catch (_) { }
+        throw e;
+    } },
+    browserSave(blob, name) { const a = document.createElement('a'), url = URL.createObjectURL(blob); a.href = url; a.download = name; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); return { name, shared: false, saved: true, native: false }; },
+    async browserShare(blob, name, type, pkg) { const file = new File([blob], name, { type }); if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+        try {
+            await navigator.share({ title: pkg.kind === 'archive' ? 'أرشيف النظام' : 'نسخة احتياطية للنظام', text: pkg.kind === 'archive' ? `أرشيف ${pkg.archiveThrough || ''}` : 'نسخة احتياطية كاملة للنظام', files: [file] });
+            return { name, shared: true, saved: false, native: false };
+        }
+        catch (e) {
+            if (e?.name === 'AbortError')
+                return { name, shared: false, saved: false, cancelled: true, native: false };
+            throw e;
+        }
+    } const out = this.browserSave(blob, name); toast('المشاركة المباشرة غير مدعومة في هذا المتصفح؛ تم تنزيل الملف ويمكن مشاركته من Downloads.', 'warning'); return { ...out, fallback: true }; },
+    async deliver(pkg, mode = 'download') { const text = JSON.stringify(pkg), name = this.filename(pkg.kind, pkg.archiveThrough), type = pkg.kind === 'archive' ? 'application/x-erp-archive' : 'application/x-erp-backup', blob = new Blob([text], { type }), bridge = this.nativeBridge(); if (bridge)
+        return this.nativeDeliver(blob, name, type, mode); if (mode === 'share')
+        return this.browserShare(blob, name, type, pkg); return this.browserSave(blob, name); },
     async export(mode = 'download', opts = {}) { const kind = opts.kind === 'archive' ? 'archive' : 'backup', pkg = await this.build(kind, opts), out = await this.deliver(pkg, mode); if (out.cancelled)
-        return pkg; this.mark(kind, out.name); toast(kind === 'archive' ? (out.shared ? 'تمت مشاركة ملف الأرشيف' : out.fallback ? 'تم حفظ الأرشيف على جهازك ويمكن مشاركته من التنزيلات' : 'تم حفظ ملف الأرشيف على جهازك') : (out.shared ? 'تمت مشاركة النسخة الاحتياطية' : out.fallback ? 'تم حفظ النسخة على جهازك ويمكن مشاركتها من التنزيلات' : 'تم حفظ النسخة الاحتياطية على جهازك'), 'ok'); return pkg; },
+        return pkg; if (out.saved)
+        this.mark(kind, out.name); toast(kind === 'archive' ? (out.shared ? 'تم إنشاء الأرشيف وفتح قائمة المشاركة' : out.fallback ? 'تم حفظ الأرشيف في Downloads ويمكن مشاركته من هناك' : 'تم حفظ ملف الأرشيف على الجهاز') : (out.shared ? 'تم إنشاء النسخة وفتح قائمة المشاركة' : out.fallback ? 'تم حفظ النسخة في Downloads ويمكن مشاركتها من هناك' : 'تم حفظ النسخة الاحتياطية على الجهاز'), 'ok'); return pkg; },
     async normalizeLegacy(raw) { if (raw?.formatVersion >= 4 && (raw?.format === 'erp-professional-suite-backup' || raw?.format === 'erp-professional-suite-archive'))
         return raw; if (raw?.format === 'erp-professional-suite-portable' || raw?.format === 'erp-professional-suite-backup') {
         const files = raw.files || [], attachments = [], blobMap = new Map();
@@ -4702,7 +4730,7 @@ const Print = {
         toast(S(d.message || 'تم تجهيز ملف PDF وفتح المشاركة'), 'ok');
     else if (status === 'error')
         toast(S(d.message || 'تعذر تجهيز ملف PDF للمشاركة'), 'error'); }); },
-    show(html, context = null) { this.currentContext = context; this.bindNativeShareListener(); document.getElementById('printBody').innerHTML = html; this.renderDescriptionEditor(); this.renderWhatsAppButton(); document.getElementById('printModal').classList.add('show'); }, close() { this.currentContext = null; document.getElementById('printDescriptionEditor')?.classList.add('hidden'); document.getElementById('printModal')?.classList.remove('show'); },
+    show(html, context = null) { this.currentContext = context; this.bindNativeShareListener(); document.getElementById('printBody').innerHTML = html; this.renderDescriptionEditor(); this.renderShareButton(); document.getElementById('printModal').classList.add('show'); }, close() { this.currentContext = null; document.getElementById('printDescriptionEditor')?.classList.add('hidden'); document.getElementById('printModal')?.classList.remove('show'); },
     renderDescriptionEditor() { const box = document.getElementById('printDescriptionEditor'), c = this.currentContext; if (!box)
         return; if (!c) {
         box.innerHTML = '';
@@ -4840,73 +4868,24 @@ const Print = {
     catch (_) {
         return src;
     } },
-    partyRecipient(type, id) { const x = Actions.partyRecord(type, id); if (!x)
-        return null; const phone = Actions.normalizeWhatsApp(x.whatsapp || x.phone); return { type, id, name: S(x.name || ''), phone }; },
-    shareRecipient(c = this.currentContext) { if (!c)
-        return null; if (c.partyType && c.partyId)
-        return this.partyRecipient(c.partyType, c.partyId); if (c.type === 'invoice') {
-        const x = byId(DB.data.invoices, c.id);
-        return x ? this.partyRecipient(x.kind === 'supplier' ? 'supplier' : (x.partyType || 'customer'), x.partyId) : null;
-    } if (c.type === 'adjustment') {
-        const x = byId(DB.data.invoiceAdjustments, c.id);
-        return x ? this.partyRecipient(x.kind === 'supplier' ? 'supplier' : (x.partyType || 'customer'), x.partyId) : null;
-    } if (c.type === 'voucher') {
-        const x = byId(c.kind === 'receipt' ? DB.data.receipts : DB.data.payments, c.id);
-        return x ? this.partyRecipient(x.partyType || 'customer', x.partyId) : null;
-    } if (c.type === 'quotation') {
-        const x = byId(DB.data.quotations, c.id);
-        return x ? this.partyRecipient('customer', x.partyId) : null;
-    } if (c.type === 'purchaseOrder') {
-        const x = byId(DB.data.purchaseOrders, c.id);
-        return x ? this.partyRecipient('supplier', x.supplierId) : null;
-    } if (c.type === 'statement' && ['customer', 'supplier', 'agent'].includes(c.statementType))
-        return this.partyRecipient(c.statementType, c.id); if (c.type === 'statement' && c.statementType === 'unified') {
-        const g = UnifiedParty.groupById(c.id), phone = Actions.normalizeWhatsApp(g?.whatsapp || g?.phone);
-        return g && phone ? { type: 'unified', id: g.id, name: S(g.name || ''), phone } : null;
-    } if (c.type === 'booking') {
-        const x = byId(DB.data.bookings, c.id);
-        return x ? this.partyRecipient('customer', x.customerId) : null;
-    } if (c.type === 'umrahBooking') {
-        const x = byId(DB.data.umrahBookings || [], c.id), p = x && this.partyRecipient('customer', x.customerId);
-        if (p)
-            return p;
-        const phone = Actions.normalizeWhatsApp(x?.customerSnapshot?.phone || '');
-        return x && phone ? { type: 'customer', id: x.customerId || '', name: S(x.customerSnapshot?.name || ''), phone } : null;
-    } if (c.type === 'service') {
-        const x = byId(DB.data.services, c.id);
-        return x ? this.partyRecipient('customer', x.customerId) : null;
-    } return null; },
-    renderWhatsAppButton() { const b = document.getElementById('printWhatsAppBtn'), r = this.shareRecipient(); if (!b)
-        return; b.classList.toggle('hidden', !r); b.toggleAttribute('disabled', !r || !r.phone); b.title = r ? (r.phone ? `إرسال PDF إلى ${r.name || 'صاحب المستند'} عبر واتساب` : `لا يوجد رقم واتساب مسجل لـ ${r.name || 'صاحب المستند'}`) : 'هذا المستند غير مرتبط بطرف واحد'; },
+    renderShareButton() { const b = document.getElementById('printSharePdfBtn'), native = window.NativePrint; if (!b)
+        return; const available = !!native?.shareDocumentPdf; b.classList.toggle('hidden', !available); b.toggleAttribute('disabled', !available); b.title = available ? 'إنشاء ملف PDF ومشاركته عبر قائمة المشاركة في Android' : 'المشاركة المباشرة متاحة داخل تطبيق Android'; },
     documentTitle() { return S(document.querySelector('#printBody .print-document-title h1')?.textContent || document.querySelector('#printBody h1')?.textContent || 'مستند') || 'مستند'; },
-    shareMessage(r, title) { return `مرحبًا ${r.name || ''}، مرفق لكم ${title} من ${DB.data.company?.name || 'الشركة'}. مع خالص التحية.`; },
-    async printPayload() { const s = DB.data.settings, orientation = (s.printOrientation || 'portrait') === 'landscape' ? 'landscape' : 'portrait', nativeContentWidth = orientation === 'landscape' ? 1047 : 718, nativeContentHeight = orientation === 'landscape' ? 718 : 1047, title = `${APP.name} — ${APP.product}`, source = document.getElementById('printBody').innerHTML, logo = DB.data.company?.logo || '', compact = logo ? await this.compactPrintLogo(logo) : '', body = logo && compact && compact !== logo ? source.split(logo).join(compact) : source, fontImport = '', html = `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=${nativeContentWidth},initial-scale=1,maximum-scale=1"><title>${esc(`${APP.name} — ${APP.product}`)}</title><style>${fontImport}*{box-sizing:border-box;box-shadow:none!important;text-shadow:none!important}body{font-family:${({ default: 'Tahoma,\"Noto Sans Arabic\",\"Segoe UI\",Arial,sans-serif', cairo: '\"Cairo\",Tahoma,Arial,sans-serif', tajawal: '\"Tajawal\",Tahoma,Arial,sans-serif', noto: '\"Noto Sans Arabic\",Tahoma,Arial,sans-serif', plex: '\"IBM Plex Sans Arabic\",\"Noto Sans Arabic\",Tahoma,Arial,sans-serif', kufi: '\"Noto Kufi Arabic\",\"Noto Sans Arabic\",Tahoma,Arial,sans-serif' }[s.fontFamily || 'default'] || 'Tahoma,Arial,sans-serif')};padding:0;color:#111;font-size:calc(12px * ${N(s.fontScale || 1)});background:#fff;margin:0;width:${nativeContentWidth}px;max-width:${nativeContentWidth}px}.print-document{width:100%;max-width:none;margin:0}.print-head{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #1d2a3b;padding-bottom:12px;margin-bottom:14px}.print-company{display:flex;gap:12px}.print-logo{width:58px;height:58px;object-fit:contain;border:1px solid #ddd;border-radius:8px}.print-head h2{margin:0}.print-head small{display:block;margin-top:4px}.print-meta{display:flex;gap:14px;flex-wrap:wrap;background:#f7f8fa;border:1px solid #ddd;border-radius:7px;padding:8px;margin:9px 0}.print-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0}.print-summary>div{border:1px solid #ddd;border-radius:7px;padding:8px}.print-summary small{display:block;color:#666}.print-summary b{display:block;margin-top:4px}.print-table{width:100%;border-collapse:collapse;margin-top:10px}.print-table th,.print-table td{border:1px solid #999;padding:6px;text-align:right;font-size:11.2px;line-height:1.45;vertical-align:top}.print-table th{background:#f2f4f7}.print-party-due{color:#b42318;font-weight:800}.print-party-credit{color:#08785b;font-weight:800}.print-party-balance{display:inline-block;padding:3px 7px;border-radius:6px;font-weight:800;white-space:nowrap}.print-party-balance.red{color:#8f1b13;background:#fff1f0}.print-party-balance.green{color:#06634a;background:#edf9f4}.print-party-balance.neutral{color:#555;background:#f3f4f6}.print-total{margin-top:12px;font-weight:700}.print-balance-alert{display:flex;justify-content:space-between;gap:12px;border:2px solid;padding:10px 12px;border-radius:7px;margin:10px 0;font-weight:800}.print-balance-alert.red{border-color:#b42318;background:#fff1f0;color:#8f1b13}.print-balance-alert.green{border-color:#08785b;background:#edf9f4;color:#06634a}.print-balance-alert.neutral{border-color:#777;background:#f5f5f5;color:#333}.print-movement-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0}.print-movement-card{border:1px solid #d7dce3;border-radius:7px;padding:8px}.print-movement-card small{display:block;color:#666;margin-bottom:4px}.print-movement-card strong{font-size:12px}.print-movement-card.due,.print-movement-card.balance.red{background:#fff1f0;border-color:#dca9a5;color:#8f1b13}.print-movement-card.credit,.print-movement-card.balance.green{background:#edf9f4;border-color:#abd7c6;color:#06634a}.print-movement-card.balance.neutral{background:#f5f5f5;color:#444}.print-balance-breakdown{display:grid;gap:6px;margin:8px 0}.print-balance-total{border-top:2px solid #bbb;padding-top:7px;margin-top:8px}.print-statement-note{font-size:10px;color:#555;margin:7px 0}.print-description-block{border:1px solid #d7dce3;background:#f8fafc;border-radius:7px;padding:8px 10px;margin:9px 0;line-height:1.65}.print-description-block b{display:block;margin-bottom:3px}.statement-description-full{display:block;font-size:9.5px;color:#555;margin-top:3px;line-height:1.5}.statement-description-short{font-weight:700}.signature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:32px;text-align:center}.signature-grid div{border-top:1px solid #999;padding-top:6px}@page{size:${s.printPaper || 'A4'} ${s.printOrientation || 'portrait'};margin:10mm}@media print{body{width:auto;max-width:none}img{max-width:100%}.print-table thead{display:table-header-group}.print-table tr{break-inside:avoid}.signature-grid{break-inside:avoid}}</style></head><body>${body}</body></html>`; const documentTitle = this.documentTitle(), fileName = (documentTitle || 'مستند').replace(/[\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) + '.pdf'; return { html, title, documentTitle, fileName, nativeContentWidth, nativeContentHeight, orientation }; },
-    async shareWhatsApp() { try {
-        const r = this.shareRecipient();
-        if (!r)
-            throw new Error('هذا المستند غير مرتبط بعميل/مورد/مندوب واحد لإرساله تلقائيًا');
-        if (!r.phone)
-            throw new Error(`لا يوجد رقم واتساب صالح مسجل لـ ${r.name || 'صاحب المستند'}`);
-        const title = this.documentTitle(), message = this.shareMessage(r, title), native = window.NativePrint;
-        if (native?.sharePdfA4 || native?.sharePdf) {
-            this.bindNativeShareListener();
-            const p = await this.printPayload();
-            toast(`جاري تجهيز ملف PDF لـ ${r.name || 'صاحب المستند'}...`, 'info');
-            if (this.nativeShareTimer)
-                clearTimeout(this.nativeShareTimer);
-            this.nativeShareTimer = setTimeout(() => { this.nativeShareTimer = null; toast('لم يكتمل تجهيز PDF من تطبيق Android. حدّث التطبيق إلى الإصدار 32.5.50 ثم أعد المحاولة.', 'error'); }, 15000);
-            if (native?.sharePdfA4)
-                native.sharePdfA4(p.html, p.documentTitle, r.phone, message, p.orientation);
-            else
-                native.sharePdf(p.html, p.documentTitle, r.phone, message);
-            return;
-        }
-        window.open(`https://wa.me/${r.phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
-        toast('تم فتح واتساب. سيظهر الآن مربع الطباعة/حفظ PDF لإرفاق الملف من المتصفح.', 'info');
-        setTimeout(() => this.doPrint(), 120);
+    async printPayload() { const s = DB.data.settings, orientation = (s.printOrientation || 'portrait') === 'landscape' ? 'landscape' : 'portrait', nativeContentWidth = orientation === 'landscape' ? 1047 : 718, nativeContentHeight = orientation === 'landscape' ? 718 : 1047, title = `${APP.name} — ${APP.product}`, rawSource = document.getElementById('printBody').innerHTML, source = rawSource.replace(/<style[^>]*class=["']commercial-print-theme["'][^>]*>[\s\S]*?<\/style>/gi, ''), logo = DB.data.company?.logo || '', compact = logo ? await this.compactPrintLogo(logo) : '', body = logo && compact && compact !== logo ? source.split(logo).join(compact) : source, fontFamily = ({ default: 'Tahoma,"Noto Sans Arabic","Segoe UI",Arial,sans-serif', cairo: '"Cairo",Tahoma,Arial,sans-serif', tajawal: '"Tajawal",Tahoma,Arial,sans-serif', noto: '"Noto Sans Arabic",Tahoma,Arial,sans-serif', plex: '"IBM Plex Sans Arabic","Noto Sans Arabic",Tahoma,Arial,sans-serif', kufi: '"Noto Kufi Arabic","Noto Sans Arabic",Tahoma,Arial,sans-serif' }[s.fontFamily || 'default'] || 'Tahoma,Arial,sans-serif'), html = `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=${nativeContentWidth},initial-scale=1,maximum-scale=1"><title>${esc(`${APP.name} — ${APP.product}`)}</title><style>:root{--print-navy:#112745;--print-gold:#c9972f;--print-line:#d9e1eb;--print-soft:#f5f8fc}*{box-sizing:border-box;box-shadow:none!important;text-shadow:none!important;min-width:0}html,body{margin:0;padding:0;background:#fff;color:#17243a;direction:rtl;overflow-x:hidden}body{font-family:${fontFamily};font-size:calc(12px * ${N(s.fontScale || 1)});line-height:1.55;width:${nativeContentWidth}px;max-width:${nativeContentWidth}px}.print-document{position:relative;width:100%;max-width:100%;margin:0;padding:0;background:#fff;overflow:visible}.print-document:before{content:"";display:block;width:100%;height:7px;margin:0 0 14px;border-radius:3px;background:linear-gradient(90deg,var(--print-navy) 0 72%,var(--print-gold) 72%)}.print-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.75fr);align-items:start;gap:20px;border-bottom:1px solid var(--print-line);padding:0 0 14px;margin:0 0 14px}.print-company{display:flex;gap:12px;align-items:flex-start;min-width:0}.print-company>div{min-width:0}.print-company h2{font-size:18px;color:var(--print-navy);margin:0 0 4px;overflow-wrap:anywhere}.print-company small{display:block;color:#5d6b7e;line-height:1.55;overflow-wrap:anywhere}.print-logo{width:58px;height:58px;flex:0 0 58px;object-fit:contain;border:1px solid var(--print-line);border-radius:10px;background:#fff}.print-document-title{min-width:0;text-align:left}.print-document-title h1{margin:0;color:var(--print-navy);font-size:21px;line-height:1.35;overflow-wrap:anywhere}.print-document-title small{display:block;margin-top:6px;color:#66758a}.print-document-title:after{content:"";display:block;width:54px;height:3px;margin:9px 0 0 auto;background:var(--print-gold);border-radius:5px}.print-meta{display:flex;gap:8px 18px;flex-wrap:wrap;width:100%;max-width:100%;background:var(--print-soft);border:1px solid var(--print-line);border-right:4px solid var(--print-gold);border-radius:10px;padding:9px 11px;margin:10px 0 14px;overflow:hidden}.print-meta span{min-width:0;max-width:100%;overflow-wrap:anywhere}.print-table{width:100%;max-width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;border:1px solid #cdd7e3;border-radius:9px;overflow:hidden;margin-top:10px}.print-table th,.print-table td{border:0;border-bottom:1px solid #dfe6ee;border-left:1px solid #e6ebf1;padding:7px 7px;text-align:right;font-size:11px;line-height:1.45;vertical-align:top;overflow-wrap:anywhere;word-break:normal}.print-table th{background:var(--print-navy);color:#fff;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact}.print-table tr:last-child td{border-bottom:0}.print-table th:last-child,.print-table td:last-child{border-left:0}.print-table tbody tr:nth-child(even) td{background:#f8fafc}.print-summary,.print-movement-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;width:100%;margin:10px 0}.print-summary>div,.print-movement-card{min-width:0;border:1px solid var(--print-line);border-radius:10px;background:#fff;padding:9px;overflow:hidden}.print-summary small,.print-movement-card small{display:block;color:#66758a;margin-bottom:4px;overflow-wrap:anywhere}.print-summary b,.print-movement-card strong{display:block;overflow-wrap:anywhere}.print-description-block{width:100%;border:1px solid var(--print-line);border-right:4px solid var(--print-gold);background:#fbfcfe;border-radius:10px;padding:9px 11px;margin:9px 0;line-height:1.65;overflow-wrap:anywhere}.print-description-block b{display:block;margin-bottom:3px}.print-balance-alert{display:flex;justify-content:space-between;gap:12px;width:100%;border:2px solid;padding:10px 12px;border-radius:10px;margin:10px 0;font-weight:800;overflow:hidden}.print-balance-alert>*{min-width:0;overflow-wrap:anywhere}.print-balance-alert.red{border-color:#b42318;background:#fff1f0;color:#8f1b13}.print-balance-alert.green{border-color:#08785b;background:#edf9f4;color:#06634a}.print-balance-alert.neutral{border-color:#777;background:#f5f5f5;color:#333}.print-party-due{color:#b42318;font-weight:800}.print-party-credit{color:#08785b;font-weight:800}.print-party-balance{display:inline-block;padding:3px 7px;border-radius:6px;font-weight:800;white-space:normal}.print-party-balance.red{color:#8f1b13;background:#fff1f0}.print-party-balance.green{color:#06634a;background:#edf9f4}.print-party-balance.neutral{color:#555;background:#f3f4f6}.print-total{margin-top:12px;font-weight:700;overflow-wrap:anywhere}.print-movement-card.due,.print-movement-card.balance.red{background:#fff1f0;border-color:#dca9a5;color:#8f1b13}.print-movement-card.credit,.print-movement-card.balance.green{background:#edf9f4;border-color:#abd7c6;color:#06634a}.print-movement-card.balance.neutral{background:#f5f5f5;color:#444}.print-balance-breakdown{display:grid;gap:6px;margin:8px 0}.print-balance-total{border-top:2px solid #bbb;padding-top:7px;margin-top:8px}.print-statement-note{font-size:10px;color:#555;margin:7px 0}.statement-description-full{display:block;font-size:9.5px;color:#555;margin-top:3px;line-height:1.5}.statement-description-short{font-weight:700}.print-role-chip{display:inline-block;padding:2px 7px;border:1px solid var(--print-line);border-radius:999px;background:var(--print-soft);font-size:9px;font-weight:700;color:#46556a;white-space:normal}.print-internal-detail{display:block;font-size:8.7px;color:#7b8797;margin-top:3px}.print-compact-note{font-size:9.5px;color:#66758a;line-height:1.55}.signature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin-top:38px;text-align:center}.signature-grid div{border-top:1px solid #8290a3;padding-top:8px;color:#46556a}.print-footer{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-top:25px;padding-top:9px;border-top:1px solid var(--print-line);font-size:9.5px;color:#69778a}.print-footer>*{min-width:0;overflow-wrap:anywhere}.print-confidential{font-size:8.5px;color:#8793a4}img{max-width:100%;height:auto}@page{size:${s.printPaper || 'A4'} ${orientation};margin:10mm}@media print{html,body{width:auto;max-width:none;overflow:visible}.print-document{break-inside:auto}.print-table thead{display:table-header-group}.print-table tr{break-inside:avoid}.signature-grid,.print-footer,.print-summary>div,.print-movement-card{break-inside:avoid}}</style></head><body>${body}</body></html>`; const documentTitle = this.documentTitle(), fileName = (documentTitle || 'مستند').replace(/[\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) + '.pdf'; return { html, title, documentTitle, fileName, nativeContentWidth, nativeContentHeight, orientation }; },
+    async sharePdf() { try {
+        const native = window.NativePrint;
+        if (!native?.shareDocumentPdf)
+            throw new Error('مشاركة PDF المباشرة متاحة من تطبيق Android فقط. استخدم طباعة / حفظ PDF من المتصفح.');
+        this.bindNativeShareListener();
+        const p = await this.printPayload();
+        toast('جاري إنشاء ملف PDF...', 'info');
+        if (this.nativeShareTimer)
+            clearTimeout(this.nativeShareTimer);
+        this.nativeShareTimer = setTimeout(() => { this.nativeShareTimer = null; toast('لم يكتمل إنشاء ملف PDF. أعد المحاولة بعد إغلاق شاشة الطباعة وفتحها من جديد.', 'error'); }, 15000);
+        native.shareDocumentPdf(p.html, p.documentTitle, p.orientation);
     }
     catch (e) {
-        toast(e.message || 'تعذر تجهيز مشاركة واتساب', 'error');
+        toast(e.message || 'تعذر تجهيز ملف PDF للمشاركة', 'error');
     } },
     async doPrint() { const { html, title } = await this.printPayload(); const native = window.NativePrint; if (native?.printHtml) {
         try {
@@ -7618,9 +7597,9 @@ const UIDelegatedActions = {
                 return true;
             }
         }
-        if ((el = hit('[data-print-whatsapp]'))) {
+        if ((el = hit('[data-print-share-pdf]'))) {
             e.preventDefault();
-            Print.shareWhatsApp();
+            Print.sharePdf();
             return true;
         }
         if ((el = hit('[data-print-save-description]'))) {
@@ -15198,7 +15177,8 @@ Object.assign(CommercialPages, {
 Object.assign(Pages, { 'market-readiness': CommercialPages.marketReadiness, 'quick-guide': CommercialPages.quickGuide });
 const BackupCenter = {
     statusText(kind) { const x = Backup.status()?.[kind]; return x?.at ? `${formatDateTime(x.at)} • ${esc(x.name || '')}` : 'لم يتم على هذا الجهاز بعد'; },
-    page() { setTimeout(() => CommercialPages.loadBackups?.(), 0); const admin = Auth.user?.role === 'admin' || Auth.user?.permissions?.all; return Pages.head('النسخ الاحتياطي والاستعادة', 'مركز موحد للنسخ الخارجية والاستعادة والنسخ الخادمية دون تكرار المرفقات.') + `<div class="grid two"><div class="card"><h3>نسخة احتياطية كاملة</h3><p class="muted">ملف مستقل يشمل البيانات والمرفقات والبيانات الوصفية وبصمة التحقق. احفظه على الكمبيوتر أو الموبايل أو شاركه إلى خدمة تخزين سحابي أو واتساب أو البريد.</p><div class="quick-actions mt-12"><button class="btn success" data-commercial-action="externalBackup" data-commercial-mode="download">حفظ نسخة على الجهاز</button><button class="btn soft" data-commercial-action="externalBackup" data-commercial-mode="share">مشاركة / تخزين سحابي</button></div><div class="mini-row mt-12"><span>آخر نسخة على هذا الجهاز</span><b>${this.statusText('backup')}</b></div></div><div class="card"><h3>استعادة نسخة من ملف</h3><p class="muted">اختر ملف <b>.erpbackup</b>. يتم فحص بصمة التحقق والمرفقات وهوية الشركة قبل الاستعادة.</p><input id="backupRestoreFile" type="file" accept=".erpbackup,application/json" hidden data-restore-file="1"> <button class="btn primary mt-12" data-trigger-file="backupRestoreFile">استعادة نسخة احتياطية</button></div></div><div class="card mt-16"><div class="card-head"><div><h3>النسخ الخادمية</h3><p class="muted">يحتفظ النظام تلقائيًا بآخر 3 نسخ غير مثبتة فقط. المثبتة لا تُحذف تلقائيًا.</p></div><div class="quick-actions"><button class="btn primary" data-commercial-action="createSnapshot">إنشاء نسخة خادمية الآن</button><button class="btn ghost" data-commercial-action="cleanupSnapshots">تنظيف القديمة</button></div></div><div id="serverSnapshots"><div class="loading-state">جاري تحميل النسخ...</div></div></div>`; }
+    page() { const offline = APP.offlineEdition === true; if (!offline)
+        setTimeout(() => CommercialPages.loadBackups?.(), 0); const serverCard = offline ? '' : `<div class="card mt-16"><div class="card-head"><div><h3>النسخ الخادمية</h3><p class="muted">يحتفظ النظام تلقائيًا بآخر 3 نسخ غير مثبتة فقط. المثبتة لا تُحذف تلقائيًا.</p></div><div class="quick-actions"><button class="btn primary" data-commercial-action="createSnapshot">إنشاء نسخة خادمية الآن</button><button class="btn ghost" data-commercial-action="cleanupSnapshots">تنظيف القديمة</button></div></div><div id="serverSnapshots"><div class="loading-state">جاري تحميل النسخ...</div></div></div>`; return Pages.head('النسخ الاحتياطي والاستعادة', 'نسخة واحدة كاملة من بياناتك ومرفقاتك، قابلة للحفظ على الجهاز أو المشاركة ثم الاستعادة في أي وقت.') + `<div class="grid two"><div class="card"><h3>تنزيل نسخة على الجهاز</h3><p class="muted">ينشئ ملف <b>.erpbackup</b> حقيقيًا ويحفظه في Downloads على الموبايل أو في مجلد التنزيلات على الكمبيوتر. الملف نفسه قابل للاستعادة لاحقًا.</p><button class="btn success mt-12" data-commercial-action="externalBackup" data-commercial-mode="download">تنزيل نسخة على الجهاز</button></div><div class="card"><h3>مشاركة النسخة</h3><p class="muted">ينشئ نفس ملف النسخة الاحتياطية ثم يفتح قائمة المشاركة لاختيار واتساب أو Google Drive أو البريد أو أي تطبيق آخر.</p><button class="btn soft mt-12" data-commercial-action="externalBackup" data-commercial-mode="share">مشاركة النسخة</button></div></div><div class="card mt-16"><div class="card-head"><div><h3>استعادة نسخة محفوظة</h3><p class="muted">اختر ملف <b>.erpbackup</b> سبق حفظه أو استلامه. يتم فحص البصمة والمرفقات وهوية الشركة قبل استعادة أي بيانات.</p></div><div><input id="backupRestoreFile" type="file" accept=".erpbackup,application/json" hidden data-restore-file="1"> <button class="btn primary" data-trigger-file="backupRestoreFile">استعادة نسخة احتياطية</button></div></div><div class="mini-row mt-12"><span>آخر نسخة محفوظة على هذا الجهاز</span><b>${this.statusText('backup')}</b></div></div>${serverCard}`; }
 };
 const ArchiveCenter = {
     preview: null,
@@ -16976,7 +16956,7 @@ if (uxModal)
         if (init?.headers)
             new Headers(init.headers).forEach((v, k) => h.set(k, v));
         h.set('X-ERP-Mobile', 'android');
-        h.set('X-ERP-Mobile-Version', '32.5.50-OFFLINE');
+        h.set('X-ERP-Mobile-Version', '32.5.52-OFFLINE');
         return h;
     };
     if (!offlineEdition)
@@ -17497,7 +17477,7 @@ if (uxModal)
         releaseCheckBusy = true;
         lastReleaseCheck = now;
         try {
-            const response = await nativeFetch(`${API_BASE}/api/health?_=${now}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'X-ERP-Mobile': 'android', 'X-ERP-Mobile-Version': '32.5.50' } });
+            const response = await nativeFetch(`${API_BASE}/api/health?_=${now}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'X-ERP-Mobile': 'android', 'X-ERP-Mobile-Version': '32.5.52' } });
             if (!response.ok)
                 return false;
             const payload = await response.json();

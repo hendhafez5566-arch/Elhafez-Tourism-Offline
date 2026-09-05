@@ -73,24 +73,25 @@ async def main():
     except Exception as e:
       failed.append({'route':'customer-form','reason':str(e)})
     await page.wait_for_timeout(250)
-    # Print + WhatsApp PDF share wiring: party-bound documents expose one-tap share; global reports do not.
+    # Print + generic PDF share wiring: Android Share Sheet is document-based and does not depend on a party phone.
     print_flow={}
     try:
       share=await page.evaluate("""async () => {
         const c=DB.data.customers[0]; c.phone='01012345678'; c.whatsapp='';
-        window.__qaPdfShare=null; window.NativePrint={sharePdf:(html,title,phone,message)=>window.__qaPdfShare={html:html.length,title,phone,message}};
+        window.__qaPdfShare=null; window.NativePrint={shareDocumentPdf:(html,title,orientation)=>window.__qaPdfShare={html:html.length,title,orientation}};
         Print.show(Print.wrap('كشف حساب عميل','','<p>QA</p>'),{type:'statement',statementType:'customer',id:c.id});
-        const partyVisible=!document.getElementById('printWhatsAppBtn').classList.contains('hidden'), enabled=!document.getElementById('printWhatsAppBtn').disabled, recipient=Print.shareRecipient();
-        await Print.shareWhatsApp(); const native=window.__qaPdfShare;
+        const partyVisible=!document.getElementById('printSharePdfBtn').classList.contains('hidden'), enabled=!document.getElementById('printSharePdfBtn').disabled;
+        await Print.sharePdf(); const native=window.__qaPdfShare;
         Print.show(Print.wrap('تقرير عام','','<p>QA</p>'));
-        const globalHidden=document.getElementById('printWhatsAppBtn').classList.contains('hidden');
-        return {partyVisible,enabled,recipient,native,globalHidden,modalVisible:document.getElementById('printModal').classList.contains('show'),printButtonCount:document.querySelectorAll('#printModal button').length};
+        const globalVisible=!document.getElementById('printSharePdfBtn').classList.contains('hidden');
+        return {partyVisible,enabled,native,globalVisible,legacyButton:!!document.getElementById('printWhatsAppBtn'),modalVisible:document.getElementById('printModal').classList.contains('show'),printButtonCount:document.querySelectorAll('#printModal button').length};
       }""")
       print_flow=share
       if not share['modalVisible']: failed.append({'route':'print','reason':'print modal not visible'})
-      if not share['partyVisible'] or not share['enabled']: failed.append({'route':'print-share','reason':'party WhatsApp button unavailable'})
-      if not share['native'] or share['native']['phone']!='201012345678': failed.append({'route':'print-share','reason':'native PDF share did not receive normalized recipient'})
-      if not share['globalHidden']: failed.append({'route':'print-share','reason':'global report exposed an automatic recipient button'})
+      if not share['partyVisible'] or not share['enabled']: failed.append({'route':'print-share','reason':'generic PDF share button unavailable'})
+      if not share['native'] or share['native']['orientation'] not in ('portrait','landscape'): failed.append({'route':'print-share','reason':'native generic PDF share did not receive document orientation'})
+      if not share['globalVisible']: failed.append({'route':'print-share','reason':'generic PDF share should work for global reports too'})
+      if share['legacyButton']: failed.append({'route':'print-share','reason':'legacy WhatsApp print button still exists'})
     except Exception as e: failed.append({'route':'print','reason':str(e)})
     slow=sorted(timings,key=lambda x:x['ms'],reverse=True)[:10]
     result={'ok':not failed and not errors,'init':init,'routesTested':len(routes),'failed':failed,'pageErrors':errors[:20],'consoleErrors':console_errors[:20],'customerFlow':customer_flow,'printFlow':print_flow,'slowestRoutes':[{**x,'ms':round(x['ms'],1)} for x in slow]}
