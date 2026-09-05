@@ -1,8 +1,8 @@
 {
   "name": "erp-professional-suite-commercial",
   "private": true,
-  "version": "32.5.44",
-  "description": "Elhafez Tourism v32.5.44 — full standalone offline Android copy with unified parties, AR/AP netting and WhatsApp PDF sharing.",
+  "version": "32.5.45",
+  "description": "Elhafez Tourism v32.5.45 — full standalone offline Android copy with unified parties, AR/AP netting and WhatsApp PDF sharing.",
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-static.mjs && tsc -p server/tsconfig.json",
     "start": "node server/dist/server.js",
@@ -65,7 +65,7 @@
   },
   "erpRelease": {
     "channel": "offline-copy",
-    "notes": "Full offline copy of v32.5.44. Local device storage only; unified party accounting and WhatsApp PDF share included.",
+    "notes": "Full offline copy of v32.5.45. Local device storage only; unified party accounting and WhatsApp PDF share included.",
     "migrationRequired": false
   },
   "dependencies": {

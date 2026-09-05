@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
 import android.graphics.pdf.PdfDocument;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Canvas;
 import android.os.Bundle;
@@ -31,6 +32,9 @@ import org.json.JSONObject;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Required when a WebView is rendered into an off-screen bitmap/PDF.
+        // Call before BridgeActivity creates its first WebView.
+        WebView.enableSlowWholeDocumentDraw();
         super.onCreate(savedInstanceState);
         WebView webView = getBridge().getWebView();
         // These native interfaces live on the WebView itself, so they remain
@@ -136,10 +140,50 @@ public class MainActivity extends BridgeActivity {
         try {
             ViewGroup root = findViewById(android.R.id.content);
             if (root == null || view.getParent() != null) return;
-            view.setAlpha(0.01f);
-            view.setTranslationX(-10000f);
-            root.addView(view, new ViewGroup.LayoutParams(1, 1));
+            // Keep the print WebView VISIBLE and attached so Chromium actually paints it.
+            // Put it behind the main Capacitor view instead of translating it off-screen.
+            view.setBackgroundColor(Color.WHITE);
+            view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+            view.setClickable(false);
+            view.setFocusable(false);
+            int initialHeight = Math.max(1200, root.getHeight() > 0 ? root.getHeight() : 1200);
+            root.addView(view, 0, new ViewGroup.LayoutParams(794, initialHeight));
         } catch (Exception ignored) { }
+    }
+
+    private void afterVisualReady(WebView view, Runnable task) {
+        try {
+            view.postVisualStateCallback(System.nanoTime(), new WebView.VisualStateCallback() {
+                @Override public void onComplete(long requestId) {
+                    view.postDelayed(() -> {
+                        try {
+                            view.requestLayout();
+                            view.invalidate();
+                            task.run();
+                        } catch (Exception e) {
+                            notifyPdfShare("error", "تعذر تجهيز محتوى المستند للمشاركة");
+                            destroyPrintView(view);
+                        }
+                    }, 80);
+                }
+            });
+        } catch (Exception e) {
+            view.postDelayed(task, 180);
+        }
+    }
+
+    private boolean bitmapHasInk(Bitmap bitmap) {
+        if (bitmap == null || bitmap.getWidth() <= 0 || bitmap.getHeight() <= 0) return false;
+        int stepX = Math.max(6, bitmap.getWidth() / 48);
+        int stepY = Math.max(6, bitmap.getHeight() / 64);
+        for (int y = 0; y < bitmap.getHeight(); y += stepY) {
+            for (int x = 0; x < bitmap.getWidth(); x += stepX) {
+                int c = bitmap.getPixel(x, y);
+                int a = Color.alpha(c), r = Color.red(c), g = Color.green(c), b = Color.blue(c);
+                if (a > 20 && (r < 246 || g < 246 || b < 246)) return true;
+            }
+        }
+        return false;
     }
 
     private Intent buildPdfShareIntent(File file, Uri uri, String phone, String message, String packageName) {
@@ -185,35 +229,64 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void shareHtmlAsPdf(WebView view, String jobName, String phone, String message) {
+        shareHtmlAsPdf(view, jobName, phone, message, 0);
+    }
+
+    private void shareHtmlAsPdf(WebView view, String jobName, String phone, String message, int attempt) {
         String safe = (jobName == null || jobName.trim().isEmpty()) ? "document" : jobName.replaceAll("[^\\p{L}\\p{N}._-]+", "_");
         File file = new File(getCacheDir(), safe + "_" + System.currentTimeMillis() + ".pdf");
         final int pageWidth = 595, pageHeight = 842, margin = 24, renderWidth = 794;
         PdfDocument pdf = new PdfDocument();
         try {
+            view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
             int widthSpec = View.MeasureSpec.makeMeasureSpec(renderWidth, View.MeasureSpec.EXACTLY);
             int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
             view.measure(widthSpec, heightSpec);
             int measuredHeight = Math.max(1, view.getMeasuredHeight());
-            int contentHeight = Math.max(measuredHeight, Math.round(view.getContentHeight() * view.getScale()));
+            int chromiumHeight = Math.max(1, Math.round(view.getContentHeight() * view.getScale()));
+            int contentHeight = Math.max(measuredHeight, chromiumHeight);
+            if (contentHeight <= 2) throw new IllegalStateException("pdf_content_not_ready");
             view.measure(widthSpec, View.MeasureSpec.makeMeasureSpec(contentHeight, View.MeasureSpec.EXACTLY));
             view.layout(0, 0, renderWidth, contentHeight);
+
             float scale = (pageWidth - (margin * 2f)) / renderWidth;
             float sourcePageHeight = (pageHeight - (margin * 2f)) / scale;
             int pageCount = Math.max(1, (int) Math.ceil(contentHeight / sourcePageHeight));
+            boolean firstPageHasInk = false;
+
             for (int i = 0; i < pageCount; i++) {
+                // Rasterize the WebView into a software bitmap first. Chromium/WebView can
+                // otherwise return an empty frame when drawn directly into PdfDocument.
+                Bitmap bitmap = Bitmap.createBitmap(pageWidth, pageHeight, Bitmap.Config.ARGB_8888);
+                Canvas bitmapCanvas = new Canvas(bitmap);
+                bitmapCanvas.drawColor(Color.WHITE);
+                bitmapCanvas.save();
+                bitmapCanvas.clipRect(margin, margin, pageWidth - margin, pageHeight - margin);
+                bitmapCanvas.translate(margin, margin);
+                bitmapCanvas.scale(scale, scale);
+                bitmapCanvas.translate(0, -(i * sourcePageHeight));
+                view.draw(bitmapCanvas);
+                bitmapCanvas.restore();
+
+                if (i == 0) firstPageHasInk = bitmapHasInk(bitmap);
+
                 PdfDocument.PageInfo info = new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, i + 1).create();
                 PdfDocument.Page page = pdf.startPage(info);
-                Canvas canvas = page.getCanvas();
-                canvas.drawColor(Color.WHITE);
-                canvas.save();
-                canvas.clipRect(margin, margin, pageWidth - margin, pageHeight - margin);
-                canvas.translate(margin, margin);
-                canvas.scale(scale, scale);
-                canvas.translate(0, -(i * sourcePageHeight));
-                view.draw(canvas);
-                canvas.restore();
+                page.getCanvas().drawColor(Color.WHITE);
+                page.getCanvas().drawBitmap(bitmap, 0, 0, null);
                 pdf.finishPage(page);
+                bitmap.recycle();
             }
+
+            if (!firstPageHasInk) {
+                try { pdf.close(); } catch (Exception ignored) { }
+                if (attempt < 2) {
+                    view.postDelayed(() -> afterVisualReady(view, () -> shareHtmlAsPdf(view, jobName, phone, message, attempt + 1)), 220);
+                    return;
+                }
+                throw new IllegalStateException("pdf_render_blank");
+            }
+
             try (FileOutputStream out = new FileOutputStream(file)) { pdf.writeTo(out); out.flush(); }
             pdf.close();
             destroyPrintView(view);
@@ -221,6 +294,10 @@ public class MainActivity extends BridgeActivity {
             sharePdfFile(file, phone, message);
         } catch (Exception e) {
             try { pdf.close(); } catch (Exception ignored) { }
+            if (attempt < 2 && "pdf_content_not_ready".equals(e.getMessage())) {
+                view.postDelayed(() -> afterVisualReady(view, () -> shareHtmlAsPdf(view, jobName, phone, message, attempt + 1)), 220);
+                return;
+            }
             destroyPrintView(view);
             notifyPdfShare("error", "تعذر إنشاء ملف PDF للمشاركة");
         }
@@ -239,13 +316,15 @@ public class MainActivity extends BridgeActivity {
                 attachPrintView(printView);
                 printView.getSettings().setJavaScriptEnabled(false);
                 printView.getSettings().setDomStorageEnabled(false);
+                printView.getSettings().setLoadsImagesAutomatically(true);
+                printView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
                 printView.setWebViewClient(new WebViewClient() {
                     private boolean printed = false;
                     @Override
                     public void onPageFinished(WebView view, String url) {
                         if (printed) return;
                         printed = true;
-                        startPrint(view, jobName);
+                        afterVisualReady(view, () -> startPrint(view, jobName));
                     }
                 });
                 printView.loadDataWithBaseURL("https://localhost/", html == null ? "" : html, "text/html", "UTF-8", null);
@@ -259,12 +338,14 @@ public class MainActivity extends BridgeActivity {
                 attachPrintView(printView);
                 printView.getSettings().setJavaScriptEnabled(false);
                 printView.getSettings().setDomStorageEnabled(false);
+                printView.getSettings().setLoadsImagesAutomatically(true);
+                printView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
                 printView.setWebViewClient(new WebViewClient() {
                     private boolean shared = false;
                     @Override public void onPageFinished(WebView view, String url) {
                         if (shared) return;
                         shared = true;
-                        view.postDelayed(() -> shareHtmlAsPdf(view, jobName, phone, message), 220);
+                        afterVisualReady(view, () -> shareHtmlAsPdf(view, jobName, phone, message));
                     }
                 });
                 printView.loadDataWithBaseURL("https://localhost/", html == null ? "" : html, "text/html", "UTF-8", null);

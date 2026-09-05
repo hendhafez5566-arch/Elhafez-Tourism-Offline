@@ -10,7 +10,7 @@ const UnifiedParty={
  record(type,id){const c=this.roleConfig[type];return c?byId(DB.data[c.list]||[],id):null},
  groupById(id){this.ensureData();return byId(DB.data.partyGroups,id)},
  groupFor(type,id){const x=this.record(type,id);return x?.partyGroupId?this.groupById(x.partyGroupId):null},
- roleIds(group){return{customer:group?.roles?.customer||'',supplier:group?.roles?.supplier||'',agent:group?.roles?.agent||''}},
+ roleIds(group){const roles={customer:group?.roles?.customer||'',supplier:group?.roles?.supplier||'',agent:group?.roles?.agent||''};let changed=false;for(const t of['customer','supplier','agent'])if(roles[t]&&!this.record(t,roles[t])){roles[t]='';changed=true}if(changed&&group){group.roles=roles;group.updatedAt=now()}return roles},
  roleRecord(group,type){const id=this.roleIds(group)[type];return id?this.record(type,id):null},
  canonical(type,id){const x=this.record(type,id),g=this.groupFor(type,id);return g||x||null},
  roleLabel(type){return this.roleConfig[type]?.label||type},

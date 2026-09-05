@@ -13,9 +13,9 @@ Object.assign(globalThis,{document:{documentElement:{classList:makeClass(),style
 Object.defineProperty(globalThis,'navigator',{value:{maxTouchPoints:0,userAgent:'ERP-Unified-Party-Smoke',onLine:false},configurable:true});
 Object.defineProperty(globalThis,'screen',{value:{width:1440,height:900},configurable:true});
 globalThis.window.addEventListener=()=>{};globalThis.window.open=()=>null;
-const code=fs.readFileSync(resolve(root,'dist/app.js'),'utf8')+`\n;globalThis.__erp={DB,Accounting,Invoices,Transactions,Auth,UnifiedParty,Statements};`;
+const code=fs.readFileSync(resolve(root,'dist/app.js'),'utf8')+`\n;globalThis.__erp={DB,Accounting,Invoices,Transactions,Auth,UnifiedParty,Statements,MasterData};`;
 vm.runInThisContext(code,{filename:'app.js'});await new Promise(r=>setTimeout(r,350));
-const {DB,Accounting,Invoices,Transactions,Auth,UnifiedParty,Statements}=globalThis.__erp;
+const {DB,Accounting,Invoices,Transactions,Auth,UnifiedParty,Statements,MasterData}=globalThis.__erp;
 DB.data.meta.setupComplete=true;const admin={id:'admin-unified',name:'Unified Admin',role:'admin',active:true,permissions:{all:true},approvalLimit:1e12};DB.data.users=[admin];Auth.user=admin;DB.save=async()=>true;
 const date=new Date().toISOString().slice(0,10);
 const customer=Transactions.addCustomer({name:'شركة الطرف الموحد',type:'company',phone:'01000000999'});
@@ -44,6 +44,21 @@ if(net.status!=='reversed')throw new Error('Netting reversal status failed');
 if(Math.abs(Invoices.remaining(sale)-15000)>.01||sale.status!=='open')throw new Error('Customer invoice did not reopen after netting reversal');
 if(Math.abs(Invoices.remaining(purchase)-25000)>.01||purchase.status!=='open')throw new Error('Supplier invoice did not reopen after netting reversal');
 const ar2=Number(Accounting.partyReceivable('customer',customer.id).EGP||0),ap2=Number(Accounting.supplierPayable(supplier.id).EGP||0);if(Math.abs(ar2-15000)>.01||Math.abs(ap2-25000)>.01)throw new Error('Control accounts did not restore after reversal');
+// A role with no accounting/operational references may be deleted and created again.
+const supplierOnly=Transactions.addSupplier({name:'طرف قابل لإعادة الدور',currency:'EGP',phone:'01000000888'});
+const tempCustomer=await UnifiedParty.createRole('supplier',supplierOnly.id,'customer');
+tempCustomer.active=false;
+const tempGroup=UnifiedParty.groupFor('supplier',supplierOnly.id);
+if(!tempGroup||tempGroup.roles.customer!==tempCustomer.id)throw new Error('Temporary linked customer role was not created');
+MasterData.removeCustomer(tempCustomer.id);
+if(DB.data.customers.some(x=>x.id===tempCustomer.id))throw new Error('Unused customer role was not deleted');
+if(tempGroup.roles.customer)throw new Error('Deleted customer role left a stale party-group link');
+if(!UnifiedParty.missingRoles('supplier',supplierOnly.id).includes('customer'))throw new Error('Customer role option did not return after safe delete');
+const recreated=await UnifiedParty.createRole('supplier',supplierOnly.id,'customer');
+if(!recreated||UnifiedParty.groupFor('supplier',supplierOnly.id)?.roles?.customer!==recreated.id)throw new Error('Deleted customer role could not be recreated');
+// Self-heal legacy stale links created by older builds.
+const recreatedId=recreated.id;recreated.active=false;MasterData.removeCustomer(recreatedId);tempGroup.roles.customer='legacy-missing-customer-id';
+if(!UnifiedParty.missingRoles('supplier',supplierOnly.id).includes('customer')||tempGroup.roles.customer)throw new Error('Legacy stale role link was not self-healed');
 const imbalanced=DB.data.journals.filter(j=>Math.abs((j.lines||[]).reduce((z,l)=>z+Number(l.baseDebit||0)-Number(l.baseCredit||0),0))>.01);
-const result={ok:!imbalanced.length,before:{له:row['له'],عليه:row['عليه'],net:row.net},netting:{max:pair.max,amount:net.amount,status:net.status,invoiceAllocations:net.invoiceAllocations.length},afterPost:{saleRemaining:0,purchaseRemaining:10000,ar,ap},afterReverse:{saleRemaining:Invoices.remaining(sale),purchaseRemaining:Invoices.remaining(purchase),ar:ar2,ap:ap2},imbalanced:imbalanced.length};
+const result={ok:!imbalanced.length,before:{له:row['له'],عليه:row['عليه'],net:row.net},netting:{max:pair.max,amount:net.amount,status:net.status,invoiceAllocations:net.invoiceAllocations.length},afterPost:{saleRemaining:0,purchaseRemaining:10000,ar,ap},afterReverse:{saleRemaining:Invoices.remaining(sale),purchaseRemaining:Invoices.remaining(purchase),ar:ar2,ap:ap2},roleDeleteRecreate:true,imbalanced:imbalanced.length};
 console.log(JSON.stringify(result,null,2));if(!result.ok)process.exit(3);

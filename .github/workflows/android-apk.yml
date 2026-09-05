@@ -35,6 +35,10 @@ jobs:
         run: npm run test:offline
       - name: Build bundled ERP and sync Android
         run: npm run mobile:sync
+      - name: Verify role recreation and WhatsApp PDF rendering guards
+        run: |
+          node scripts/unified-party-accounting-smoke.mjs
+          node scripts/offline-whatsapp-pdf-smoke.mjs
       - name: Restore release signing key
         if: env.KEYSTORE_B64 != ''
         shell: bash

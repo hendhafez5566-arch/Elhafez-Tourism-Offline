@@ -1,0 +1,49 @@
+Elhafez Tourism v32.5.45 — OFFLINE PDF + Unified Role Recovery Fix
+====================================================================
+
+المرجع:
+- مبني على Elhafez-Tourism-v32.5.44-OFFLINE-FULL-COPY.
+- لم يتم إعادة بناء النظام من الصفر.
+- CSS لم يتغير (مطابق byte-for-byte للإصدار السابق).
+
+الإصلاح 1 — PDF واتساب أبيض على Android:
+- الانتظار حتى تصبح حالة WebView المرئية جاهزة للرسم عبر postVisualStateCallback بدل الاعتماد على onPageFinished فقط.
+- تفعيل WebView.enableSlowWholeDocumentDraw قبل إنشاء WebView.
+- إبقاء WebView الخاص بالطباعة مرفقًا ومرئيًا خلف الواجهة بدل نقله خارج الشاشة بحجم 1x1.
+- استخدام Software rendering للـWebView المخصص للطباعة.
+- Rasterize لكل صفحة إلى Bitmap أولًا ثم إدراجها في PdfDocument.
+- فحص الصفحة الأولى لاكتشاف PDF الأبيض قبل المشاركة.
+- Retry تلقائي حتى محاولتين إضافيتين إذا لم يكتمل الرندر.
+- FileProvider + WhatsApp / WhatsApp Business / Share chooser كما هي.
+
+الإصلاح 2 — حذف دور مرتبط ثم عدم ظهور خيار إنشائه من جديد:
+- حذف دور غير مستخدم يفك role ID من partyGroup قبل حذف سجل الدور.
+- UnifiedParty.roleIds يعالج تلقائيًا أي stale role ID من إصدارات أقدم إذا كان السجل نفسه غير موجود.
+- زر إنشاء دور عميل/مورد/مندوب يعود تلقائيًا بعد الحذف الآمن.
+- تم اختبار: مورد -> إنشاء دور عميل -> تعليق -> حذف آمن -> عودة خيار العميل -> إنشاء العميل مرة أخرى.
+- حماية الحذف لم تتغير: وجود فاتورة/قيد/سند/حركة/مرجع تشغيلي يمنع الحذف.
+
+نتائج الاختبار:
+- TypeScript frontend build: PASS.
+- Offline architecture: 15/15 PASS.
+- WhatsApp Android anti-blank static/native regression: 8/8 PASS.
+- Unified party accounting + role delete/recreate: PASS.
+- Accounting smoke: 31 journals / 0 imbalanced.
+- Advanced accounting: 28 journals / 0 imbalanced.
+- Umrah workflow: 9 journals / 0 imbalanced.
+- Cancel integrity: PASS.
+- Browser suite: 6/6 PASS.
+- UI routes: 49 routes, 0 Page Errors, 0 Console Errors.
+- src/dist parity: PASS.
+- Module size gate: PASS.
+- Java MainActivity syntax/stub compile: PASS.
+- Full Gradle compile was not possible in this execution environment because Gradle 8.14.3 is not cached and outbound network is disabled. GitHub Actions workflow retains the real Android Gradle build gate.
+
+GitHub Actions:
+- android-apk.yml now runs the unified-role regression and WhatsApp PDF anti-blank regression after mobile:sync and before Gradle APK build.
+
+Version:
+- Web/Runtime/Server: 32.5.45
+- Android versionName: 32.5.45
+- Android versionCode: 32545
+- App ID: com.elhafez.tourism.erp.offline

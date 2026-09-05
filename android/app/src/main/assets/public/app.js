@@ -86,7 +86,7 @@ const statusClass = s => ({ draft: 'gray', posted: 'green', paid: 'green', appro
 const accountTypeLabel = t => ({ asset: 'أصول', liability: 'خصوم', equity: 'حقوق ملكية', revenue: 'إيرادات', expense: 'مصروفات', group: 'مجموعة' })[t] || t;
 const natureLabel = n => ({ debit: 'مدين', credit: 'دائن' })[n] || n;
 const expenseModeLabel = m => ({ paid: 'مدفوع الآن', accrued: 'مستحق', prepaid: 'مصروف مقدم' })[m] || m;
-const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.44', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
+const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.45', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
 const Device = { isMobileHardware() { const coarse = matchMedia?.('(any-pointer: coarse)')?.matches || false, touch = N(navigator.maxTouchPoints) > 0, smallPhysical = Math.min(N(screen.width) || 9999, N(screen.height) || 9999) <= 900, ua = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent); return ua || (touch && coarse && smallPhysical); }, apply() { document.documentElement.classList.toggle('mobile-device', this.isMobileHardware()); } };
 Device.apply();
 const PrefixDefaults = { customer: 'C', supplier: 'S', agent: 'A', lead: 'L', quotation: 'Q', purchaseOrder: 'PO', program: 'U', booking: 'B', service: 'SV', salesInvoice: 'SI', purchaseInvoice: 'PI', creditNote: 'CN', debitNote: 'DN', receipt: 'R', payment: 'P', expense: 'E', journal: 'J', transfer: 'T', commission: 'M', costCenter: 'CC', treasury: 'TR', attachment: 'AT', approval: 'AP', cashCount: 'CT', reconciliation: 'BR', fxRevaluation: 'FX', partyNetting: 'NET' };
@@ -2214,10 +2214,12 @@ const MasterData = {
         throw new Error('المورد غير موجود'); Object.assign(x, { ...o, no: x.no, id: x.id, active: x.active, updatedAt: now() }); DB.log('update', 'supplier', id, x.name); return x; }, updateAgent(id, o) { const x = byId(DB.data.agents, id); if (!x)
         throw new Error('المندوب غير موجود'); Object.assign(x, { ...o, no: x.no, id: x.id, active: x.active, updatedAt: now() }); DB.log('update', 'agent', id, x.name); return x; }, toggle(list, id) { const x = byId(DB.data[list] || [], id); if (!x)
         throw new Error('السجل غير موجود'); x.active = x.active === false; DB.log(x.active ? 'activate' : 'deactivate', list, id, x.name || x.no); return x; },
-    removeCustomer(id) { const x = byId(DB.data.customers, id); if (x?.active !== false)
-        throw new Error('علّق العميل أولًا قبل الحذف'); this.assertUnused('customer', id); DB.data.customers = DB.data.customers.filter(x => x.id !== id); }, removeSupplier(id) { const x = byId(DB.data.suppliers, id); if (x?.active !== false)
-        throw new Error('علّق المورد أولًا قبل الحذف'); this.assertUnused('supplier', id); DB.data.suppliers = DB.data.suppliers.filter(x => x.id !== id); }, removeAgent(id) { const x = byId(DB.data.agents, id); if (x?.active !== false)
-        throw new Error('علّق المندوب أولًا قبل الحذف'); this.assertUnused('agent', id); DB.data.agents = DB.data.agents.filter(x => x.id !== id); },
+    detachUnifiedRole(type, x) { const gid = x?.partyGroupId; if (!gid)
+        return; const g = (DB.data.partyGroups || []).find(z => z.id === gid); if (!g || g.roles?.[type] !== x.id)
+        return; g.roles = { customer: g.roles?.customer || '', supplier: g.roles?.supplier || '', agent: g.roles?.agent || '', [type]: '' }; g.updatedAt = now(); DB.log('unlink', 'partyGroup', g.id, `حذف دور ${type} — ${x.no || x.name || x.id}`); }, removeCustomer(id) { const x = byId(DB.data.customers, id); if (x?.active !== false)
+        throw new Error('علّق العميل أولًا قبل الحذف'); this.assertUnused('customer', id); this.detachUnifiedRole('customer', x); DB.data.customers = DB.data.customers.filter(x => x.id !== id); }, removeSupplier(id) { const x = byId(DB.data.suppliers, id); if (x?.active !== false)
+        throw new Error('علّق المورد أولًا قبل الحذف'); this.assertUnused('supplier', id); this.detachUnifiedRole('supplier', x); DB.data.suppliers = DB.data.suppliers.filter(x => x.id !== id); }, removeAgent(id) { const x = byId(DB.data.agents, id); if (x?.active !== false)
+        throw new Error('علّق المندوب أولًا قبل الحذف'); this.assertUnused('agent', id); this.detachUnifiedRole('agent', x); DB.data.agents = DB.data.agents.filter(x => x.id !== id); },
     updateAccount(id, o) { const a = Accounting.account(id); if (!a)
         throw new Error('الحساب غير موجود'); const locked = Accounting.accountLocked(id); if (a.system) {
         a.name = S(o.name || a.name).trim();
@@ -4115,7 +4117,14 @@ const UnifiedParty = {
     record(type, id) { const c = this.roleConfig[type]; return c ? byId(DB.data[c.list] || [], id) : null; },
     groupById(id) { this.ensureData(); return byId(DB.data.partyGroups, id); },
     groupFor(type, id) { const x = this.record(type, id); return x?.partyGroupId ? this.groupById(x.partyGroupId) : null; },
-    roleIds(group) { return { customer: group?.roles?.customer || '', supplier: group?.roles?.supplier || '', agent: group?.roles?.agent || '' }; },
+    roleIds(group) { const roles = { customer: group?.roles?.customer || '', supplier: group?.roles?.supplier || '', agent: group?.roles?.agent || '' }; let changed = false; for (const t of ['customer', 'supplier', 'agent'])
+        if (roles[t] && !this.record(t, roles[t])) {
+            roles[t] = '';
+            changed = true;
+        } if (changed && group) {
+        group.roles = roles;
+        group.updatedAt = now();
+    } return roles; },
     roleRecord(group, type) { const id = this.roleIds(group)[type]; return id ? this.record(type, id) : null; },
     canonical(type, id) { const x = this.record(type, id), g = this.groupFor(type, id); return g || x || null; },
     roleLabel(type) { return this.roleConfig[type]?.label || type; },
@@ -4875,7 +4884,7 @@ const Print = {
             toast(`جاري تجهيز ملف PDF لـ ${r.name || 'صاحب المستند'}...`, 'info');
             if (this.nativeShareTimer)
                 clearTimeout(this.nativeShareTimer);
-            this.nativeShareTimer = setTimeout(() => { this.nativeShareTimer = null; toast('لم يكتمل تجهيز PDF من تطبيق Android. حدّث التطبيق إلى الإصدار 32.5.44 ثم أعد المحاولة.', 'error'); }, 15000);
+            this.nativeShareTimer = setTimeout(() => { this.nativeShareTimer = null; toast('لم يكتمل تجهيز PDF من تطبيق Android. حدّث التطبيق إلى الإصدار 32.5.45 ثم أعد المحاولة.', 'error'); }, 15000);
             native.sharePdf(p.html, p.documentTitle, r.phone, message);
             return;
         }
@@ -16888,7 +16897,7 @@ if (uxModal)
         if (init?.headers)
             new Headers(init.headers).forEach((v, k) => h.set(k, v));
         h.set('X-ERP-Mobile', 'android');
-        h.set('X-ERP-Mobile-Version', '32.5.44-OFFLINE');
+        h.set('X-ERP-Mobile-Version', '32.5.45-OFFLINE');
         return h;
     };
     if (!offlineEdition)
@@ -17409,7 +17418,7 @@ if (uxModal)
         releaseCheckBusy = true;
         lastReleaseCheck = now;
         try {
-            const response = await nativeFetch(`${API_BASE}/api/health?_=${now}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'X-ERP-Mobile': 'android', 'X-ERP-Mobile-Version': '32.5.44' } });
+            const response = await nativeFetch(`${API_BASE}/api/health?_=${now}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'X-ERP-Mobile': 'android', 'X-ERP-Mobile-Version': '32.5.45' } });
             if (!response.ok)
                 return false;
             const payload = await response.json();
