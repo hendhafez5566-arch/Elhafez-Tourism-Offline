@@ -1,0 +1,7 @@
+Elhafez Tourism Offline v32.5.50 — Android PDF build clean fix
+
+- إصلاح سبب فشل GitHub Actions في v32.5.49: لا يتم إنشاء LayoutResultCallback أو WriteResultCallback يدويًا لأن منشئاتها غير عامة في Android framework.
+- مشاركة واتساب تستخدم PrintedPdfDocument العام والرسمي، وترسم WebView مباشرة على Canvas صفحات PDF A4 بدون Bitmap أو Screenshot وسيط.
+- هوامش A4 فعلية 10mm، ودعم portrait/landscape، وتقسيم المحتوى إلى صفحات متعددة.
+- لا تغيير في المحاسبة أو القيود أو الحجوزات أو الموردين أو المخزون أو قاعدة البيانات.
+- الحفاظ على إصلاحات Sidebar والكيبورد/Autofill وجهات الاتصال من v32.5.49.

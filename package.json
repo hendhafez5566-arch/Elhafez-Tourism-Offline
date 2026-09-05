@@ -1,8 +1,8 @@
 {
   "name": "erp-professional-suite-commercial",
   "private": true,
-  "version": "32.5.49",
-  "description": "Elhafez Tourism v32.5.49 — clean offline Android release with standard WebView IME/autofill, native A4 PDF sharing and stable sidebar behavior.",
+  "version": "32.5.50",
+  "description": "Elhafez Tourism v32.5.50 — clean offline Android release with standard WebView IME/autofill, direct A4 PDF canvas sharing and stable sidebar behavior.",
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-static.mjs && tsc -p server/tsconfig.json",
     "start": "node server/dist/server.js",
@@ -66,7 +66,7 @@
   },
   "erpRelease": {
     "channel": "offline-copy",
-    "notes": "Full offline v32.5.49: replaces raster screenshot PDFs with the Android WebView print engine for true A4 PDF sharing, removes sidebar accordion/scroll regressions, preserves keyboard suggestions, collapsible per-user shortcuts and the native contact phone picker. No accounting, booking, inventory, database or business-rule changes.",
+    "notes": "Full offline v32.5.50: renders the print WebView directly into Android A4 PDF pages without Bitmap screenshots or inaccessible print callbacks, removes sidebar accordion/scroll regressions, preserves keyboard suggestions, collapsible per-user shortcuts and the native contact phone picker. No accounting, booking, inventory, database or business-rule changes.",
     "migrationRequired": false
   },
   "dependencies": {

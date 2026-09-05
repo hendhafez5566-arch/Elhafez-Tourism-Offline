@@ -86,7 +86,7 @@ const statusClass = s => ({ draft: 'gray', posted: 'green', paid: 'green', appro
 const accountTypeLabel = t => ({ asset: 'أصول', liability: 'خصوم', equity: 'حقوق ملكية', revenue: 'إيرادات', expense: 'مصروفات', group: 'مجموعة' })[t] || t;
 const natureLabel = n => ({ debit: 'مدين', credit: 'دائن' })[n] || n;
 const expenseModeLabel = m => ({ paid: 'مدفوع الآن', accrued: 'مستحق', prepaid: 'مصروف مقدم' })[m] || m;
-const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.49', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
+const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.50', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
 const Device = { isMobileHardware() { const coarse = matchMedia?.('(any-pointer: coarse)')?.matches || false, touch = N(navigator.maxTouchPoints) > 0, smallPhysical = Math.min(N(screen.width) || 9999, N(screen.height) || 9999) <= 900, ua = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent); return ua || (touch && coarse && smallPhysical); }, apply() { document.documentElement.classList.toggle('mobile-device', this.isMobileHardware()); } };
 Device.apply();
 const PrefixDefaults = { customer: 'C', supplier: 'S', agent: 'A', lead: 'L', quotation: 'Q', purchaseOrder: 'PO', program: 'U', booking: 'B', service: 'SV', salesInvoice: 'SI', purchaseInvoice: 'PI', creditNote: 'CN', debitNote: 'DN', receipt: 'R', payment: 'P', expense: 'E', journal: 'J', transfer: 'T', commission: 'M', costCenter: 'CC', treasury: 'TR', attachment: 'AT', approval: 'AP', cashCount: 'CT', reconciliation: 'BR', fxRevaluation: 'FX', partyNetting: 'NET' };
@@ -4894,7 +4894,7 @@ const Print = {
             toast(`جاري تجهيز ملف PDF لـ ${r.name || 'صاحب المستند'}...`, 'info');
             if (this.nativeShareTimer)
                 clearTimeout(this.nativeShareTimer);
-            this.nativeShareTimer = setTimeout(() => { this.nativeShareTimer = null; toast('لم يكتمل تجهيز PDF من تطبيق Android. حدّث التطبيق إلى الإصدار 32.5.49 ثم أعد المحاولة.', 'error'); }, 15000);
+            this.nativeShareTimer = setTimeout(() => { this.nativeShareTimer = null; toast('لم يكتمل تجهيز PDF من تطبيق Android. حدّث التطبيق إلى الإصدار 32.5.50 ثم أعد المحاولة.', 'error'); }, 15000);
             if (native?.sharePdfA4)
                 native.sharePdfA4(p.html, p.documentTitle, r.phone, message, p.orientation);
             else
@@ -16976,7 +16976,7 @@ if (uxModal)
         if (init?.headers)
             new Headers(init.headers).forEach((v, k) => h.set(k, v));
         h.set('X-ERP-Mobile', 'android');
-        h.set('X-ERP-Mobile-Version', '32.5.49-OFFLINE');
+        h.set('X-ERP-Mobile-Version', '32.5.50-OFFLINE');
         return h;
     };
     if (!offlineEdition)
@@ -17497,7 +17497,7 @@ if (uxModal)
         releaseCheckBusy = true;
         lastReleaseCheck = now;
         try {
-            const response = await nativeFetch(`${API_BASE}/api/health?_=${now}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'X-ERP-Mobile': 'android', 'X-ERP-Mobile-Version': '32.5.49' } });
+            const response = await nativeFetch(`${API_BASE}/api/health?_=${now}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'X-ERP-Mobile': 'android', 'X-ERP-Mobile-Version': '32.5.50' } });
             if (!response.ok)
                 return false;
             const payload = await response.json();

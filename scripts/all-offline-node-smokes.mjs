@@ -16,6 +16,7 @@ const scripts=[
   'v32547-mobile-clean-smoke.mjs',
   'v32548-clean-print-sidebar-smoke.mjs',
   'v32549-keyboard-autofill-smoke.mjs',
+  'v32550-android-pdf-build-smoke.mjs',
   'system-ux-smoke.mjs',
   'clean-ui-smoke.mjs',
   'rocket-360-performance-smoke.mjs'
