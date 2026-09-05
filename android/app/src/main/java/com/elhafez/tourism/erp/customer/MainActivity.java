@@ -279,7 +279,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void shareHtmlAsPdf(WebView view, String jobName, String phone, String message, String orientation, int attempt) {
-        String safe = (jobName == null || jobName.trim().isEmpty()) ? "document" : jobName.replaceAll("[^\p{L}\p{N}._-]+", "_");
+        String safe = (jobName == null || jobName.trim().isEmpty()) ? "document" : jobName.replaceAll("[^\\p{L}\\p{N}._-]+", "_");
         File file = new File(getCacheDir(), safe + "_" + System.currentTimeMillis() + ".pdf");
         final boolean landscape = "landscape".equalsIgnoreCase(orientation);
         final int pageWidth = landscape ? 842 : 595;
