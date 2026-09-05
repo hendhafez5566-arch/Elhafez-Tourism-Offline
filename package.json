@@ -1,8 +1,8 @@
 {
   "name": "erp-professional-suite-commercial",
   "private": true,
-  "version": "32.5.47",
-  "description": "Elhafez Tourism v32.5.47 — clean offline Android release with density-correct A4 WhatsApp PDF, keyboard suggestions, collapsible shortcuts and native contact phone picker.",
+  "version": "32.5.49",
+  "description": "Elhafez Tourism v32.5.49 — clean offline Android release with standard WebView IME/autofill, native A4 PDF sharing and stable sidebar behavior.",
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-static.mjs && tsc -p server/tsconfig.json",
     "start": "node server/dist/server.js",
@@ -66,7 +66,7 @@
   },
   "erpRelease": {
     "channel": "offline-copy",
-    "notes": "Full offline v32.5.47: density-correct native A4 WhatsApp PDF rendering, explicit Android keyboard suggestion hints, Hajj/Umrah-style collapsible per-user shortcuts, and system contact phone picker without broad contacts permission. Activity log remains capped at 1000 visible entries.",
+    "notes": "Full offline v32.5.49: replaces raster screenshot PDFs with the Android WebView print engine for true A4 PDF sharing, removes sidebar accordion/scroll regressions, preserves keyboard suggestions, collapsible per-user shortcuts and the native contact phone picker. No accounting, booking, inventory, database or business-rule changes.",
     "migrationRequired": false
   },
   "dependencies": {

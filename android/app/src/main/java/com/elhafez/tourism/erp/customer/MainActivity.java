@@ -9,13 +9,15 @@ import android.provider.ContactsContract;
 import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
-import android.graphics.pdf.PdfDocument;
-import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.Canvas;
 import android.os.Bundle;
+import android.os.Build;
+import android.os.CancellationSignal;
+import android.os.ParcelFileDescriptor;
+import android.print.PageRange;
 import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
+import android.print.PrintDocumentInfo;
 import android.print.PrintManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
@@ -27,7 +29,6 @@ import androidx.core.content.FileProvider;
 import com.getcapacitor.BridgeActivity;
 
 import java.io.File;
-import java.io.FileOutputStream;
 
 import org.json.JSONObject;
 
@@ -36,11 +37,11 @@ public class MainActivity extends BridgeActivity {
     private String pendingContactField = "";
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        // Required when a WebView is rendered into an off-screen bitmap/PDF.
-        // Call before BridgeActivity creates its first WebView.
-        WebView.enableSlowWholeDocumentDraw();
         super.onCreate(savedInstanceState);
         WebView webView = getBridge().getWebView();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            webView.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_YES);
+        }
         // These native interfaces live on the WebView itself, so they remain
         // available after the Customer resolver navigates to its Railway runtime.
         webView.addJavascriptInterface(new NativePrintBridge(), "NativePrint");
@@ -214,20 +215,6 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
-    private boolean bitmapHasInk(Bitmap bitmap) {
-        if (bitmap == null || bitmap.getWidth() <= 0 || bitmap.getHeight() <= 0) return false;
-        int stepX = Math.max(6, bitmap.getWidth() / 48);
-        int stepY = Math.max(6, bitmap.getHeight() / 64);
-        for (int y = 0; y < bitmap.getHeight(); y += stepY) {
-            for (int x = 0; x < bitmap.getWidth(); x += stepX) {
-                int c = bitmap.getPixel(x, y);
-                int a = Color.alpha(c), r = Color.red(c), g = Color.green(c), b = Color.blue(c);
-                if (a > 20 && (r < 246 || g < 246 || b < 246)) return true;
-            }
-        }
-        return false;
-    }
-
     private Intent buildPdfShareIntent(File file, Uri uri, String phone, String message, String packageName) {
         Intent share = new Intent(Intent.ACTION_SEND);
         share.setType("application/pdf");
@@ -270,90 +257,100 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    private PrintAttributes buildPdfAttributes(boolean landscape) {
+        PrintAttributes.MediaSize media = PrintAttributes.MediaSize.ISO_A4;
+        media = landscape ? media.asLandscape() : media.asPortrait();
+        return new PrintAttributes.Builder()
+                .setMediaSize(media)
+                .setResolution(new PrintAttributes.Resolution("elhafez_pdf", "Elhafez PDF", 600, 600))
+                .setMinMargins(new PrintAttributes.Margins(0, 0, 0, 0))
+                .setColorMode(PrintAttributes.COLOR_MODE_COLOR)
+                .build();
+    }
+
+    private void closePrintAdapter(PrintDocumentAdapter adapter, ParcelFileDescriptor descriptor, WebView view) {
+        try { if (descriptor != null) descriptor.close(); } catch (Exception ignored) { }
+        try { if (adapter != null) adapter.onFinish(); } catch (Exception ignored) { }
+        destroyPrintView(view);
+    }
+
     private void shareHtmlAsPdf(WebView view, String jobName, String phone, String message) {
-        shareHtmlAsPdf(view, jobName, phone, message, "portrait", 0);
+        shareHtmlAsPdf(view, jobName, phone, message, "portrait");
     }
 
     private void shareHtmlAsPdf(WebView view, String jobName, String phone, String message, String orientation) {
-        shareHtmlAsPdf(view, jobName, phone, message, orientation, 0);
-    }
-
-    private void shareHtmlAsPdf(WebView view, String jobName, String phone, String message, String orientation, int attempt) {
-        String safe = (jobName == null || jobName.trim().isEmpty()) ? "document" : jobName.replaceAll("[^\\p{L}\\p{N}._-]+", "_");
-        File file = new File(getCacheDir(), safe + "_" + System.currentTimeMillis() + ".pdf");
+        final String safe = (jobName == null || jobName.trim().isEmpty())
+                ? "document"
+                : jobName.replaceAll("[^\\p{L}\\p{N}._-]+", "_");
+        final File file = new File(getCacheDir(), safe + "_" + System.currentTimeMillis() + ".pdf");
         final boolean landscape = "landscape".equalsIgnoreCase(orientation);
-        final int pageWidth = landscape ? 842 : 595;
-        final int pageHeight = landscape ? 595 : 842;
-        final int margin = 28;
-        final int cssContentWidth = landscape ? 1047 : 718;
-        final float density = Math.max(1f, getResources().getDisplayMetrics().density);
-        final int renderWidth = Math.max(cssContentWidth, Math.round(cssContentWidth * density));
-        final float pdfContentWidth = pageWidth - (margin * 2f);
-        final float pdfContentHeight = pageHeight - (margin * 2f);
-        final float scale = pdfContentWidth / renderWidth;
-        final float sourcePageHeight = pdfContentHeight / scale;
-        PdfDocument pdf = new PdfDocument();
+        final PrintAttributes attributes = buildPdfAttributes(landscape);
+        final PrintDocumentAdapter adapter = view.createPrintDocumentAdapter(safe);
+        final CancellationSignal cancellation = new CancellationSignal();
+
         try {
-            view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-            view.getSettings().setUseWideViewPort(true);
-            view.getSettings().setLoadWithOverviewMode(false);
-            ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
-            if (layoutParams != null) { layoutParams.width = renderWidth; view.setLayoutParams(layoutParams); }
-            int widthSpec = View.MeasureSpec.makeMeasureSpec(renderWidth, View.MeasureSpec.EXACTLY);
-            int heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
-            view.measure(widthSpec, heightSpec);
-            int measuredHeight = Math.max(1, view.getMeasuredHeight());
-            int chromiumHeight = Math.max(1, Math.round(view.getContentHeight() * density));
-            int contentHeight = Math.max(measuredHeight, chromiumHeight);
-            if (contentHeight <= 2) throw new IllegalStateException("pdf_content_not_ready");
-            view.measure(widthSpec, View.MeasureSpec.makeMeasureSpec(contentHeight, View.MeasureSpec.EXACTLY));
-            view.layout(0, 0, renderWidth, contentHeight);
-            view.scrollTo(0, 0);
+            adapter.onStart();
+            adapter.onLayout(attributes, attributes, cancellation,
+                    new PrintDocumentAdapter.LayoutResultCallback() {
+                        @Override
+                        public void onLayoutFinished(PrintDocumentInfo info, boolean changed) {
+                            final ParcelFileDescriptor descriptor;
+                            try {
+                                descriptor = ParcelFileDescriptor.open(file,
+                                        ParcelFileDescriptor.MODE_CREATE |
+                                        ParcelFileDescriptor.MODE_TRUNCATE |
+                                        ParcelFileDescriptor.MODE_READ_WRITE);
+                            } catch (Exception e) {
+                                closePrintAdapter(adapter, null, view);
+                                notifyPdfShare("error", "تعذر إنشاء ملف PDF للمشاركة");
+                                return;
+                            }
 
-            int pageCount = Math.max(1, (int) Math.ceil(contentHeight / sourcePageHeight));
-            boolean firstPageHasInk = false;
-            for (int i = 0; i < pageCount; i++) {
-                Bitmap bitmap = Bitmap.createBitmap(pageWidth, pageHeight, Bitmap.Config.ARGB_8888);
-                Canvas bitmapCanvas = new Canvas(bitmap);
-                bitmapCanvas.drawColor(Color.WHITE);
-                bitmapCanvas.save();
-                bitmapCanvas.clipRect(margin, margin, pageWidth - margin, pageHeight - margin);
-                bitmapCanvas.translate(margin, margin);
-                bitmapCanvas.scale(scale, scale);
-                bitmapCanvas.translate(0, -(i * sourcePageHeight));
-                view.draw(bitmapCanvas);
-                bitmapCanvas.restore();
-                if (i == 0) firstPageHasInk = bitmapHasInk(bitmap);
+                            adapter.onWrite(new PageRange[]{PageRange.ALL_PAGES}, descriptor, cancellation,
+                                    new PrintDocumentAdapter.WriteResultCallback() {
+                                        @Override
+                                        public void onWriteFinished(PageRange[] pages) {
+                                            closePrintAdapter(adapter, descriptor, view);
+                                            if (!file.isFile() || file.length() <= 0) {
+                                                notifyPdfShare("error", "تم إنشاء ملف PDF فارغ");
+                                                return;
+                                            }
+                                            sharePdfFile(file, phone, message);
+                                        }
 
-                PdfDocument.PageInfo info = new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, i + 1).create();
-                PdfDocument.Page page = pdf.startPage(info);
-                page.getCanvas().drawColor(Color.WHITE);
-                page.getCanvas().drawBitmap(bitmap, 0, 0, null);
-                pdf.finishPage(page);
-                bitmap.recycle();
-            }
+                                        @Override
+                                        public void onWriteFailed(CharSequence error) {
+                                            closePrintAdapter(adapter, descriptor, view);
+                                            try { file.delete(); } catch (Exception ignored) { }
+                                            notifyPdfShare("error", "تعذر كتابة ملف PDF للمشاركة");
+                                        }
 
-            if (!firstPageHasInk) {
-                try { pdf.close(); } catch (Exception ignored) { }
-                if (attempt < 2) {
-                    view.postDelayed(() -> afterVisualReady(view, () -> shareHtmlAsPdf(view, jobName, phone, message, orientation, attempt + 1)), 220);
-                    return;
-                }
-                throw new IllegalStateException("pdf_render_blank");
-            }
+                                        @Override
+                                        public void onWriteCancelled() {
+                                            closePrintAdapter(adapter, descriptor, view);
+                                            try { file.delete(); } catch (Exception ignored) { }
+                                            notifyPdfShare("error", "تم إلغاء تجهيز ملف PDF");
+                                        }
+                                    });
+                        }
 
-            try (FileOutputStream out = new FileOutputStream(file)) { pdf.writeTo(out); out.flush(); }
-            pdf.close();
-            destroyPrintView(view);
-            if (!file.isFile() || file.length() <= 0) throw new IllegalStateException("pdf_file_empty");
-            sharePdfFile(file, phone, message);
+                        @Override
+                        public void onLayoutFailed(CharSequence error) {
+                            closePrintAdapter(adapter, null, view);
+                            try { file.delete(); } catch (Exception ignored) { }
+                            notifyPdfShare("error", "تعذر تجهيز صفحات PDF");
+                        }
+
+                        @Override
+                        public void onLayoutCancelled() {
+                            closePrintAdapter(adapter, null, view);
+                            try { file.delete(); } catch (Exception ignored) { }
+                            notifyPdfShare("error", "تم إلغاء تجهيز صفحات PDF");
+                        }
+                    }, new Bundle());
         } catch (Exception e) {
-            try { pdf.close(); } catch (Exception ignored) { }
-            if (attempt < 2 && "pdf_content_not_ready".equals(e.getMessage())) {
-                view.postDelayed(() -> afterVisualReady(view, () -> shareHtmlAsPdf(view, jobName, phone, message, orientation, attempt + 1)), 220);
-                return;
-            }
-            destroyPrintView(view);
+            closePrintAdapter(adapter, null, view);
+            try { file.delete(); } catch (Exception ignored) { }
             notifyPdfShare("error", "تعذر إنشاء ملف PDF للمشاركة");
         }
     }
@@ -372,7 +369,6 @@ public class MainActivity extends BridgeActivity {
                 printView.getSettings().setJavaScriptEnabled(false);
                 printView.getSettings().setDomStorageEnabled(false);
                 printView.getSettings().setLoadsImagesAutomatically(true);
-                printView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
                 printView.setWebViewClient(new WebViewClient() {
                     private boolean printed = false;
                     @Override
@@ -391,15 +387,13 @@ public class MainActivity extends BridgeActivity {
             runOnUiThread(() -> {
                 final boolean landscape = "landscape".equalsIgnoreCase(orientation);
                 final int cssWidth = landscape ? 1047 : 718;
-                final float density = Math.max(1f, getResources().getDisplayMetrics().density);
                 final WebView printView = new WebView(MainActivity.this);
-                attachPrintView(printView, Math.round(cssWidth * density));
+                attachPrintView(printView, cssWidth);
                 printView.getSettings().setJavaScriptEnabled(false);
                 printView.getSettings().setDomStorageEnabled(false);
                 printView.getSettings().setLoadsImagesAutomatically(true);
                 printView.getSettings().setUseWideViewPort(true);
                 printView.getSettings().setLoadWithOverviewMode(false);
-                printView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
                 printView.setWebViewClient(new WebViewClient() {
                     private boolean shared = false;
                     @Override public void onPageFinished(WebView view, String url) {
@@ -414,23 +408,7 @@ public class MainActivity extends BridgeActivity {
 
         @JavascriptInterface
         public void sharePdf(String html, String jobName, String phone, String message) {
-            runOnUiThread(() -> {
-                final WebView printView = new WebView(MainActivity.this);
-                attachPrintView(printView);
-                printView.getSettings().setJavaScriptEnabled(false);
-                printView.getSettings().setDomStorageEnabled(false);
-                printView.getSettings().setLoadsImagesAutomatically(true);
-                printView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-                printView.setWebViewClient(new WebViewClient() {
-                    private boolean shared = false;
-                    @Override public void onPageFinished(WebView view, String url) {
-                        if (shared) return;
-                        shared = true;
-                        afterVisualReady(view, () -> shareHtmlAsPdf(view, jobName, phone, message));
-                    }
-                });
-                printView.loadDataWithBaseURL("https://localhost/", html == null ? "" : html, "text/html", "UTF-8", null);
-            });
+            sharePdfA4(html, jobName, phone, message, "portrait");
         }
     }
 }

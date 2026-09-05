@@ -32,7 +32,7 @@ a{text-decoration:none;color:inherit}.hidden{display:none!important}.muted{color
 .svg-icon{width:19px;height:19px;display:inline-block;vertical-align:-4px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.svg-icon.sm{width:16px;height:16px}.svg-icon.lg{width:23px;height:23px}
 #app{min-height:100vh}
 .sidebar{position:fixed;right:0;top:0;bottom:0;width:var(--sidebar);background:linear-gradient(178deg,var(--navy),var(--navy-3));color:#fff;padding:15px 12px 14px;overflow:auto;overscroll-behavior:contain;z-index:70;box-shadow:-12px 0 36px rgba(6,20,38,.16);scrollbar-width:thin;scrollbar-color:#ffffff22 transparent}
-.sidebar:before{content:"";position:fixed;right:0;top:0;width:var(--sidebar);height:190px;background:radial-gradient(circle at 30% 0%,color-mix(in srgb,var(--brand) 35%,transparent),transparent 68%);pointer-events:none}
+.sidebar:before{content:"";position:absolute;right:0;top:0;width:var(--sidebar);height:190px;background:radial-gradient(circle at 30% 0%,color-mix(in srgb,var(--brand) 35%,transparent),transparent 68%);pointer-events:none}
 .brand{position:relative;display:flex;align-items:center;gap:12px;padding:11px 10px 17px;margin-bottom:8px;border-bottom:1px solid #ffffff18}
 .logo{width:50px;height:50px;border-radius:16px;background:linear-gradient(145deg,#fff,#f0f4fa);color:var(--brand);display:grid;place-items:center;font-weight:900;font-size:calc(23px * var(--font-scale));overflow:hidden;box-shadow:0 8px 22px #0002;border:1px solid #ffffff80;flex:0 0 auto}.logo img{width:100%;height:100%;object-fit:cover}.brand b{display:block;font-size:calc(15.5px * var(--font-scale));line-height:1.45;max-width:190px}.brand small{display:block;color:#bfcce0;margin-top:4px;font-size:calc(11.5px * var(--font-scale));letter-spacing:.2px}.brand .brand-tag{margin-top:7px;display:inline-flex;gap:5px;align-items:center;font-size:calc(10.5px * var(--font-scale));color:#e8eef7;background:#ffffff12;border:1px solid #ffffff14;border-radius:999px;padding:4px 8px}
 .nav-group{margin-top:12px}.nav-title{color:#91a4bf;font-size:calc(10.5px * var(--font-scale));font-weight:800;padding:8px 11px 5px;letter-spacing:.35px}.nav-btn{width:100%;border:0;background:transparent;color:#eaf1fb;border-radius:13px;padding:10px 11px;margin:3px 0;display:flex;align-items:center;gap:11px;text-align:right;position:relative;transition:.18s ease}.nav-btn:hover{background:#ffffff0d;transform:translateX(-2px)}.nav-btn.active{background:linear-gradient(90deg,#ffffff16,#ffffff0d);box-shadow:inset -3px 0 var(--brand),0 7px 18px #00000012}.nav-btn .nav-ico{width:34px;height:34px;border-radius:10px;background:#ffffff0c;display:grid;place-items:center;color:#cbd9ed;flex:0 0 auto}.nav-btn.active .nav-ico{background:color-mix(in srgb,var(--brand) 22%,transparent);color:#fff2c8}.nav-btn .nav-copy{min-width:0;flex:1}.nav-btn b{font-weight:750;font-size:calc(13.5px * var(--font-scale))}.nav-btn small{display:block;color:#aebdd2;font-size:calc(10.8px * var(--font-scale));margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nav-badge{font-size:calc(10px * var(--font-scale));font-weight:800;min-width:20px;height:20px;padding:0 6px;border-radius:999px;display:grid;place-items:center;background:#ffffff15;color:#dfe8f5}.nav-btn.active .nav-badge{background:var(--brand);color:#fff}
@@ -864,7 +864,7 @@ body.sidebar-auto .sidebar:not(:hover) .workspace-nav-section>summary{display:no
 .umrah-nav-group-body{padding-top:3px}
 @media(max-width:780px){.workspace-nav-chevron{width:10px;height:10px}.workspace-accordion details>summary{min-height:44px;display:flex;align-items:center}}
 
-/* v32.5.47 — clean native contact picker + collapsible per-user shortcuts. */
+/* v32.5.47 — native contact picker + collapsible per-user shortcuts. */
 .phone-input-wrap{display:flex;align-items:stretch;gap:8px;width:100%}
 .phone-input-wrap>input{flex:1;min-width:0}
 .phone-contact-pick{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;border:1px solid var(--line,#d7dce3);background:var(--surface,#fff);color:var(--ink,#1d2a3b);border-radius:10px;padding:0 11px;font:inherit;cursor:pointer}
@@ -872,3 +872,7 @@ body.sidebar-auto .sidebar:not(:hover) .workspace-nav-section>summary{display:no
 .shortcut-nav-group{padding-top:0}
 .shortcut-nav-details{margin-top:0}
 @media(max-width:780px){.phone-input-wrap{gap:6px}.phone-contact-pick{padding:0 10px}.phone-contact-pick span{display:none}}
+
+/* v32.5.48 — stable Android sidebar compositing; no layout/scroll flash. */
+.native-android .sidebar{will-change:transform;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.native-android .sidebar #nav{-webkit-overflow-scrolling:touch}

@@ -5,15 +5,15 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const main=fs.readFileSync(path.join(root,'android/app/src/main/java/com/elhafez/tourism/erp/customer/MainActivity.java'),'utf8');
 const printing=fs.readFileSync(path.join(root,'src/reports/printing.ts'),'utf8');
 const checks=[
- ['whole-document draw enabled before Bridge WebView',main.indexOf('WebView.enableSlowWholeDocumentDraw();')>=0&&main.indexOf('WebView.enableSlowWholeDocumentDraw();')<main.indexOf('super.onCreate(savedInstanceState);')],
- ['print WebView is attached and software-rendered',main.includes('root.addView(view, 0')&&main.includes('View.LAYER_TYPE_SOFTWARE')&&!main.includes('setTranslationX(-10000f)')],
- ['visual state callback gates rendering',main.includes('postVisualStateCallback')&&main.includes('afterVisualReady(view')],
- ['A4 PDF renders with density-correct CSS viewport and PDF-point scaling',main.includes('cssContentWidth = landscape ? 1047 : 718')&&main.includes('getDisplayMetrics().density')&&main.includes('pdfContentWidth / renderWidth')&&main.includes('pdfContentHeight / scale')],
- ['WebView renders one A4 bitmap per PDF page',main.includes('Bitmap.createBitmap')&&main.includes('view.draw(bitmapCanvas)')&&main.includes('drawBitmap(bitmap, 0, 0, null)')],
- ['blank PDF is detected and retried',main.includes('bitmapHasInk')&&main.includes('pdf_render_blank')&&main.includes('attempt < 2')],
+ ['native PDF uses Chromium PrintDocumentAdapter',main.includes('createPrintDocumentAdapter')&&main.includes('LayoutResultCallback()')&&main.includes('WriteResultCallback()')],
+ ['native PDF targets ISO A4 and respects orientation',main.includes('PrintAttributes.MediaSize.ISO_A4')&&main.includes('media.asLandscape()')&&main.includes('media.asPortrait()')],
+ ['native PDF writes directly to a file descriptor',main.includes('ParcelFileDescriptor.open')&&main.includes('PageRange.ALL_PAGES')],
+ ['screenshot/raster document path is absent',!main.includes('Bitmap.createBitmap')&&!main.includes('view.draw(bitmapCanvas)')&&!main.includes('drawBitmap(bitmap')&&!main.includes('PdfDocument pdf')],
+ ['obsolete whole-document bitmap drawing is absent',!main.includes('enableSlowWholeDocumentDraw')&&!main.includes('bitmapHasInk')],
  ['WhatsApp PDF uses FileProvider and readable URI grant',main.includes('FileProvider.getUriForFile')&&main.includes('ClipData.newRawUri')&&main.includes('FLAG_GRANT_READ_URI_PERMISSION')&&main.includes('grantUriPermission')],
- ['native callback is wired back to UI',main.includes('erp:native-pdf-share')&&printing.includes('erp:native-pdf-share')&&(printing.includes('native?.sharePdfA4')||printing.includes('native?.sharePdf'))],
- ['forbidden PrintDocumentAdapter callbacks are absent',!main.includes('LayoutResultCallback()')&&!main.includes('WriteResultCallback()')]
+ ['native callback is wired back to UI',main.includes('erp:native-pdf-share')&&printing.includes('erp:native-pdf-share')&&printing.includes('native?.sharePdfA4')],
+ ['print payload has A4 CSS page rules',printing.includes('@page{size:${s.printPaper||\'A4\'} ${s.printOrientation||\'portrait\'};margin:10mm}')],
+ ['offline print payload does not fetch Google Fonts',!printing.includes('fonts.googleapis.com')]
 ];
 for(const [name,pass] of checks) console.log(`${pass?'PASS':'FAIL'} ${name}`);
 if(checks.some(([,p])=>!p)) process.exit(1);

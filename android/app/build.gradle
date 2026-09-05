@@ -19,8 +19,8 @@ android {
         buildConfigField "String", "ELHAFEZ_TECHNOLOGY_URL", groovy.json.JsonOutput.toJson('')
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 32547
-        versionName "32.5.47"
+        versionCode 32549
+        versionName "32.5.49"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

@@ -64,7 +64,7 @@
           </div>
           <div id="loginInlineMessage" class="login-inline-message hidden" role="alert" aria-live="assertive"></div>
           <div class="login-fields">
-            <div class="field"><label>اسم المستخدم <span class="req">*</span></label><input name="username" autocomplete="username" autocapitalize="none" spellcheck="false" dir="ltr" placeholder="اسم المستخدم" required></div>
+            <div class="field"><label>اسم المستخدم <span class="req">*</span></label><input name="username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text" dir="ltr" placeholder="اسم المستخدم" required></div>
             <div class="field"><div class="field-label-row"><label>كلمة المرور <span class="req">*</span></label><button class="login-link" type="button" onclick="Auth.showRecovery()">نسيت كلمة المرور أو اسم المستخدم؟</button></div><div class="password-entry"><input name="password" type="password" autocomplete="current-password" autocapitalize="none" spellcheck="false" dir="ltr" placeholder="كلمة المرور" required><button type="button" class="password-toggle" onclick="const i=this.parentElement.querySelector('input');const show=i.type==='password';i.type=show?'text':'password';this.textContent=show?'إخفاء':'إظهار';i.focus()">إظهار</button></div></div>
           </div>
           <button class="btn primary login-submit" id="loginButtonText" type="submit">دخول إلى النظام</button>

@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+const read=p=>fs.readFileSync(p,'utf8');
+const cfg=JSON.parse(read('capacitor.config.json'));
+const html=read('index.html'),auth=read('src/security/auth.ts'),ui=read('src/ui/ui.ts'),java=read('android/app/src/main/java/com/elhafez/tourism/erp/customer/MainActivity.java');
+const checks=[]; const ok=(name,cond)=>{checks.push([name,!!cond]);console.log(`${cond?'PASS':'FAIL'} ${name}`)};
+ok('Capacitor uses standard Android InputConnection',cfg.android?.captureInput===false);
+ok('Login exposes credential autofill semantics',html.includes('name="username" autocomplete="username"')&&html.includes('autocomplete="current-password"'));
+ok('First-run setup no longer blocks profile autofill',!auth.includes("noProfile='autocomplete=\"off\"")&&auth.includes('data-setup-key="email" type="email"')&&auth.includes('autocomplete="email"'));
+ok('Normal text fields request correction and suggestions',ui.includes("setAttribute('spellcheck','true')")&&ui.includes("setAttribute('autocorrect','on')"));
+ok('Email and phone fields expose semantic IME/autofill hints',ui.includes("setAttribute('autocomplete','email')")&&ui.includes("setAttribute('inputmode','email')")&&ui.includes("setAttribute('autocomplete','tel')"));
+ok('Search controls keep browser autofill out while retaining IME correction',ui.includes("isSearch=type==='search'")&&ui.includes("setAttribute('autocomplete','off')"));
+ok('Android WebView is explicitly important for Autofill',java.includes('Build.VERSION_CODES.O')&&java.includes('setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_YES)'));
+const failed=checks.filter(x=>!x[1]); console.log(`v32.5.49 keyboard/autofill smoke: ${checks.length-failed.length}/${checks.length}`); if(failed.length)process.exit(1);

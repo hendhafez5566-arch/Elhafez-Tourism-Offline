@@ -1,0 +1,20 @@
+Elhafez Tourism v32.5.48 OFFLINE — تنظيف الطباعة والقائمة الجانبية
+
+نطاق التعديل فقط:
+- استبدال PDF الواتساب المعتمد على Screenshot/Bitmap بمحرك طباعة Chromium الأصلي عبر PrintDocumentAdapter إلى A4 PDF.
+- دعم Portrait/Landscape من PrintAttributes + CSS @page بدون Rasterization للمستند بالكامل.
+- إزالة WebView.enableSlowWholeDocumentDraw و Bitmap/PdfDocument من مسار مشاركة المستند.
+- إصلاح Regex Android الذي كان يمنع Java compilation.
+- إلغاء تعارض Accordion العام في القائمة الجانبية؛ الإغلاق أصبح داخل المجموعة نفسها فقط.
+- إزالة إجبار sidebar.scrollTop أثناء الفتح ومعالجة طبقة الزخرفة داخل الـSidebar لتقليل الوميض في Android WebView.
+- منع اعتماد PDF على Google Fonts أثناء Offline؛ الطباعة تستخدم font stack محلي/نظامي.
+- إضافة اختبارات تمنع عودة مسار Screenshot PDF أو global sidebar accordion.
+
+لم يتم تعديل:
+- أي ملف محاسبي أو منطق قيود.
+- قواعد الحجوزات أو الإلغاء.
+- الموردين أو أوامر الشراء أو المخزون.
+- قاعدة البيانات أو schema/storage identifiers.
+- حسابات الفواتير أو الضرائب أو الأرصدة.
+
+Migration required: NO

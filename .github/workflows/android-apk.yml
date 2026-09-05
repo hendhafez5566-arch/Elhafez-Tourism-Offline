@@ -15,6 +15,7 @@ on:
       - 'scripts/unified-party-accounting-smoke.mjs'
       - 'scripts/v32546-print-shortcuts-smoke.mjs'
       - 'scripts/v32547-mobile-clean-smoke.mjs'
+      - 'scripts/v32548-clean-print-sidebar-smoke.mjs'
       - 'scripts/all-offline-node-smokes.mjs'
       - '.github/workflows/android-apk.yml'
 jobs:
@@ -44,6 +45,7 @@ jobs:
         run: |
           node scripts/v32546-print-shortcuts-smoke.mjs
           node scripts/v32547-mobile-clean-smoke.mjs
+          node scripts/v32548-clean-print-sidebar-smoke.mjs
       - name: Restore release signing key
         if: env.KEYSTORE_B64 != ''
         shell: bash

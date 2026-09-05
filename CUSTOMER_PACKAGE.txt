@@ -1,6 +1,6 @@
-Elhafez Technology — Tourism & Umrah ERP v32.5.47 — Full Offline Android Release
+Elhafez Technology — Tourism & Umrah ERP v32.5.48 — Full Offline Android Release
 Mode: OFFLINE ONLY
 App ID: com.elhafez.tourism.erp.offline
 Runtime: local device storage (IndexedDB / WebView)
 No Railway / Owner Center / Company Code required during operation.
-Key release changes: concise centralized printing, A4 multi-page WhatsApp PDF, unified-party accounting preserved, per-user shortcuts, activity UI cap remains 1000.
+Key release changes: native Chromium A4 PDF sharing without full-document screenshots, stable mobile sidebar, keyboard suggestions, per-user shortcuts, native contact picker. Accounting/business logic unchanged.
