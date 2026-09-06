@@ -6,7 +6,7 @@ const auth=read('src/security/auth.ts');
 const css=read('src/styles.css');
 const accounting=read('src/accounting/engine.ts')+read('src/accounting/transactions.ts')+read('src/accounting/invoices.ts');
 const checks=[];const ok=(n,p)=>{checks.push([n,!!p]);console.log(`${p?'PASS':'FAIL'} ${n}`)};
-ok('release is v32.5.55',pkg.version==='32.5.55');
+ok('release is v32.5.56',pkg.version==='32.5.56');
 ok('regular login uses one compact operational card',html.includes('auth-clean-card')&&!html.includes('regular-login-showcase')&&!html.includes('regular-login-feature-list'));
 ok('duplicate recovery card is removed',!html.includes('login-help-card')&&((html.match(/data-auth-action="recovery"/g)||[]).length===1));
 ok('password toggle uses delegated auth action',html.includes('data-auth-password-toggle="1"')&&!html.includes("onclick=\"const i=this.parentElement.querySelector('input')"));
@@ -14,6 +14,6 @@ ok('first-run setup has no marketing split panel',auth.includes('auth-setup-clea
 ok('first-run remains three operational steps',auth.includes('حساب المدير')&&auth.includes('بيانات الشركة')&&auth.includes('المراجعة'));
 ok('offline email is optional but server email remains required',auth.includes("APP.offlineEdition===true?'': 'required'")&&auth.includes("...((APP.offlineEdition===true)?[]:[['email','البريد الإلكتروني']])"));
 ok('email validation only runs when email is provided',auth.includes("if(email&&!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))"));
-ok('clean auth CSS replaces legacy split-panel auth blocks',css.includes('v32.5.55 — clean authentication surfaces')&&!css.includes('v32.4.52 — premium responsive first-run wizard')&&!css.includes('v32.4.53 — regular login'));
+ok('clean auth CSS replaces legacy split-panel auth blocks',css.includes('v32.5.56 — clean authentication surfaces')&&!css.includes('v32.4.52 — premium responsive first-run wizard')&&!css.includes('v32.4.53 — regular login'));
 ok('accounting core is not coupled to auth UI',!accounting.includes('auth-clean')&&!accounting.includes('setup-wizard'));
-const fail=checks.filter(([,p])=>!p);console.log(`v32.5.55 clean auth UI smoke: ${checks.length-fail.length}/${checks.length}`);if(fail.length)process.exit(1);
+const fail=checks.filter(([,p])=>!p);console.log(`v32.5.56 clean auth UI smoke: ${checks.length-fail.length}/${checks.length}`);if(fail.length)process.exit(1);

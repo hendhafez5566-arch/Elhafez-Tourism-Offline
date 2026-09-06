@@ -28,7 +28,7 @@ html,body{margin:0;min-height:100%;font-family:var(--system-font,Tahoma,"Noto Sa
 body{background-image:radial-gradient(circle at 10% 0%,rgba(44,120,199,.06),transparent 28%),radial-gradient(circle at 90% 100%,rgba(201,151,47,.06),transparent 24%)}
 body.no-anim *,body.no-anim *:before,body.no-anim *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid color-mix(in srgb,var(--page-accent) 24%,transparent);outline-offset:1px}
-a{text-decoration:none;color:inherit}.hidden{display:none!important}.muted{color:var(--muted)}.text-sm{font-size:calc(12.5px * var(--font-scale))}.nowrap{white-space:nowrap}.grow{flex:1}.mt-12{margin-top:12px}.mt-16{margin-top:16px}
+a{text-decoration:none;color:inherit}.hidden{display:none!important}.muted{color:var(--muted)}.text-sm{font-size:calc(12.5px * var(--font-scale))}.nowrap{white-space:nowrap}.grow{flex:1}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-4{margin-top:4px}.mt-6{margin-top:6px}.mt-7{margin-top:7px}.mt-8{margin-top:8px}.mt-10{margin-top:10px}.mt-14{margin-top:14px}.mt-18{margin-top:18px}.mb-8{margin-bottom:8px}.mb-10{margin-bottom:10px}.mb-12{margin-bottom:12px}
 .svg-icon{width:19px;height:19px;display:inline-block;vertical-align:-4px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.svg-icon.sm{width:16px;height:16px}.svg-icon.lg{width:23px;height:23px}
 #app{min-height:100vh}
 .sidebar{position:fixed;right:0;top:0;bottom:0;width:var(--sidebar);background:linear-gradient(178deg,var(--navy),var(--navy-3));color:#fff;padding:15px 12px 14px;overflow:auto;overscroll-behavior:contain;z-index:70;box-shadow:-12px 0 36px rgba(6,20,38,.16);scrollbar-width:thin;scrollbar-color:#ffffff22 transparent}
@@ -585,7 +585,7 @@ body.sidebar-auto .sidebar:not(:hover) .workspace-nav-section>summary{display:no
 .archive-close-card{border-inline-start:5px solid #315f85;padding:24px}.archive-tabs{margin-bottom:16px}.archive-tabs button{white-space:nowrap}.block{display:block}.mono{font-family:ui-monospace,Consolas,monospace;font-size:calc(11px * var(--font-scale));direction:ltr}.archive-close-card .mini-row{max-width:520px}
 
 
-/* v32.5.55 — clean authentication surfaces: one compact login and one first-run wizard, no marketing split panels. */
+/* v32.5.56 — clean authentication surfaces: one compact login and one first-run wizard, no marketing split panels. */
 .login-card.regular-auth,.setup-card{width:min(100%,620px);max-width:620px;padding:0;border:1px solid #dce6f0;border-radius:24px;background:#fff;box-shadow:0 28px 80px rgba(4,24,52,.24);overflow:hidden;color:#17243a}
 .auth-clean-card,.auth-setup-clean{padding:28px 30px 24px;background:#fff;direction:rtl}
 .auth-clean-product{display:flex;align-items:center;gap:12px;padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid #e7edf3}.auth-clean-product img{width:54px;height:54px;border-radius:15px;object-fit:cover}.auth-clean-product>div{display:flex;flex-direction:column;gap:1px;min-width:0}.auth-clean-product small{font-size:calc(8px * var(--font-scale));letter-spacing:.08em;color:#7c8da0;text-transform:uppercase}.auth-clean-product b{font-size:calc(18px * var(--font-scale));color:#102d52;line-height:1.15}.auth-clean-product span{font-size:calc(10px * var(--font-scale));color:#2388b9;font-weight:800;line-height:1.45}

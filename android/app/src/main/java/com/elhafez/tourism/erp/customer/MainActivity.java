@@ -222,9 +222,9 @@ public class MainActivity extends BridgeActivity {
 
     private String safeBackupName(String raw) {
         String name = raw == null ? "" : raw.trim();
-        if (name.isEmpty()) name = "ERP_BACKUP.erpbackup";
-        name = name.replaceAll("[^\\p{L}\\p{N}._-]+", "_");
-        if (name.length() > 160) name = name.substring(name.length() - 160);
+        if (name.isEmpty()) name = "نسخة احتياطية - Elhafez Tourism.erpbackup";
+        name = name.replaceAll("[\\/:*?\"<>|]+", " ").replaceAll("\\s+", " ").trim();
+        if (name.length() > 160) name = name.substring(0, 160);
         return name;
     }
 
@@ -853,9 +853,11 @@ public class MainActivity extends BridgeActivity {
             }
         }
         finishStructuredPage(st);
-        String safe = (jobName == null || jobName.trim().isEmpty()) ? "document" : jobName.trim();
-        safe = safe.replaceAll("[^\\p{L}\\p{N}._-]+", "_");
-        File file = new File(getCacheDir(), safe + "_" + System.currentTimeMillis() + ".pdf");
+        String safe = (jobName == null || jobName.trim().isEmpty()) ? "مستند.pdf" : jobName.trim();
+        safe = safe.replaceAll("[\\/:*?\"<>|]+", " ").replaceAll("\\s+", " ").trim();
+        if (!safe.toLowerCase(java.util.Locale.ROOT).endsWith(".pdf")) safe += ".pdf";
+        File file = new File(getCacheDir(), safe);
+        if (file.exists() && !file.delete()) file = new File(getCacheDir(), "مستند.pdf");
         try (FileOutputStream out = new FileOutputStream(file)) { document.writeTo(out); out.flush(); }
         document.close();
         if (st.logo != null) try { st.logo.recycle(); } catch (Exception ignored) { }

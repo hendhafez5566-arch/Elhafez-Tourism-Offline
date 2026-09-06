@@ -5,7 +5,7 @@ const UmrahCore_META = {
 };
 const UmrahCore_S = v => String(v ?? ''), UmrahCore_N = v => Number(v) || 0, UmrahCore_deep = o => JSON.parse(JSON.stringify(o)), UmrahCore_today = () => { const x = new Date(); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; }, UmrahCore_now = () => new Date().toISOString(), UmrahCore_localDateTime = () => { const x = new Date(), p = n => String(n).padStart(2, '0'); return `${x.getFullYear()}-${p(x.getMonth() + 1)}-${p(x.getDate())}T${p(x.getHours())}:${p(x.getMinutes())}`; }, UmrahCore_iid = () => globalThis.crypto?.randomUUID?.() || ('id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9));
 const UmrahCore_esc = s => UmrahCore_S(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-const UmrahCore_fmt = (n, d = 2) => new Intl.NumberFormat('ar-EG', { minimumFractionDigits: d, maximumFractionDigits: d }).format(UmrahCore_N(n)), UmrahCore_money = (n, c = 'EGP') => `${UmrahCore_fmt(n)} ${c}`;
+const UmrahCore_fmt = (n, d = 2) => new Intl.NumberFormat('ar-EG-u-nu-latn', { minimumFractionDigits: 0, maximumFractionDigits: d }).format(UmrahCore_N(n)), UmrahCore_money = (n, c = 'EGP') => `${UmrahCore_fmt(n)} ${c}`;
 const UmrahCore_dateAdd = (d, days) => { if (!d)
     return ''; const x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() + UmrahCore_N(days)); return x.toISOString().slice(0, 10); }, UmrahCore_monthsAdd = (d, m) => { if (!d)
     return ''; const x = new Date(d + 'T00:00:00Z'); x.setUTCMonth(x.getUTCMonth() + UmrahCore_N(m)); return x.toISOString().slice(0, 10); };

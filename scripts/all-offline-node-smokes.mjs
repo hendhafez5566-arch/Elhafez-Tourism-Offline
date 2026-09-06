@@ -22,6 +22,7 @@ const scripts=[
   'v32553-party-comms-docs-print-smoke.mjs',
   'v32554-persistent-android-session-smoke.mjs',
   'v32555-auth-ui-clean-smoke.mjs',
+  'v32556-ui-consistency-smoke.mjs',
   'system-ux-smoke.mjs',
   'clean-ui-smoke.mjs',
   'rocket-360-performance-smoke.mjs'
