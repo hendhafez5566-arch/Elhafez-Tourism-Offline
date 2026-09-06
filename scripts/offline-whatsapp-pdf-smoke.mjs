@@ -16,7 +16,8 @@ const checks=[
  ['legacy print WhatsApp targeting is absent',!printing.includes('shareWhatsApp')&&!printing.includes('shareRecipient')&&!html.includes('printWhatsAppBtn')],
  ['print payload keeps bounded A4 layout rules',printing.includes('table-layout:fixed')&&printing.includes('grid-template-columns:repeat(3,minmax(0,1fr))')&&printing.includes('overflow-x:hidden')],
  ['print payload has explicit A4 CSS page rules',printing.includes('@page{size:A4 ${orientation};margin:10mm}')],
- ['offline print payload does not fetch Google Fonts',!printing.includes('fonts.googleapis.com')]
+ ['offline print payload does not fetch Google Fonts',!printing.includes('fonts.googleapis.com')],
+ ['structured PDF lays out logical column 0 from the right edge',main.includes('st.pageWidth - st.margin - (col + 1) * cellW')&&main.includes('st.pageWidth - st.margin - colW - col * (colW + gap)')&&main.includes('st.pageWidth - st.margin - colW - i * (colW + gap)')]
 ];
 for(const [name,pass] of checks) console.log(`${pass?'PASS':'FAIL'} ${name}`);
 if(checks.some(([,p])=>!p)) process.exit(1);

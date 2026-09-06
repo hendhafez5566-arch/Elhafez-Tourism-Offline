@@ -708,7 +708,7 @@ public class MainActivity extends BridgeActivity {
         Paint stroke = new Paint(Paint.ANTI_ALIAS_FLAG); stroke.setStyle(Paint.Style.STROKE); stroke.setStrokeWidth(.7f); stroke.setColor(LINE);
         for (int i = 0; i < items.length(); i++) {
             int row = i / 2, col = i % 2;
-            float x = st.margin + col * (colW + gap), y = st.y + row * 31f;
+            float x = st.pageWidth - st.margin - colW - col * (colW + gap), y = st.y + row * 31f;
             st.canvas.drawRoundRect(x, y, x + colW, y + 25f, 5f, 5f, fill);
             st.canvas.drawRoundRect(x, y, x + colW, y + 25f, 5f, 5f, stroke);
             drawPdfText(st.canvas, items.optString(i), x + 6f, y + 6f, colW - 12f, 8.2f, true, INK, 2);
@@ -742,7 +742,7 @@ public class MainActivity extends BridgeActivity {
         for (int i = 0; i < items.length(); i++) {
             JSONObject item = items.optJSONObject(i); if (item == null) continue;
             int row = i / 3, col = i % 3;
-            float x = st.margin + col * (colW + gap), y = st.y + row * 48f;
+            float x = st.pageWidth - st.margin - colW - col * (colW + gap), y = st.y + row * 48f;
             st.canvas.drawRoundRect(x, y, x + colW, y + 42f, 6f, 6f, fill);
             st.canvas.drawRoundRect(x, y, x + colW, y + 42f, 6f, 6f, stroke);
             drawPdfText(st.canvas, item.optString("label"), x + 6f, y + 5f, colW - 12f, 7.2f, false, MUTED, 1);
@@ -780,7 +780,7 @@ public class MainActivity extends BridgeActivity {
         Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG); fill.setColor(header ? NAVY : (rowIndex % 2 == 1 ? SOFT : Color.WHITE));
         Paint stroke = new Paint(Paint.ANTI_ALIAS_FLAG); stroke.setStyle(Paint.Style.STROKE); stroke.setStrokeWidth(.55f); stroke.setColor(LINE);
         for (int col = 0; col < cols; col++) {
-            float x = st.margin + col * cellW;
+            float x = st.pageWidth - st.margin - (col + 1) * cellW;
             st.canvas.drawRect(x, y, x + cellW, y + h, fill);
             st.canvas.drawRect(x, y, x + cellW, y + h, stroke);
             drawPdfText(st.canvas, col < row.length() ? row.optString(col) : "", x + 4f, y + 5f,
@@ -820,7 +820,7 @@ public class MainActivity extends BridgeActivity {
         Paint line = new Paint(Paint.ANTI_ALIAS_FLAG); line.setColor(Color.rgb(130, 144, 163)); line.setStrokeWidth(.7f);
         st.y += 22f;
         for (int i = 0; i < Math.min(3, items.length()); i++) {
-            float x = st.margin + i * (colW + gap);
+            float x = st.pageWidth - st.margin - colW - i * (colW + gap);
             st.canvas.drawLine(x, st.y, x + colW, st.y, line);
             drawPdfText(st.canvas, items.optString(i), x, st.y + 7f, colW, 7.5f, false, Color.rgb(70, 85, 106), 1);
         }
