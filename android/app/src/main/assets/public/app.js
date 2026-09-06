@@ -4959,7 +4959,7 @@ const Print = {
         return src;
     } },
     renderShareButton() { const b = document.getElementById('printSharePdfBtn'), native = window.NativePrint; if (!b)
-        return; const phone = this.whatsappPhone(), available = !!native?.shareStructuredPdfToWhatsApp && !!phone; b.classList.toggle('hidden', !available); b.toggleAttribute('disabled', !available); b.title = available ? 'إرسال نفس ملف PDF المطبوع إلى واتساب الرقم المسجل' : 'واتساب متاح عند وجود رقم واتساب/هاتف صالح للطرف'; },
+        return; const phone = this.whatsappPhone(), available = !!native?.shareHtmlA4ToWhatsApp && !!phone; b.classList.toggle('hidden', !available); b.toggleAttribute('disabled', !available); b.title = available ? 'إرسال نفس ملف PDF المطبوع إلى واتساب الرقم المسجل' : 'واتساب متاح عند وجود رقم واتساب/هاتف صالح للطرف'; },
     whatsappPhone() { const c = this.currentContext || {}; try {
         let x = null;
         if (c.type === 'invoice') {
@@ -5113,29 +5113,20 @@ const Print = {
         const native = window.NativePrint, phone = this.whatsappPhone();
         if (!phone)
             throw new Error('لا يوجد رقم واتساب/هاتف صالح للطرف المرتبط بهذا المستند');
-        if (!native?.shareStructuredPdfToWhatsApp)
+        if (!native?.shareHtmlA4ToWhatsApp)
             throw new Error('إرسال PDF إلى واتساب متاح من تطبيق Android فقط');
         this.bindNativeShareListener();
-        const p = await this.printPayload(), model = await this.nativePdfModel();
-        toast('جاري تجهيز نفس ملف PDF المطبوع لواتساب...', 'info');
+        const p = await this.printPayload();
+        toast('جاري تجهيز نفس قالب الطباعة لواتساب...', 'info');
         if (this.nativeShareTimer)
             clearTimeout(this.nativeShareTimer);
         this.nativeShareTimer = setTimeout(() => { this.nativeShareTimer = null; toast('لم يكتمل تجهيز ملف PDF لواتساب. أعد المحاولة من المعاينة.', 'error'); }, 15000);
-        native.shareStructuredPdfToWhatsApp(JSON.stringify(model), p.fileName, p.orientation, phone);
+        native.shareHtmlA4ToWhatsApp(p.html, p.fileName, p.orientation, phone);
     }
     catch (e) {
         toast(e.message || 'تعذر تجهيز ملف PDF لواتساب', 'error');
     } },
-    async doPrint() { const p = await this.printPayload(); const native = window.NativePrint; if (native?.printStructuredPdf) {
-        try {
-            const model = await this.nativePdfModel();
-            native.printStructuredPdf(JSON.stringify(model), p.fileName, p.orientation);
-            return;
-        }
-        catch (e) {
-            console.error('[print] unified PDF print failed', e);
-        }
-    } if (native?.printHtmlA4) {
+    async doPrint() { const p = await this.printPayload(); const native = window.NativePrint; if (native?.printHtmlA4) {
         try {
             native.printHtmlA4(p.html, p.fileName, p.orientation);
             return;

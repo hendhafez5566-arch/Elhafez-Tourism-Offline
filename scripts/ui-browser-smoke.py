@@ -73,12 +73,12 @@ async def main():
     except Exception as e:
       failed.append({'route':'customer-form','reason':str(e)})
     await page.wait_for_timeout(250)
-    # Print + generic PDF share wiring: Android Share Sheet is document-based and does not depend on a party phone.
+    # Print + WhatsApp wiring: WhatsApp is party-specific and receives the same HTML/A4 payload as print.
     print_flow={}
     try:
       share=await page.evaluate("""async () => {
         const c=DB.data.customers[0]; c.phone='01012345678'; c.whatsapp='';
-        window.__qaPdfShare=null; window.NativePrint={shareStructuredPdf:(modelJson,title,orientation)=>window.__qaPdfShare={model:JSON.parse(modelJson),title,orientation}};
+        window.__qaPdfShare=null; window.NativePrint={shareHtmlA4ToWhatsApp:(html,title,orientation,phone)=>window.__qaPdfShare={html,title,orientation,phone}};
         Print.show(Print.wrap('كشف حساب عميل','','<p>QA</p>'),{type:'statement',statementType:'customer',id:c.id});
         const partyVisible=!document.getElementById('printSharePdfBtn').classList.contains('hidden'), enabled=!document.getElementById('printSharePdfBtn').disabled;
         await Print.sharePdf(); const native=window.__qaPdfShare;
@@ -88,10 +88,10 @@ async def main():
       }""")
       print_flow=share
       if not share['modalVisible']: failed.append({'route':'print','reason':'print modal not visible'})
-      if not share['partyVisible'] or not share['enabled']: failed.append({'route':'print-share','reason':'generic PDF share button unavailable'})
-      if not share['native'] or share['native']['orientation'] not in ('portrait','landscape'): failed.append({'route':'print-share','reason':'native generic PDF share did not receive document orientation'})
-      if not share['globalVisible']: failed.append({'route':'print-share','reason':'generic PDF share should work for global reports too'})
-      if share['legacyButton']: failed.append({'route':'print-share','reason':'legacy WhatsApp print button still exists'})
+      if not share['partyVisible'] or not share['enabled']: failed.append({'route':'print-whatsapp','reason':'party WhatsApp PDF button unavailable'})
+      if not share['native'] or share['native']['orientation'] not in ('portrait','landscape') or not share['native']['html'] or not share['native']['phone']: failed.append({'route':'print-whatsapp','reason':'native WhatsApp did not receive HTML/orientation/phone payload'})
+      if share['globalVisible']: failed.append({'route':'print-whatsapp','reason':'WhatsApp button must stay hidden for reports without a registered party'})
+      if share['legacyButton']: failed.append({'route':'print-whatsapp','reason':'legacy duplicate WhatsApp print button still exists'})
     except Exception as e: failed.append({'route':'print','reason':str(e)})
     slow=sorted(timings,key=lambda x:x['ms'],reverse=True)[:10]
     result={'ok':not failed and not errors,'init':init,'routesTested':len(routes),'failed':failed,'pageErrors':errors[:20],'consoleErrors':console_errors[:20],'customerFlow':customer_flow,'printFlow':print_flow,'slowestRoutes':[{**x,'ms':round(x['ms'],1)} for x in slow]}

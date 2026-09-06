@@ -4959,7 +4959,7 @@ const Print = {
         return src;
     } },
     renderShareButton() { const b = document.getElementById('printSharePdfBtn'), native = window.NativePrint; if (!b)
-        return; const phone = this.whatsappPhone(), available = !!native?.shareStructuredPdfToWhatsApp && !!phone; b.classList.toggle('hidden', !available); b.toggleAttribute('disabled', !available); b.title = available ? 'إرسال نفس ملف PDF المطبوع إلى واتساب الرقم المسجل' : 'واتساب متاح عند وجود رقم واتساب/هاتف صالح للطرف'; },
+        return; const phone = this.whatsappPhone(), available = !!native?.shareHtmlA4ToWhatsApp && !!phone; b.classList.toggle('hidden', !available); b.toggleAttribute('disabled', !available); b.title = available ? 'إرسال نفس ملف PDF المطبوع إلى واتساب الرقم المسجل' : 'واتساب متاح عند وجود رقم واتساب/هاتف صالح للطرف'; },
     whatsappPhone() { const c = this.currentContext || {}; try {
         let x = null;
         if (c.type === 'invoice') {

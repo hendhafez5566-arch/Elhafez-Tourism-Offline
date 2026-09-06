@@ -1,8 +1,8 @@
 {
   "name": "erp-professional-suite-commercial",
   "private": true,
-  "version": "32.5.61",
-  "description": "Elhafez Tourism v32.5.61 — one structured PDF source for print and direct WhatsApp delivery to the registered party number; no accounting or workflow changes.",
+  "version": "32.5.62",
+  "description": "Elhafez Tourism v32.5.62 — clean release-gate consolidation for the canonical HTML/A4 Print + direct WhatsApp flow, including Android bundle parity and the correct WhatsApp bridge availability check.",
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-static.mjs && tsc -p server/tsconfig.json",
     "start": "node server/dist/server.js",
@@ -66,7 +66,7 @@
   },
   "erpRelease": {
     "channel": "offline-copy",
-    "notes": "v32.5.61: print and WhatsApp delivery now consume the same structured PDF model and native renderer. The print modal WhatsApp button targets the registered party number. No accounting, database, booking, inventory, or financial workflow changes.",
+    "notes": "v32.5.62: clean release-gate consolidation. The active Print and WhatsApp paths both consume the same printPayload HTML/CSS/A4 source; the WhatsApp button now checks the correct shareHtmlA4ToWhatsApp bridge; Android bundled web assets are gated against stale print code. Obsolete historical renderer assertions are removed from the active gate. No accounting, database, booking, inventory, or financial workflow changes.",
     "migrationRequired": false
   },
   "dependencies": {
