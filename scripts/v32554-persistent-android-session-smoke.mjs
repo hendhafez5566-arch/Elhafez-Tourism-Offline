@@ -5,7 +5,7 @@ const auth=read('src/security/auth.ts');
 const java=read('android/app/src/main/java/com/elhafez/tourism/erp/customer/MainActivity.java');
 const accounting=read('src/accounting/engine.ts')+read('src/accounting/transactions.ts')+read('src/accounting/invoices.ts');
 const checks=[]; const ok=(name,pass)=>{checks.push([name,!!pass]);console.log(`${pass?'PASS':'FAIL'} ${name}`)};
-ok('release is v32.5.54',pkg.version==='32.5.54');
+ok('release retains v32.5.54+ persistent session behavior',Number(pkg.version.split('.').at(-1))>=54);
 ok('native auth preferences are private app storage',java.includes('AUTH_PREFS = "elhafez_offline_auth"')&&java.includes('getSharedPreferences(AUTH_PREFS, MODE_PRIVATE)'));
 ok('native bridge exposes persistent user id read/write/clear',java.includes('getPersistentSessionUserId()')&&java.includes('setPersistentSessionUserId(String userId)')&&java.includes('clearPersistentSession()'));
 ok('persistent session stores user id only and never password',java.includes('AUTH_USER_KEY = "persistent_user_id"')&&!java.toLowerCase().includes('persistent_password')&&!auth.includes('setPersistentSessionPassword'));
@@ -16,5 +16,5 @@ ok('invalid or disallowed stored user is rejected and cleared',auth.includes('if
 ok('Home/pause/resume never clears login',java.includes('public void onPause()')&&java.includes('public void onResume()')&&!/onPause\(\)[\s\S]{0,500}clearPersistentSession/.test(java)&&!/onResume\(\)[\s\S]{0,500}clearPersistentSession/.test(java));
 ok('accounting core is not coupled to persistent login storage',!accounting.includes('PersistentSession')&&!accounting.includes('AUTH_PREFS')&&!accounting.includes('persistent_user_id'));
 const failed=checks.filter(([,pass])=>!pass);
-console.log(`v32.5.54 persistent Android session smoke: ${checks.length-failed.length}/${checks.length}`);
+console.log(`v32.5.54+ persistent Android session smoke: ${checks.length-failed.length}/${checks.length}`);
 if(failed.length)process.exit(1);

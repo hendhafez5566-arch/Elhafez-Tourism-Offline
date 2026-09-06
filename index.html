@@ -30,48 +30,24 @@
     </div>
     <form id="loginForm" class="login-card hidden" method="post" action="#" onsubmit="return false" data-login-host="1" aria-busy="true"></form>
     <template id="loginFormTemplate">
-      <div class="regular-login-layout">
-        <section class="regular-login-showcase" aria-label="هوية نظام Elhafez Tourism">
-          <div class="regular-login-product">
-            <img src="./icons/erp-512.png" alt="Elhafez Tourism">
-            <div><b id="loginProductName">Elhafez Tourism</b><span id="loginProductEdition">نظام إدارة السياحة والحج والعمرة</span><small id="loginProductDescription">منظومة متكاملة لشركات السياحة والحج والعمرة</small></div>
-          </div>
-          <div class="regular-login-pitch">
-            <span class="regular-login-badge">منصة متخصصة لشركات السياحة</span>
-            <h1>إدارة شركتك<br><em>باحتراف من مكان واحد</em></h1>
-            <p>الحجوزات والبرامج والحج والعمرة والحسابات والتقارير في دورة تشغيلية ومالية واحدة.</p>
-          </div>
-          <div class="regular-login-feature-list" aria-hidden="true">
-            <span>✓ إدارة الحجوزات والبرامج</span><span>✓ الحج والعمرة</span><span>✓ الحسابات والتقارير</span><span>✓ تشغيل آمن ومركزي</span>
-          </div>
-          <div class="regular-login-scene" aria-hidden="true">
-            <div class="regular-login-route">✈</div>
-            <div class="regular-login-minaret m1"></div><div class="regular-login-minaret m2"></div>
-            <div class="regular-login-kaaba"><i></i></div>
-            <div class="regular-login-ground"></div>
-          </div>
-          <div class="regular-login-maker">Elhafez Technology <span>•</span> حلول البرمجيات والذكاء الاصطناعي</div>
-        </section>
-        <div class="regular-login-form-pane">
-          <div class="login-form-head regular-login-head">
-            <div class="auth-company-brand">
-              <div class="logo auth-company-logo" id="loginFormLogo">ش</div>
-              <div class="auth-company-copy"><span>مرحبًا بك في</span><b id="loginFormCompanyName">اسم الشركة</b><small>مساحة العمل الخاصة بشركتك</small></div>
-            </div>
-            <span class="login-step">دخول آمن</span>
-            <h2>تسجيل الدخول</h2>
-            <p>استخدم بيانات حسابك للوصول إلى النظام.</p>
-          </div>
-          <div id="loginInlineMessage" class="login-inline-message hidden" role="alert" aria-live="assertive"></div>
-          <div class="login-fields">
-            <div class="field"><label>اسم المستخدم <span class="req">*</span></label><input name="username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text" dir="ltr" placeholder="اسم المستخدم" required></div>
-            <div class="field"><div class="field-label-row"><label>كلمة المرور <span class="req">*</span></label><button class="login-link" type="button" onclick="Auth.showRecovery()">نسيت كلمة المرور أو اسم المستخدم؟</button></div><div class="password-entry"><input name="password" type="password" autocomplete="current-password" autocapitalize="none" spellcheck="false" dir="ltr" placeholder="كلمة المرور" required><button type="button" class="password-toggle" onclick="const i=this.parentElement.querySelector('input');const show=i.type==='password';i.type=show?'text':'password';this.textContent=show?'إخفاء':'إظهار';i.focus()">إظهار</button></div></div>
-          </div>
-          <button class="btn primary login-submit" id="loginButtonText" type="submit">دخول إلى النظام</button>
-          <div class="login-help-row"><button type="button" class="login-help-card" onclick="Auth.showRecovery()"><svg class="svg-icon sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span><b>مشكلة في الدخول؟</b><small>استرجاع اسم المستخدم أو تعيين كلمة مرور جديدة</small></span></button></div>
-          <div class="login-trust"><span><svg class="svg-icon sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> اتصال آمن</span><span><svg class="svg-icon sm" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> بيانات الدخول مشفّرة</span></div>
-          <div class="login-version" id="loginVersionMobile"></div>
+      <div class="auth-clean-card">
+        <div class="auth-clean-product">
+          <img src="./icons/erp-192.png" alt="Elhafez Tourism">
+          <div><small>Elhafez Technology</small><b>Elhafez Tourism</b><span>نظام إدارة السياحة والحج والعمرة</span></div>
         </div>
+        <div class="auth-company-brand auth-clean-company">
+          <div class="logo auth-company-logo" id="loginFormLogo">ش</div>
+          <div class="auth-company-copy"><span>تسجيل الدخول إلى</span><b id="loginFormCompanyName">اسم الشركة</b><small>مساحة العمل الخاصة بشركتك</small></div>
+        </div>
+        <div class="login-form-head auth-clean-head"><h2>تسجيل الدخول</h2><p>أدخل بيانات حسابك للمتابعة.</p></div>
+        <div id="loginInlineMessage" class="login-inline-message hidden" role="alert" aria-live="assertive"></div>
+        <div class="login-fields auth-clean-fields">
+          <div class="field"><label>اسم المستخدم <span class="req">*</span></label><input name="username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text" dir="ltr" placeholder="اسم المستخدم" required></div>
+          <div class="field"><label>كلمة المرور <span class="req">*</span></label><div class="password-entry"><input name="password" type="password" autocomplete="current-password" autocapitalize="none" spellcheck="false" dir="ltr" placeholder="كلمة المرور" required><button type="button" class="password-toggle" data-auth-password-toggle="1">إظهار</button></div></div>
+        </div>
+        <button class="btn primary login-submit auth-clean-submit" id="loginButtonText" type="submit">دخول إلى النظام</button>
+        <button type="button" class="login-link auth-clean-recovery" data-auth-action="recovery">نسيت اسم المستخدم أو كلمة المرور؟</button>
+        <div class="auth-clean-foot"><span>دخول آمن</span><span>•</span><span>v<span id="loginVersionMobile"></span></span></div>
       </div>
     </template>
   </div>

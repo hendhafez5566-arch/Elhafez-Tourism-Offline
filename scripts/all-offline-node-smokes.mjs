@@ -21,6 +21,7 @@ const scripts=[
   'v32552-native-backup-delivery-smoke.mjs',
   'v32553-party-comms-docs-print-smoke.mjs',
   'v32554-persistent-android-session-smoke.mjs',
+  'v32555-auth-ui-clean-smoke.mjs',
   'system-ux-smoke.mjs',
   'clean-ui-smoke.mjs',
   'rocket-360-performance-smoke.mjs'
