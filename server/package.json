@@ -1,7 +1,7 @@
 {
   "name": "erp-professional-suite-commercial-api",
   "private": true,
-  "version": "32.5.45",
+  "version": "32.5.63",
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",

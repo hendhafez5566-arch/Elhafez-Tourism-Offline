@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+const read=p=>fs.readFileSync(p,'utf8');
+const source=read('src/reports/printing.ts');
+const bundle=read('android/app/src/main/assets/public/app.js');
+const pkg=JSON.parse(read('package.json'));
+const manifest=read('android/app/src/main/assets/public/manifest.webmanifest');
+const checks=[];
+const ok=(name,pass)=>{checks.push([name,!!pass]);console.log(`${pass?'PASS':'FAIL'} ${name}`)};
+ok('Android bundle has canonical Print bridge', /printHtmlA4\(p\.html,\s*p\.fileName,\s*p\.orientation\)/.test(bundle));
+ok('Android bundle has canonical WhatsApp bridge', /shareHtmlA4ToWhatsApp\(p\.html,\s*p\.fileName,\s*p\.orientation,\s*phone\)/.test(bundle));
+ok('Android bundle has no structured renderer path', !bundle.includes('shareStructuredPdfToWhatsApp')&&!bundle.includes('printStructuredPdf')&&!bundle.includes('nativePdfModel'));
+ok('Android bundle source contract matches current source', source.includes('shareHtmlA4ToWhatsApp(p.html,p.fileName,p.orientation,phone)')&&/shareHtmlA4ToWhatsApp\(p\.html,\s*p\.fileName,\s*p\.orientation,\s*phone\)/.test(bundle));
+ok('Android manifest carries current version', manifest.includes(pkg.version));
+const failed=checks.filter(([,p])=>!p);
+console.log(`v32.5.63 Android bundle parity: ${checks.length-failed.length}/${checks.length}`);
+if(failed.length)process.exit(1);

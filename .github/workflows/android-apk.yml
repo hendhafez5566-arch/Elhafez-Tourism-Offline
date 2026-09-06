@@ -14,7 +14,8 @@ on:
       - 'scripts/unified-party-accounting-smoke.mjs'
       - 'scripts/v32552-native-backup-delivery-smoke.mjs'
       - 'scripts/v32554-persistent-android-session-smoke.mjs'
-      - 'scripts/v32562-final-print-whatsapp-gate.mjs'
+      - 'scripts/v32563-single-pdf-engine-smoke.mjs'
+      - 'scripts/v32563-android-bundle-parity-smoke.mjs'
       - 'scripts/all-offline-node-smokes.mjs'
       - '.github/workflows/android-apk.yml'
 jobs:
@@ -42,7 +43,8 @@ jobs:
         run: npm run mobile:sync
       - name: Verify final print, WhatsApp and mobile regression guards
         run: |
-          node scripts/v32562-final-print-whatsapp-gate.mjs
+          node scripts/v32563-single-pdf-engine-smoke.mjs
+          node scripts/v32563-android-bundle-parity-smoke.mjs
           node scripts/v32552-native-backup-delivery-smoke.mjs
           node scripts/v32554-persistent-android-session-smoke.mjs
       - name: Restore release signing key
