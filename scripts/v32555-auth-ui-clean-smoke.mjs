@@ -6,7 +6,7 @@ const auth=read('src/security/auth.ts');
 const css=read('src/styles.css');
 const accounting=read('src/accounting/engine.ts')+read('src/accounting/transactions.ts')+read('src/accounting/invoices.ts');
 const checks=[];const ok=(n,p)=>{checks.push([n,!!p]);console.log(`${p?'PASS':'FAIL'} ${n}`)};
-ok('release is v32.5.56',pkg.version==='32.5.56');
+ok('release retains v32.5.55+ auth UI behavior',/^32\.5\.(?:5[5-9]|[6-9]\d|\d{3,})$/.test(pkg.version));
 ok('regular login uses one compact operational card',html.includes('auth-clean-card')&&!html.includes('regular-login-showcase')&&!html.includes('regular-login-feature-list'));
 ok('duplicate recovery card is removed',!html.includes('login-help-card')&&((html.match(/data-auth-action="recovery"/g)||[]).length===1));
 ok('password toggle uses delegated auth action',html.includes('data-auth-password-toggle="1"')&&!html.includes("onclick=\"const i=this.parentElement.querySelector('input')"));

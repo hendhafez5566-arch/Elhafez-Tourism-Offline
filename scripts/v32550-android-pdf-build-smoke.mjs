@@ -5,7 +5,7 @@ const checks=[
  ['no inaccessible WriteResultCallback constructor',!java.includes('new PrintDocumentAdapter.WriteResultCallback()')],
  ['structured PDF uses public PdfDocument',java.includes('new PdfDocument()')&&java.includes('document.startPage(info)')&&java.includes('document.writeTo(out)')],
  ['PDF no longer renders a WebView or Bitmap screenshot',!java.includes('view.draw(canvas)')&&!java.includes('Bitmap.createBitmap')&&!java.includes('drawBitmap(bitmap')],
- ['Java regex escapes are compiler-safe',java.includes('"[^\\\\p{L}\\\\p{N}._-]+"')],
+ ['Java filename sanitizer is compiler-safe',java.includes('name = name.replaceAll(')&&!java.includes('\\p{L}')&&!java.includes('\\p{N}')],
 ];
 for(const [name,pass] of checks)console.log(`${pass?'PASS':'FAIL'} ${name}`);
 if(checks.some(([,pass])=>!pass))process.exit(1);

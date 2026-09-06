@@ -10,7 +10,7 @@ const party=read('src/crm/party360.ts');
 const java=read('android/app/src/main/java/com/elhafez/tourism/erp/customer/MainActivity.java');
 const css=read('src/styles.css');
 const checks=[];const ok=(n,p)=>{checks.push([n,!!p]);console.log(`${p?'PASS':'FAIL'} ${n}`)};
-ok('release is v32.5.56',pkg.version==='32.5.56');
+ok('release retains v32.5.56+ UI consistency behavior',/^32\.5\.(?:5[6-9]|[6-9]\d|\d{3,})$/.test(pkg.version));
 ok('one Arabic display locale drives core number/date formatting',runtime.includes("const DISPLAY_LOCALE='ar-EG-u-nu-latn'")&&!runtime.includes("toLocaleString('en-US'")&&!runtime.includes("toLocaleDateString('en-US'"));
 ok('Umrah number formatter uses the same Latin-digit Arabic locale',umrah.includes("new Intl.NumberFormat('ar-EG-u-nu-latn'")&&!umrah.includes("new Intl.NumberFormat('ar-EG',"));
 ok('backup and archive filenames are human readable',runtime.includes('نسخة احتياطية - ${this.clean')&&runtime.includes('أرشيف - ${this.clean')&&!backup.includes('ERP_BACKUP_')&&!backup.includes('ERP_ARCHIVE_'));

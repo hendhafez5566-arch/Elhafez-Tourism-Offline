@@ -1,8 +1,8 @@
 {
   "name": "erp-professional-suite-commercial",
   "private": true,
-  "version": "32.5.56",
-  "description": "Elhafez Tourism v32.5.56 — UI consistency cleanup: human-readable exported filenames, unified Arabic display formatting, Arabic output-center labels, repeated CSS utility cleanup, and stable party action ordering.",
+  "version": "32.5.57",
+  "description": "Elhafez Tourism v32.5.57 — release-gate correction only: stale Android filename-sanitizer smoke assertions updated to the current safe implementation; no runtime, accounting, workflow, UI, database, or Android behavior changes.",
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-static.mjs && tsc -p server/tsconfig.json",
     "start": "node server/dist/server.js",
@@ -66,7 +66,7 @@
   },
   "erpRelease": {
     "channel": "offline-copy",
-    "notes": "Full offline v32.5.56: presentation-only consistency cleanup. Exported files use readable Arabic names with party/document numbers where available; backup names are human-readable; numeric/date display is unified; Rooming List and Voucher labels are Arabic-first; repeated inline spacing styles are consolidated into shared utilities; party More actions keep the fixed edit, WhatsApp, documents, suspend, delete order. Accounting and workflows are unchanged.",
+    "notes": "Full offline v32.5.57: release-gate correction only. Two legacy Android smoke assertions were stale after the filename sanitization cleanup in v32.5.56. Tests now validate the current compiler-safe sanitizer. No runtime behavior, accounting, workflows, database, UI, login, print, backup, or Android delivery logic changed.",
     "migrationRequired": false
   },
   "dependencies": {
