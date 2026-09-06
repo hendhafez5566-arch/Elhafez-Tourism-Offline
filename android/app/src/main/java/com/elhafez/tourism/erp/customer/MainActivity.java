@@ -534,30 +534,44 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
-    private Intent buildPdfShareIntent(Uri uri) {
+    private Intent buildWhatsAppPdfIntent(Uri uri, String phone, String packageName) {
         Intent share = new Intent(Intent.ACTION_SEND);
         share.setType("application/pdf");
         share.putExtra(Intent.EXTRA_STREAM, uri);
+        String digits = phone == null ? "" : phone.replaceAll("[^0-9]+", "");
+        if (!digits.isEmpty()) share.putExtra("jid", digits + "@s.whatsapp.net");
         share.setClipData(ClipData.newRawUri("Elhafez PDF", uri));
         share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        share.setPackage(packageName);
+        grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
         return share;
     }
 
-    private void sharePdfFile(File file) {
+    private void sharePdfFileToWhatsApp(File file, String phone) {
         try {
             if (file == null || !file.isFile() || file.length() <= 0) {
-                notifyPdfShare("error", "ملف PDF غير صالح للمشاركة");
+                notifyPdfShare("error", "ملف PDF غير صالح للإرسال");
+                return;
+            }
+            String digits = phone == null ? "" : phone.replaceAll("[^0-9]+", "");
+            if (digits.isEmpty()) {
+                notifyPdfShare("error", "لا يوجد رقم واتساب صالح لهذا المستند");
                 return;
             }
             Uri uri = FileProvider.getUriForFile(MainActivity.this, getPackageName() + ".fileprovider", file);
-            Intent chooser = Intent.createChooser(buildPdfShareIntent(uri), "مشاركة ملف PDF");
-            chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(chooser);
-            notifyPdfShare("success", "تم إنشاء ملف PDF وفتح قائمة المشاركة");
-        } catch (ActivityNotFoundException e) {
-            notifyPdfShare("error", "لا يوجد تطبيق متاح لمشاركة ملف PDF");
+            try {
+                startActivity(buildWhatsAppPdfIntent(uri, digits, "com.whatsapp"));
+                notifyPdfShare("success", "تم تجهيز نفس ملف PDF المطبوع وفتح واتساب");
+                return;
+            } catch (ActivityNotFoundException ignored) { }
+            try {
+                startActivity(buildWhatsAppPdfIntent(uri, digits, "com.whatsapp.w4b"));
+                notifyPdfShare("success", "تم تجهيز نفس ملف PDF المطبوع وفتح واتساب Business");
+                return;
+            } catch (ActivityNotFoundException ignored) { }
+            notifyPdfShare("error", "واتساب غير مثبت على الجهاز");
         } catch (Exception e) {
-            notifyPdfShare("error", "تعذر فتح مشاركة ملف PDF");
+            notifyPdfShare("error", "تعذر فتح واتساب لإرسال ملف PDF");
         }
     }
 
@@ -875,12 +889,12 @@ public class MainActivity extends BridgeActivity {
         return file;
     }
 
-    private void createAndShareStructuredPdf(String modelJson, String jobName, String orientation) {
+    private void createAndShareStructuredPdfToWhatsApp(String modelJson, String jobName, String orientation, String phone) {
         try {
             File file = createStructuredPdf(modelJson, jobName, orientation);
-            sharePdfFile(file);
+            sharePdfFileToWhatsApp(file, phone);
         } catch (Exception e) {
-            notifyPdfShare("error", "تعذر إنشاء ملف PDF للمشاركة");
+            notifyPdfShare("error", "تعذر إنشاء ملف PDF لواتساب");
         }
     }
 
@@ -1003,8 +1017,8 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
-        public void shareStructuredPdf(String modelJson, String jobName, String orientation) {
-            runOnUiThread(() -> createAndShareStructuredPdf(modelJson, jobName, orientation));
+        public void shareStructuredPdfToWhatsApp(String modelJson, String jobName, String orientation, String phone) {
+            runOnUiThread(() -> createAndShareStructuredPdfToWhatsApp(modelJson, jobName, orientation, phone));
         }
     }
 }

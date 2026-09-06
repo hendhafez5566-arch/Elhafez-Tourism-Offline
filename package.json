@@ -1,8 +1,8 @@
 {
   "name": "erp-professional-suite-commercial",
   "private": true,
-  "version": "32.5.59",
-  "description": "Elhafez Tourism v32.5.57 — release-gate correction only: stale Android filename-sanitizer smoke assertions updated to the current safe implementation; no runtime, accounting, workflow, UI, database, or Android behavior changes.",
+  "version": "32.5.60",
+  "description": "Elhafez Tourism v32.5.60 — one structured PDF source for print and direct WhatsApp delivery to the registered party number; no accounting or workflow changes.",
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-static.mjs && tsc -p server/tsconfig.json",
     "start": "node server/dist/server.js",
@@ -66,7 +66,7 @@
   },
   "erpRelease": {
     "channel": "offline-copy",
-    "notes": "Full offline v32.5.57: release-gate correction only. Two legacy Android smoke assertions were stale after the filename sanitization cleanup in v32.5.56. Tests now validate the current compiler-safe sanitizer. No runtime behavior, accounting, workflows, database, UI, login, print, backup, or Android delivery logic changed.",
+    "notes": "v32.5.60: print and WhatsApp delivery now consume the same structured PDF model and native renderer. The print modal WhatsApp button targets the registered party number. No accounting, database, booking, inventory, or financial workflow changes.",
     "migrationRequired": false
   },
   "dependencies": {
