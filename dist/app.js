@@ -5084,9 +5084,18 @@ const Print = {
     catch (e) {
         toast(e.message || 'تعذر تجهيز ملف PDF للمشاركة', 'error');
     } },
-    async doPrint() { const p = await this.printPayload(); const native = window.NativePrint; if (native?.printHtmlA4) {
+    async doPrint() { const p = await this.printPayload(); const native = window.NativePrint; if (native?.printStructuredPdf) {
         try {
-            native.printHtmlA4(p.html, p.title, p.orientation);
+            const model = await this.nativePdfModel();
+            native.printStructuredPdf(JSON.stringify(model), p.fileName, p.orientation);
+            return;
+        }
+        catch (e) {
+            console.error('[print] unified PDF print failed', e);
+        }
+    } if (native?.printHtmlA4) {
+        try {
+            native.printHtmlA4(p.html, p.fileName, p.orientation);
             return;
         }
         catch (e) {
@@ -5094,7 +5103,7 @@ const Print = {
         }
     } if (native?.printHtml) {
         try {
-            native.printHtml(p.html, p.title);
+            native.printHtml(p.html, p.fileName);
             return;
         }
         catch (e) {
@@ -17135,7 +17144,7 @@ if (uxModal)
         if (init?.headers)
             new Headers(init.headers).forEach((v, k) => h.set(k, v));
         h.set('X-ERP-Mobile', 'android');
-        h.set('X-ERP-Mobile-Version', '32.5.56-OFFLINE');
+        h.set('X-ERP-Mobile-Version', '32.5.59-OFFLINE');
         return h;
     };
     if (!offlineEdition)

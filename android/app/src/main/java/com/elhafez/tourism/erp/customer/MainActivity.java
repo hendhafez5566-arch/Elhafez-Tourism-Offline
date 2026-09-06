@@ -9,6 +9,8 @@ import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.database.Cursor;
 import android.os.Environment;
+import android.os.CancellationSignal;
+import android.os.ParcelFileDescriptor;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.net.Uri;
@@ -30,6 +32,8 @@ import android.os.Bundle;
 import android.os.Build;
 import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
+import android.print.PrintDocumentInfo;
+import android.print.PageRange;
 import android.print.PrintManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
@@ -827,6 +831,14 @@ public class MainActivity extends BridgeActivity {
         st.y += 34f;
     }
 
+    private String safePdfName(String raw) {
+        String safe = (raw == null || raw.trim().isEmpty()) ? "مستند.pdf" : raw.trim();
+        safe = safe.replaceAll("[\\/:*?\"<>|]+", " ").replaceAll("\\s+", " ").trim();
+        if (!safe.toLowerCase(java.util.Locale.ROOT).endsWith(".pdf")) safe += ".pdf";
+        if (safe.length() > 180) safe = safe.substring(0, 176).trim() + ".pdf";
+        return safe;
+    }
+
     private File createStructuredPdf(String modelJson, String jobName, String orientation) throws Exception {
         JSONObject model = new JSONObject(modelJson == null ? "{}" : modelJson);
         boolean landscape = "landscape".equalsIgnoreCase(orientation);
@@ -853,9 +865,7 @@ public class MainActivity extends BridgeActivity {
             }
         }
         finishStructuredPage(st);
-        String safe = (jobName == null || jobName.trim().isEmpty()) ? "مستند.pdf" : jobName.trim();
-        safe = safe.replaceAll("[\\/:*?\"<>|]+", " ").replaceAll("\\s+", " ").trim();
-        if (!safe.toLowerCase(java.util.Locale.ROOT).endsWith(".pdf")) safe += ".pdf";
+        String safe = safePdfName(jobName);
         File file = new File(getCacheDir(), safe);
         if (file.exists() && !file.delete()) file = new File(getCacheDir(), "مستند.pdf");
         try (FileOutputStream out = new FileOutputStream(file)) { document.writeTo(out); out.flush(); }
@@ -871,6 +881,68 @@ public class MainActivity extends BridgeActivity {
             sharePdfFile(file);
         } catch (Exception e) {
             notifyPdfShare("error", "تعذر إنشاء ملف PDF للمشاركة");
+        }
+    }
+
+    private static class PdfFilePrintAdapter extends PrintDocumentAdapter {
+        private final File file;
+        private final String documentName;
+
+        PdfFilePrintAdapter(File file, String documentName) {
+            this.file = file;
+            this.documentName = documentName;
+        }
+
+        @Override
+        public void onLayout(PrintAttributes oldAttributes, PrintAttributes newAttributes, CancellationSignal cancellationSignal, LayoutResultCallback callback, Bundle extras) {
+            if (cancellationSignal != null && cancellationSignal.isCanceled()) {
+                callback.onLayoutCancelled();
+                return;
+            }
+            PrintDocumentInfo info = new PrintDocumentInfo.Builder(documentName)
+                    .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
+                    .setPageCount(PrintDocumentInfo.PAGE_COUNT_UNKNOWN)
+                    .build();
+            callback.onLayoutFinished(info, true);
+        }
+
+        @Override
+        public void onWrite(PageRange[] pages, ParcelFileDescriptor destination, CancellationSignal cancellationSignal, WriteResultCallback callback) {
+            try (FileInputStream in = new FileInputStream(file); FileOutputStream out = new FileOutputStream(destination.getFileDescriptor())) {
+                byte[] buffer = new byte[64 * 1024];
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    if (cancellationSignal != null && cancellationSignal.isCanceled()) {
+                        callback.onWriteCancelled();
+                        return;
+                    }
+                    out.write(buffer, 0, read);
+                }
+                out.flush();
+                callback.onWriteFinished(new PageRange[]{PageRange.ALL_PAGES});
+            } catch (Exception e) {
+                callback.onWriteFailed("تعذر تجهيز ملف PDF للطباعة");
+            }
+        }
+    }
+
+    private void printPdfFile(File file, String jobName, String orientation) {
+        if (file == null || !file.isFile() || file.length() <= 0) {
+            notifyPdfShare("error", "ملف PDF غير صالح للطباعة");
+            return;
+        }
+        String safeJob = safePdfName(jobName);
+        boolean landscape = "landscape".equalsIgnoreCase(orientation);
+        PrintManager manager = (PrintManager) getSystemService(Context.PRINT_SERVICE);
+        manager.print(safeJob, new PdfFilePrintAdapter(file, safeJob), buildPdfAttributes(landscape));
+    }
+
+    private void createAndPrintStructuredPdf(String modelJson, String jobName, String orientation) {
+        try {
+            File file = createStructuredPdf(modelJson, jobName, orientation);
+            printPdfFile(file, jobName, orientation);
+        } catch (Exception e) {
+            notifyPdfShare("error", "تعذر إنشاء ملف PDF للطباعة");
         }
     }
 
@@ -923,6 +995,11 @@ public class MainActivity extends BridgeActivity {
                 });
                 printView.loadDataWithBaseURL("https://localhost/", html == null ? "" : html, "text/html", "UTF-8", null);
             });
+        }
+
+        @JavascriptInterface
+        public void printStructuredPdf(String modelJson, String jobName, String orientation) {
+            runOnUiThread(() -> createAndPrintStructuredPdf(modelJson, jobName, orientation));
         }
 
         @JavascriptInterface
