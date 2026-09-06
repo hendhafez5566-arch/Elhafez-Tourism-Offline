@@ -4,12 +4,12 @@ const java=fs.readFileSync('android/app/src/main/java/com/elhafez/tourism/erp/cu
 const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));
 let failed=0;
 const ok=(name,pass)=>{console.log(`${pass?'PASS':'FAIL'} ${name}`);if(!pass)failed++};
-ok('release retains v32.5.60+ unified PDF behavior',Number(pkg.version.split('.').at(-1))>=60);
-ok('native print and WhatsApp both consume the same structured document model',printing.includes('nativePdfModel()')&&printing.includes('native.printStructuredPdf(JSON.stringify(model)')&&printing.includes('native.shareStructuredPdfToWhatsApp(JSON.stringify(model)'));
-ok('native print receives the canonical business filename',printing.includes('native.printStructuredPdf(JSON.stringify(model),p.fileName,p.orientation)'));
+ok('release retains v32.5.59+ unified PDF behavior',Number(pkg.version.split('.').at(-1))>=59);
+ok('native print and share both consume the same structured document model',printing.includes('native?.printStructuredPdf')&&printing.includes('native.shareStructuredPdf(JSON.stringify(model)')&&printing.includes('native.printStructuredPdf(JSON.stringify(model)'));
+ok('native print receives the canonical business filename, not product title',printing.includes('native.printStructuredPdf(JSON.stringify(model),p.fileName,p.orientation)')&&!printing.includes('native.printStructuredPdf(JSON.stringify(model),p.title'));
 ok('Android prints the generated PDF file directly',java.includes('class PdfFilePrintAdapter extends PrintDocumentAdapter')&&java.includes('new PdfFilePrintAdapter(file, safeJob)')&&java.includes('createAndPrintStructuredPdf'));
-ok('Android print adapter copies the exact generated PDF bytes',java.includes('new FileInputStream(file)')&&java.includes('new FileOutputStream(destination.getFileDescriptor())')&&java.includes('PageRange.ALL_PAGES'));
-ok('WhatsApp delivery uses the same generated PDF file and registered jid',java.includes('createAndShareStructuredPdfToWhatsApp')&&java.includes('sharePdfFileToWhatsApp(file, phone)')&&java.includes('share.putExtra("jid"'));
+ok('Android print adapter copies the exact generated PDF bytes to the print destination',java.includes('new FileInputStream(file)')&&java.includes('new FileOutputStream(destination.getFileDescriptor())')&&java.includes('PageRange.ALL_PAGES'));
+ok('share remains generic Android share sheet so WhatsApp/Drive remain available without undocumented recipient hacks',java.includes('Intent.createChooser(buildPdfShareIntent(uri), "مشاركة ملف PDF")')&&!java.includes('"jid"')&&!java.includes('@s.whatsapp.net'));
 ok('legacy HTML print remains fallback only',printing.indexOf('native?.printStructuredPdf')<printing.indexOf('native?.printHtmlA4'));
-console.log(`v32.5.60 unified PDF engine smoke: ${7-failed}/7`);
+console.log(`v32.5.59 unified PDF engine smoke: ${7-failed}/7`);
 if(failed)process.exit(1);
