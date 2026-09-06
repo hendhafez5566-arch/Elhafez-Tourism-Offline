@@ -35,6 +35,7 @@ import android.print.PrintDocumentAdapter;
 import android.print.PrintDocumentInfo;
 import android.print.PageRange;
 import android.print.PrintManager;
+import android.print.pdf.PrintedPdfDocument;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -534,30 +535,44 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
-    private Intent buildPdfShareIntent(Uri uri) {
+    private Intent buildWhatsAppPdfIntent(Uri uri, String phone, String packageName) {
         Intent share = new Intent(Intent.ACTION_SEND);
         share.setType("application/pdf");
         share.putExtra(Intent.EXTRA_STREAM, uri);
+        String digits = phone == null ? "" : phone.replaceAll("[^0-9]+", "");
+        if (!digits.isEmpty()) share.putExtra("jid", digits + "@s.whatsapp.net");
         share.setClipData(ClipData.newRawUri("Elhafez PDF", uri));
         share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        share.setPackage(packageName);
+        grantUriPermission(packageName, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
         return share;
     }
 
-    private void sharePdfFile(File file) {
+    private void sharePdfFileToWhatsApp(File file, String phone) {
         try {
             if (file == null || !file.isFile() || file.length() <= 0) {
-                notifyPdfShare("error", "ملف PDF غير صالح للمشاركة");
+                notifyPdfShare("error", "ملف PDF غير صالح للإرسال");
+                return;
+            }
+            String digits = phone == null ? "" : phone.replaceAll("[^0-9]+", "");
+            if (digits.isEmpty()) {
+                notifyPdfShare("error", "لا يوجد رقم واتساب صالح لهذا المستند");
                 return;
             }
             Uri uri = FileProvider.getUriForFile(MainActivity.this, getPackageName() + ".fileprovider", file);
-            Intent chooser = Intent.createChooser(buildPdfShareIntent(uri), "مشاركة ملف PDF");
-            chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(chooser);
-            notifyPdfShare("success", "تم إنشاء ملف PDF وفتح قائمة المشاركة");
-        } catch (ActivityNotFoundException e) {
-            notifyPdfShare("error", "لا يوجد تطبيق متاح لمشاركة ملف PDF");
+            try {
+                startActivity(buildWhatsAppPdfIntent(uri, digits, "com.whatsapp"));
+                notifyPdfShare("success", "تم تجهيز نفس ملف PDF المطبوع وفتح واتساب");
+                return;
+            } catch (ActivityNotFoundException ignored) { }
+            try {
+                startActivity(buildWhatsAppPdfIntent(uri, digits, "com.whatsapp.w4b"));
+                notifyPdfShare("success", "تم تجهيز نفس ملف PDF المطبوع وفتح واتساب Business");
+                return;
+            } catch (ActivityNotFoundException ignored) { }
+            notifyPdfShare("error", "واتساب غير مثبت على الجهاز");
         } catch (Exception e) {
-            notifyPdfShare("error", "تعذر فتح مشاركة ملف PDF");
+            notifyPdfShare("error", "تعذر فتح واتساب لإرسال ملف PDF");
         }
     }
 
@@ -570,6 +585,68 @@ public class MainActivity extends BridgeActivity {
                 .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
                 .setColorMode(PrintAttributes.COLOR_MODE_COLOR)
                 .build();
+    }
+
+
+    /**
+     * Builds the WhatsApp attachment from the exact same HTML/CSS document used by printHtmlA4.
+     * There is no second document template or JSON renderer in this path.
+     */
+    private void sharePrintHtmlAsPdfToWhatsApp(WebView view, String jobName, String phone, String orientation) {
+        String safe = (jobName == null || jobName.trim().isEmpty()) ? "مستند.pdf" : jobName.trim();
+        if (!safe.toLowerCase().endsWith(".pdf")) safe += ".pdf";
+        safe = safe.replaceAll("[\\/:*?\"<>|]+", "-").replaceAll("\\s+", " ").trim();
+        final File file = new File(getCacheDir(), safe);
+        final boolean landscape = "landscape".equalsIgnoreCase(orientation);
+        final int cssWidth = landscape ? 1047 : 718;
+        final float density = Math.max(1f, getResources().getDisplayMetrics().density);
+        final int renderWidth = Math.max(cssWidth, Math.round(cssWidth * density));
+        final PrintAttributes attributes = buildPdfAttributes(landscape);
+        PrintedPdfDocument document = null;
+        try {
+            ViewGroup.LayoutParams lp = view.getLayoutParams();
+            if (lp != null) { lp.width = renderWidth; view.setLayoutParams(lp); }
+            int widthSpec = View.MeasureSpec.makeMeasureSpec(renderWidth, View.MeasureSpec.EXACTLY);
+            view.measure(widthSpec, View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+            int measuredHeight = Math.max(1, view.getMeasuredHeight());
+            int chromiumHeight = Math.max(1, Math.round(view.getContentHeight() * density));
+            int contentHeight = Math.max(measuredHeight, chromiumHeight);
+            if (contentHeight <= 2) throw new IllegalStateException("pdf_content_not_ready");
+            view.measure(widthSpec, View.MeasureSpec.makeMeasureSpec(contentHeight, View.MeasureSpec.EXACTLY));
+            view.layout(0, 0, renderWidth, contentHeight);
+            view.scrollTo(0, 0);
+
+            document = new PrintedPdfDocument(MainActivity.this, attributes);
+            android.graphics.Rect contentRect = document.getPageContentRect();
+            if (contentRect.width() <= 0 || contentRect.height() <= 0) throw new IllegalStateException("pdf_page_invalid");
+            float scale = contentRect.width() / (float) renderWidth;
+            float sourcePageHeight = contentRect.height() / scale;
+            int pageCount = Math.max(1, (int) Math.ceil(contentHeight / sourcePageHeight));
+
+            for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+                PdfDocument.Page page = document.startPage(pageIndex);
+                Canvas canvas = page.getCanvas();
+                canvas.drawColor(Color.WHITE);
+                int save = canvas.save();
+                canvas.clipRect(contentRect);
+                canvas.translate(contentRect.left, contentRect.top);
+                canvas.scale(scale, scale);
+                canvas.translate(0f, -(pageIndex * sourcePageHeight));
+                view.draw(canvas);
+                canvas.restoreToCount(save);
+                document.finishPage(page);
+            }
+            try (FileOutputStream out = new FileOutputStream(file)) { document.writeTo(out); out.flush(); }
+            document.close(); document = null;
+            destroyPrintView(view);
+            if (!file.isFile() || file.length() < 512) throw new IllegalStateException("pdf_invalid");
+            sharePdfFileToWhatsApp(file, phone);
+        } catch (Exception e) {
+            try { if (document != null) document.close(); } catch (Exception ignored) { }
+            try { file.delete(); } catch (Exception ignored) { }
+            destroyPrintView(view);
+            notifyPdfShare("error", "تعذر إنشاء نفس مستند الطباعة لواتساب");
+        }
     }
 
     private static class StructuredPdfState {
@@ -875,12 +952,12 @@ public class MainActivity extends BridgeActivity {
         return file;
     }
 
-    private void createAndShareStructuredPdf(String modelJson, String jobName, String orientation) {
+    private void createAndShareStructuredPdfToWhatsApp(String modelJson, String jobName, String orientation, String phone) {
         try {
             File file = createStructuredPdf(modelJson, jobName, orientation);
-            sharePdfFile(file);
+            sharePdfFileToWhatsApp(file, phone);
         } catch (Exception e) {
-            notifyPdfShare("error", "تعذر إنشاء ملف PDF للمشاركة");
+            notifyPdfShare("error", "تعذر إنشاء ملف PDF لواتساب");
         }
     }
 
@@ -1003,8 +1080,27 @@ public class MainActivity extends BridgeActivity {
         }
 
         @JavascriptInterface
-        public void shareStructuredPdf(String modelJson, String jobName, String orientation) {
-            runOnUiThread(() -> createAndShareStructuredPdf(modelJson, jobName, orientation));
+        public void shareHtmlA4ToWhatsApp(String html, String jobName, String orientation, String phone) {
+            runOnUiThread(() -> {
+                final String resolvedOrientation = "landscape".equalsIgnoreCase(orientation) ? "landscape" : "portrait";
+                final int cssWidth = "landscape".equals(resolvedOrientation) ? 1047 : 718;
+                final WebView printView = new WebView(MainActivity.this);
+                attachPrintView(printView, cssWidth);
+                printView.getSettings().setJavaScriptEnabled(false);
+                printView.getSettings().setDomStorageEnabled(false);
+                printView.getSettings().setLoadsImagesAutomatically(true);
+                printView.getSettings().setUseWideViewPort(true);
+                printView.getSettings().setLoadWithOverviewMode(false);
+                printView.setWebViewClient(new WebViewClient() {
+                    private boolean shared = false;
+                    @Override public void onPageFinished(WebView view, String url) {
+                        if (shared) return;
+                        shared = true;
+                        afterVisualReady(view, () -> sharePrintHtmlAsPdfToWhatsApp(view, jobName, phone, resolvedOrientation));
+                    }
+                });
+                printView.loadDataWithBaseURL("https://localhost/", html == null ? "" : html, "text/html", "UTF-8", null);
+            });
         }
     }
 }

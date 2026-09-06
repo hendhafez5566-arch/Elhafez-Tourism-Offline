@@ -24,6 +24,7 @@ const scripts=[
   'v32555-auth-ui-clean-smoke.mjs',
   'v32556-ui-consistency-smoke.mjs',
   'v32559-unified-pdf-engine-smoke.mjs',
+  'v32560-unified-print-whatsapp-smoke.mjs',
   'system-ux-smoke.mjs',
   'clean-ui-smoke.mjs',
   'rocket-360-performance-smoke.mjs'

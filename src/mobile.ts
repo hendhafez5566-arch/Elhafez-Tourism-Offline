@@ -30,7 +30,7 @@
   const h=new Headers(input instanceof Request?input.headers:undefined);
   if(init?.headers)new Headers(init.headers).forEach((v,k)=>h.set(k,v));
   h.set('X-ERP-Mobile','android');
-  h.set('X-ERP-Mobile-Version','32.5.59-OFFLINE');
+  h.set('X-ERP-Mobile-Version','32.5.61-OFFLINE');
   return h;
  };
  if(!offlineEdition)window.fetch=(async(input:any,init:any={})=>{
