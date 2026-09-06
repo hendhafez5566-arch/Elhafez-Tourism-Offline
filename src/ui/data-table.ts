@@ -6,8 +6,23 @@ const _dataTableExportBase=UI.exportTable.bind(UI);
 
 (UI as any).dataTable=function(headers,items,rowRenderer,empty='لا توجد بيانات',opts:any={}){
   const list=Array.isArray(items)?items:[],noSort=h=>/إجراء|الإجراءات|actions?/i.test(S(h)),ths=headers.map((h,i)=>`<th class="${noSort(h)?'':'sortable'}" data-export="${noSort(h)?'0':'1'}" ${noSort(h)?'':`data-ui-sort-index="${i}"`}>${h}</th>`).join(''),pageSize=Math.max(10,N(opts.pageSize)||25),key=`ui-data-${++this._lazySeq}`,shown=list.slice(0,pageSize),render=x=>S(rowRenderer(x));
-  const rec={kind:'data',rows:list,filtered:list.slice(),page:1,pageSize,headers:[...headers],empty,query:'',rowRenderer:render,searchText:typeof opts.searchText==='function'?opts.searchText:null,sortValues:Array.isArray(opts.sortValues)?opts.sortValues:[],exportValues:typeof opts.exportValues==='function'?opts.exportValues:null,searchIndex:null};
+  const rec={kind:'data',rows:list,filtered:list.slice(),page:1,pageSize,headers:[...headers],empty,query:'',rowRenderer:render,searchText:typeof opts.searchText==='function'?opts.searchText:null,sortValues:Array.isArray(opts.sortValues)?opts.sortValues:[],exportValues:typeof opts.exportValues==='function'?opts.exportValues:null,searchIndex:null,searchIndexBuilding:false};
   this._lazyTables.set(key,rec);
+  // Build large-table search text gradually after first paint. This keeps the
+  // first keystroke from paying the full indexing cost while preserving the
+  // exact same matching semantics and result order.
+  if(list.length>=1000&&rec.searchText){
+    rec.searchIndexBuilding=true;
+    const idx=new Array(list.length),chunk=750;
+    let pos=0;
+    const step=()=>{
+      const end=Math.min(list.length,pos+chunk);
+      for(;pos<end;pos++)idx[pos]=this.dataTableSearchValue(rec,list[pos]);
+      if(pos<list.length){setTimeout(step,0);return}
+      if(!rec.query){rec.searchIndex=idx;rec.searchIndexBuilding=false}
+    };
+    setTimeout(step,0);
+  }
   const htmlRows=shown.map(render),pager=this.tablePager(key,rec),count=list.length?(list.length>pageSize?`1–${shown.length} من ${list.length} سجل`:`${list.length} سجل`):'0 سجل';
   return `<div class="table-card" data-lazy-table="${key}"><div class="table-tools"><span class="table-count" data-total="${list.length}">${count}</span>${opts.search===false?'':`<div class="table-search">${icon('search','sm')}<input aria-label="بحث داخل الجدول" placeholder="بحث بالاسم أو الرقم..." data-ui-filter-table="1"></div>`}${opts.export===false||!Auth.can(this.current,'export')?'':`<button class="btn small ghost" data-ui-export-table="1">${icon('csv','sm')} CSV</button>`}</div><div class="table-wrap"><table class="table"><thead><tr>${ths}</tr></thead><tbody>${htmlRows.length?htmlRows.join(''):`<tr><td colspan="${headers.length}" class="empty">${empty}</td></tr>`}</tbody></table></div>${pager}</div>`;
 };
@@ -36,7 +51,7 @@ UI.filterTable=function(input){
   rec.query=q;
   if(!q)rec.filtered=rec.rows.slice();
   else{
-    if(!rec.searchIndex)rec.searchIndex=rec.rows.map(x=>this.dataTableSearchValue(rec,x));
+    if(!rec.searchIndex){rec.searchIndex=rec.rows.map(x=>this.dataTableSearchValue(rec,x));rec.searchIndexBuilding=false}
     rec.filtered=rec.rows.filter((_,i)=>rec.searchIndex[i].includes(q));
   }
   rec.page=1;return this.renderTablePage(key,card);

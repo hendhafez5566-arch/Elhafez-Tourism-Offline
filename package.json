@@ -1,8 +1,8 @@
 {
   "name": "erp-professional-suite-commercial",
   "private": true,
-  "version": "32.5.63",
-  "description": "Elhafez Tourism v32.5.63 — single canonical Chromium PDF engine for Print and direct WhatsApp delivery; no Canvas/screenshot or secondary structured renderer.",
+  "version": "32.5.64",
+  "description": "Elhafez Tourism v32.5.64 — performance-only release: idle cache warmup and background large-list search indexing; canonical PDF/WhatsApp flow unchanged.",
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-static.mjs && tsc -p server/tsconfig.json",
     "start": "node server/dist/server.js",
@@ -66,7 +66,7 @@
   },
   "erpRelease": {
     "channel": "offline-copy",
-    "notes": "v32.5.63: rebuilt print/WhatsApp delivery around one canonical Chromium/WebView PrintDocumentAdapter PDF file. Print and WhatsApp both consume and can reuse the same generated PDF bytes. Canvas/screenshot and Structured PDF generators are removed from the active code. No accounting, database, booking, inventory, or financial workflow changes.",
+    "notes": "v32.5.64: rebuilt print/WhatsApp delivery around one canonical Chromium/WebView PrintDocumentAdapter PDF file. Print and WhatsApp both consume and can reuse the same generated PDF bytes. Canvas/screenshot and Structured PDF generators are removed from the active code. No accounting, database, booking, inventory, or financial workflow changes.",
     "migrationRequired": false
   },
   "dependencies": {

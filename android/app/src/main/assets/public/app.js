@@ -93,7 +93,7 @@ const statusClass = s => ({ draft: 'gray', posted: 'green', paid: 'green', appro
 const accountTypeLabel = t => ({ asset: 'أصول', liability: 'خصوم', equity: 'حقوق ملكية', revenue: 'إيرادات', expense: 'مصروفات', group: 'مجموعة' })[t] || t;
 const natureLabel = n => ({ debit: 'مدين', credit: 'دائن' })[n] || n;
 const expenseModeLabel = m => ({ paid: 'مدفوع الآن', accrued: 'مستحق', prepaid: 'مصروف مقدم' })[m] || m;
-const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.63', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
+const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.64', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
 const Device = { isMobileHardware() { const coarse = matchMedia?.('(any-pointer: coarse)')?.matches || false, touch = N(navigator.maxTouchPoints) > 0, smallPhysical = Math.min(N(screen.width) || 9999, N(screen.height) || 9999) <= 900, ua = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent); return ua || (touch && coarse && smallPhysical); }, apply() { document.documentElement.classList.toggle('mobile-device', this.isMobileHardware()); } };
 Device.apply();
 const PrefixDefaults = { customer: 'C', supplier: 'S', agent: 'A', lead: 'L', quotation: 'Q', purchaseOrder: 'PO', program: 'U', booking: 'B', service: 'SV', salesInvoice: 'SI', purchaseInvoice: 'PI', creditNote: 'CN', debitNote: 'DN', receipt: 'R', payment: 'P', expense: 'E', journal: 'J', transfer: 'T', commission: 'M', costCenter: 'CC', treasury: 'TR', attachment: 'AT', approval: 'AP', cashCount: 'CT', reconciliation: 'BR', fxRevaluation: 'FX', partyNetting: 'NET' };
@@ -8652,8 +8652,27 @@ const _dataTableSortBase = UI.sortTable.bind(UI);
 const _dataTableExportBase = UI.exportTable.bind(UI);
 UI.dataTable = function (headers, items, rowRenderer, empty = 'لا توجد بيانات', opts = {}) {
     const list = Array.isArray(items) ? items : [], noSort = h => /إجراء|الإجراءات|actions?/i.test(S(h)), ths = headers.map((h, i) => `<th class="${noSort(h) ? '' : 'sortable'}" data-export="${noSort(h) ? '0' : '1'}" ${noSort(h) ? '' : `data-ui-sort-index="${i}"`}>${h}</th>`).join(''), pageSize = Math.max(10, N(opts.pageSize) || 25), key = `ui-data-${++this._lazySeq}`, shown = list.slice(0, pageSize), render = x => S(rowRenderer(x));
-    const rec = { kind: 'data', rows: list, filtered: list.slice(), page: 1, pageSize, headers: [...headers], empty, query: '', rowRenderer: render, searchText: typeof opts.searchText === 'function' ? opts.searchText : null, sortValues: Array.isArray(opts.sortValues) ? opts.sortValues : [], exportValues: typeof opts.exportValues === 'function' ? opts.exportValues : null, searchIndex: null };
+    const rec = { kind: 'data', rows: list, filtered: list.slice(), page: 1, pageSize, headers: [...headers], empty, query: '', rowRenderer: render, searchText: typeof opts.searchText === 'function' ? opts.searchText : null, sortValues: Array.isArray(opts.sortValues) ? opts.sortValues : [], exportValues: typeof opts.exportValues === 'function' ? opts.exportValues : null, searchIndex: null, searchIndexBuilding: false };
     this._lazyTables.set(key, rec);
+    if (list.length >= 1000 && rec.searchText) {
+        rec.searchIndexBuilding = true;
+        const idx = new Array(list.length), chunk = 750;
+        let pos = 0;
+        const step = () => {
+            const end = Math.min(list.length, pos + chunk);
+            for (; pos < end; pos++)
+                idx[pos] = this.dataTableSearchValue(rec, list[pos]);
+            if (pos < list.length) {
+                setTimeout(step, 0);
+                return;
+            }
+            if (!rec.query) {
+                rec.searchIndex = idx;
+                rec.searchIndexBuilding = false;
+            }
+        };
+        setTimeout(step, 0);
+    }
     const htmlRows = shown.map(render), pager = this.tablePager(key, rec), count = list.length ? (list.length > pageSize ? `1–${shown.length} من ${list.length} سجل` : `${list.length} سجل`) : '0 سجل';
     return `<div class="table-card" data-lazy-table="${key}"><div class="table-tools"><span class="table-count" data-total="${list.length}">${count}</span>${opts.search === false ? '' : `<div class="table-search">${icon('search', 'sm')}<input aria-label="بحث داخل الجدول" placeholder="بحث بالاسم أو الرقم..." data-ui-filter-table="1"></div>`}${opts.export === false || !Auth.can(this.current, 'export') ? '' : `<button class="btn small ghost" data-ui-export-table="1">${icon('csv', 'sm')} CSV</button>`}</div><div class="table-wrap"><table class="table"><thead><tr>${ths}</tr></thead><tbody>${htmlRows.length ? htmlRows.join('') : `<tr><td colspan="${headers.length}" class="empty">${empty}</td></tr>`}</tbody></table></div>${pager}</div>`;
 };
@@ -8704,8 +8723,10 @@ UI.filterTable = function (input) {
     if (!q)
         rec.filtered = rec.rows.slice();
     else {
-        if (!rec.searchIndex)
+        if (!rec.searchIndex) {
             rec.searchIndex = rec.rows.map(x => this.dataTableSearchValue(rec, x));
+            rec.searchIndexBuilding = false;
+        }
         rec.filtered = rec.rows.filter((_, i) => rec.searchIndex[i].includes(q));
     }
     rec.page = 1;
@@ -17834,6 +17855,21 @@ PWA.register();
             Auth.showLogin?.(message);
         else if (typeof toast === 'function')
             toast(message, 'error');
+    }
+    try {
+        const warm = () => { try {
+            Accounting.partyBalanceIndex?.();
+        }
+        catch (e) {
+            console.debug('[perf] balance warmup skipped', e);
+        } };
+        if (typeof requestIdleCallback === 'function')
+            requestIdleCallback(warm, { timeout: 1800 });
+        else
+            setTimeout(warm, 900);
+    }
+    catch (e) {
+        console.debug('[perf] idle warmup unavailable', e);
     }
     try {
         Promise.resolve(VendorOwner.init()).catch(e => console.error('[bootstrap] VendorOwner.init failed', e));

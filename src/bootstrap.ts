@@ -67,6 +67,15 @@
     else if(typeof toast==='function')toast(message,'error');
   }
 
+  // v32.5.64 performance: prebuild the existing read-only accounting index
+  // after authentication and outside the critical first-paint path. This does
+  // not mutate ERP data; it only avoids making the first customer/supplier
+  // page pay the full journal-index construction cost.
+  try{
+    const warm=()=>{try{Accounting.partyBalanceIndex?.()}catch(e){console.debug('[perf] balance warmup skipped',e)}};
+    if(typeof requestIdleCallback==='function')requestIdleCallback(warm,{timeout:1800});else setTimeout(warm,900);
+  }catch(e){console.debug('[perf] idle warmup unavailable',e)}
+
   // Vendor center discovery is optional and must never block login. Run it
   // only after Auth.init has had the opportunity to enter the ERP.
   try{Promise.resolve(VendorOwner.init()).catch(e=>console.error('[bootstrap] VendorOwner.init failed',e))}catch(e){console.error('[bootstrap] VendorOwner.init start failed',e)}
