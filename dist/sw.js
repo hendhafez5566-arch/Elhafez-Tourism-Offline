@@ -1,4 +1,4 @@
-const ERP_VERSION='32.5.64';
+const ERP_VERSION='32.5.65';
 const CACHE_NAME=`erp-shell-${ERP_VERSION}`;
 const PRECACHE=[
   './index.html',

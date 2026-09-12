@@ -1,8 +1,8 @@
 {
   "name": "erp-professional-suite-commercial",
   "private": true,
-  "version": "32.5.64",
-  "description": "Elhafez Tourism v32.5.64 — performance-only release: idle cache warmup and background large-list search indexing; canonical PDF/WhatsApp flow unchanged.",
+  "version": "32.5.65",
+  "description": "Elhafez Tourism v32.5.65 — read-only Details of Transactions report for customers, suppliers and agents with operational context filters; accounting and canonical PDF flow unchanged.",
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-static.mjs && tsc -p server/tsconfig.json",
     "start": "node server/dist/server.js",
@@ -66,7 +66,7 @@
   },
   "erpRelease": {
     "channel": "offline-copy",
-    "notes": "v32.5.64: rebuilt print/WhatsApp delivery around one canonical Chromium/WebView PrintDocumentAdapter PDF file. Print and WhatsApp both consume and can reuse the same generated PDF bytes. Canvas/screenshot and Structured PDF generators are removed from the active code. No accounting, database, booking, inventory, or financial workflow changes.",
+    "notes": "v32.5.65: added read-only تفاصيل التعاملات report for customers, suppliers and agents. Filters by period, program, individual work, service, cost center and reference. No accounting, database, posting, booking, inventory, print-engine or WhatsApp changes.",
     "migrationRequired": false
   },
   "dependencies": {
