@@ -1,8 +1,8 @@
 {
   "name": "erp-professional-suite-commercial",
   "private": true,
-  "version": "32.5.65",
-  "description": "Elhafez Tourism v32.5.65 — read-only Details of Transactions report for customers, suppliers and agents with operational context filters; accounting and canonical PDF flow unchanged.",
+  "version": "32.5.66",
+  "description": "Elhafez Tourism v32.5.66 — clean dynamic Details of Transactions: filters are generated only from each party actual transactions and the report reuses the original party-statement currency/due/credit/balance logic.",
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-static.mjs && tsc -p server/tsconfig.json",
     "start": "node server/dist/server.js",
@@ -66,7 +66,7 @@
   },
   "erpRelease": {
     "channel": "offline-copy",
-    "notes": "v32.5.65: added read-only تفاصيل التعاملات report for customers, suppliers and agents. Filters by period, program, individual work, service, cost center and reference. No accounting, database, posting, booking, inventory, print-engine or WhatsApp changes.",
+    "notes": "v32.5.66: rebuilt تفاصيل التعاملات cleanly. Filters are generated from the selected party actual programs, bookings, services and linked documents only. All-transactions output is the original party statement; filtered output preserves original currencies and عليه/له/running balance. No accounting posting or database schema changes.",
     "migrationRequired": false
   },
   "dependencies": {

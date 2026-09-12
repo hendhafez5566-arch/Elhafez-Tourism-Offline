@@ -1,0 +1,20 @@
+Elhafez Tourism Offline v32.5.66
+
+التعديل:
+- إعادة بناء تقرير «تفاصيل التعاملات» بدون فلاتر ثابتة مخترعة.
+- خيارات التصفية تُستخرج تلقائيًا من تعاملات الطرف الفعلية فقط (برنامج/حجز/خدمة/أمر شراء/مستند مرتبط فعليًا).
+- «كل التعاملات» يستخدم نفس كشف الحساب الأصلي للطرف حرفيًا.
+- التقرير المصفى يحافظ على العملة الأصلية لكل حركة، وأعمدة عليه/له/الرصيد الجاري.
+- لا تحويل تلقائي إلى العملة الأساسية داخل جدول كشف الحساب المصفى.
+
+التحقق:
+- Offline node gates: 17/17 PASS
+- Browser gates: 6/6 PASS
+- Accounting critical audit in feature smoke: 0
+- src/accounting unchanged vs v32.5.65
+- src/finance unchanged vs v32.5.65
+- Canonical PDF/WhatsApp native source unchanged.
+
+ملاحظة:
+- لا يوجد Database migration.
+- لا يوجد تغيير في القيود أو منطق الترحيل.

@@ -93,7 +93,7 @@ const statusClass = s => ({ draft: 'gray', posted: 'green', paid: 'green', appro
 const accountTypeLabel = t => ({ asset: 'أصول', liability: 'خصوم', equity: 'حقوق ملكية', revenue: 'إيرادات', expense: 'مصروفات', group: 'مجموعة' })[t] || t;
 const natureLabel = n => ({ debit: 'مدين', credit: 'دائن' })[n] || n;
 const expenseModeLabel = m => ({ paid: 'مدفوع الآن', accrued: 'مستحق', prepaid: 'مصروف مقدم' })[m] || m;
-const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.65', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
+const APP = { name: 'Elhafez', product: 'نظام السياحة والحج والعمرة', descriptionAr: 'نظام إدارة شركات السياحة والحج والعمرة', manufacturer: 'Elhafez Technology', tagline: 'حلول البرمجيات والذكاء الاصطناعي', version: '32.5.66', offlineEdition: true, schema: 'erp-professional-suite-v32.2-commercial-offline', storage: 'erp_professional_suite_v32_2_commercial_offline', session: 'erp_suite_v32_2_commercial_offline_user', filesDb: 'erp_professional_suite_v32_2_commercial_offline_files', dataDb: 'erp_professional_suite_v32_2_commercial_offline_data', tenantStorage: 'erp_suite_v32_2_commercial_offline_tenant', legacyStorage: '', legacyFilesDb: '' };
 const Device = { isMobileHardware() { const coarse = matchMedia?.('(any-pointer: coarse)')?.matches || false, touch = N(navigator.maxTouchPoints) > 0, smallPhysical = Math.min(N(screen.width) || 9999, N(screen.height) || 9999) <= 900, ua = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent); return ua || (touch && coarse && smallPhysical); }, apply() { document.documentElement.classList.toggle('mobile-device', this.isMobileHardware()); } };
 Device.apply();
 const PrefixDefaults = { customer: 'C', supplier: 'S', agent: 'A', lead: 'L', quotation: 'Q', purchaseOrder: 'PO', program: 'U', booking: 'B', service: 'SV', salesInvoice: 'SI', purchaseInvoice: 'PI', creditNote: 'CN', debitNote: 'DN', receipt: 'R', payment: 'P', expense: 'E', journal: 'J', transfer: 'T', commission: 'M', costCenter: 'CC', treasury: 'TR', attachment: 'AT', approval: 'AP', cashCount: 'CT', reconciliation: 'BR', fxRevaluation: 'FX', partyNetting: 'NET' };
@@ -5155,77 +5155,165 @@ const Statements = {
         rows.push(`<tr><td>${formatDate(l.date)}</td><td>${l.journalNo}</td><td><span class="statement-description-short">${esc(DocumentNarrative.statementLine(l, opts.level || 'short'))}</span>${opts.level === 'full' ? `<span class="statement-description-full">${esc(l.memo || '')}</span>` : ''}</td><td>${fmt(l.baseDebit)}</td><td>${fmt(l.baseCredit)}</td><td>${fmt(run)}</td></tr>`);
     } const label = Math.abs(run) <= 0.01 ? 'الحساب متعادل' : run > 0 ? 'رصيد مدين' : 'رصيد دائن', tone = Math.abs(run) <= 0.01 ? 'neutral' : a.nature === 'debit' ? (run > 0 ? 'green' : 'red') : (run < 0 ? 'green' : 'red'); return Print.wrap('كشف حساب أستاذ', `<div class="print-meta"><span>الحساب: <b>${a.id} — ${esc(a.name)}</b></span></div>${Print.financialStatus(label, run, DB.data.settings.baseCurrency, tone)}`, `<table class="print-table"><tr><th>التاريخ</th><th>القيد</th><th>البيان</th><th>مدين</th><th>دائن</th><th>الرصيد</th></tr>${rows.join('')}</table>`); }
 };
+const PartyTransactions = {
+    programs() { return [...new Map([...(DB.data.programs || []), ...(DB.data.umrahPrograms || [])].map((x) => [x.id, x])).values()]; },
+    bookings() { return [...new Map([...(DB.data.bookings || []), ...(DB.data.umrahBookings || [])].map((x) => [x.id, x])).values()]; },
+    uniqFilters(items) { const out = new Map(); for (const x of items || [])
+        if (x?.key && !out.has(x.key))
+            out.set(x.key, x); return [...out.values()]; },
+    programFilter(id) { const x = this.programs().find((p) => p.id === id); return x ? { key: `program:${x.id}`, label: `برنامج — ${x.name || x.no || x.id}`, order: 10 } : null; },
+    bookingFilter(id) { const x = this.bookings().find((b) => b.id === id); return x ? { key: `booking:${x.id}`, label: `حجز — ${x.no || x.name || x.id}`, order: 20 } : null; },
+    serviceFilter(id) { const x = byId(DB.data.services || [], id); if (!x)
+        return null; const detail = S(x.description || x.details?.travelerName || '').trim(), tail = detail ? ` — ${DocumentNarrative.clip(detail, 45)}` : ''; return { key: `service:${x.id}`, label: `${x.type || 'خدمة'}${x.no ? ` — ${x.no}` : ''}${tail}`, order: 30 }; },
+    purchaseOrderFilter(id) { const x = byId(DB.data.purchaseOrders || [], id); return x ? { key: `purchaseOrder:${x.id}`, label: `أمر شراء — ${x.no || x.id}`, order: 40 } : null; },
+    commissionFilter(id) { const x = byId(DB.data.commissions || [], id); return x ? { key: `commission:${x.id}`, label: `عمولة — ${x.no || x.id}`, order: 50 } : null; },
+    invoiceFilter(id) { const x = byId(DB.data.invoices || [], id); return x ? { key: `invoice:${x.id}`, label: `${x.kind === 'supplier' ? 'فاتورة مورد' : 'فاتورة مبيعات'} — ${x.no || x.id}`, order: 60 } : null; },
+    voucherFilter(type, id) { const x = byId(type === 'receipt' ? DB.data.receipts : DB.data.payments, id); return x ? { key: `${type}:${x.id}`, label: `${type === 'receipt' ? 'سند قبض' : 'سند صرف'} — ${x.no || x.id}`, order: 70 } : null; },
+    adjustmentFilter(id) { const x = byId(DB.data.invoiceAdjustments || [], id); return x ? { key: `invoice-adjustment:${x.id}`, label: `${x.type === 'credit' ? 'إشعار دائن' : 'إشعار مدين'} — ${x.no || x.id}`, order: 80 } : null; },
+    nettingFilter(id) { const x = byId(DB.data.partyNettings || [], id); return x ? { key: `party-netting:${x.id}`, label: `مقاصة — ${x.no || x.id}`, order: 90 } : null; },
+    journalFilter(j) { return j ? { key: `journal:${j.id}`, label: `حركة — ${j.no || j.id}`, order: 100 } : null; },
+    sourceFilters(type, id, depth = 0) {
+        if (depth > 7 || !type || !id)
+            return [];
+        if (type === 'invoice') {
+            const x = byId(DB.data.invoices || [], id);
+            if (!x)
+                return [];
+            let out = [];
+            if (x.sourceType && x.sourceId)
+                out.push(...this.sourceFilters(x.sourceType, x.sourceId, depth + 1));
+            if (x.bookingId)
+                out.push(this.bookingFilter(x.bookingId));
+            if (x.programId)
+                out.push(this.programFilter(x.programId));
+            if (!out.filter(Boolean).length)
+                out.push(this.invoiceFilter(x.id));
+            return this.uniqFilters(out);
+        }
+        if (type === 'service') {
+            const x = byId(DB.data.services || [], id);
+            if (!x)
+                return [];
+            const out = [this.serviceFilter(x.id)];
+            const bookingId = x.bookingId || x.details?.bookingId, programId = x.programId || x.details?.programId;
+            if (bookingId) {
+                out.push(this.bookingFilter(bookingId));
+                const b = this.bookings().find((v) => v.id === bookingId);
+                if (b?.programId)
+                    out.push(this.programFilter(b.programId));
+            }
+            if (programId)
+                out.push(this.programFilter(programId));
+            return this.uniqFilters(out);
+        }
+        if (type === 'booking' || type === 'umrah-booking') {
+            const x = this.bookings().find((v) => v.id === id);
+            if (!x)
+                return [];
+            const out = [this.bookingFilter(x.id)];
+            if (x.programId)
+                out.push(this.programFilter(x.programId));
+            return this.uniqFilters(out);
+        }
+        if (type === 'purchaseOrder') {
+            const x = byId(DB.data.purchaseOrders || [], id);
+            if (!x)
+                return [];
+            const out = [this.purchaseOrderFilter(x.id)];
+            if (x.programId)
+                out.push(this.programFilter(x.programId));
+            return this.uniqFilters(out);
+        }
+        if (type === 'commission') {
+            const x = byId(DB.data.commissions || [], id);
+            if (!x)
+                return [];
+            const out = [this.commissionFilter(x.id)];
+            if (x.sourceType && x.sourceId)
+                out.push(...this.sourceFilters(x.sourceType, x.sourceId, depth + 1));
+            else if (x.sourceId)
+                out.push(...this.sourceFilters('service', x.sourceId, depth + 1), ...this.sourceFilters('booking', x.sourceId, depth + 1));
+            return this.uniqFilters(out);
+        }
+        if (type === 'receipt' || type === 'payment') {
+            const arr = type === 'receipt' ? DB.data.receipts : DB.data.payments, x = byId(arr || [], id);
+            if (!x)
+                return [];
+            const out = [];
+            for (const a of x.allocations || [])
+                if (a.invoiceId)
+                    out.push(...this.sourceFilters('invoice', a.invoiceId, depth + 1));
+            if (x.sourceType && x.sourceId)
+                out.push(...this.sourceFilters(x.sourceType, x.sourceId, depth + 1));
+            if (x.commissionId)
+                out.push(...this.sourceFilters('commission', x.commissionId, depth + 1));
+            if (!out.filter(Boolean).length)
+                out.push(this.voucherFilter(type, x.id));
+            return this.uniqFilters(out);
+        }
+        if (type === 'invoice-adjustment') {
+            const x = byId(DB.data.invoiceAdjustments || [], id);
+            if (!x)
+                return [];
+            const out = x.invoiceId ? this.sourceFilters('invoice', x.invoiceId, depth + 1) : [];
+            return out.length ? out : [this.adjustmentFilter(x.id)].filter(Boolean);
+        }
+        if (type === 'party-netting')
+            return [this.nettingFilter(id)].filter(Boolean);
+        if (type === 'reversal') {
+            const original = byId(DB.data.journals || [], id);
+            return original ? this.sourceFilters(original.refType, original.refId, depth + 1) : [];
+        }
+        const j = (DB.data.journals || []).find((x) => x.refType === type && x.refId === id);
+        return [this.journalFilter(j)].filter(Boolean);
+    },
+    lineFilters(line) { const j = byId(DB.data.journals || [], line.journalId); if (!j)
+        return []; const out = this.sourceFilters(j.refType, j.refId); return out.length ? out : [this.journalFilter(j)].filter(Boolean); },
+    matches(line, key) { return !key || this.lineFilters(line).some((x) => x.key === key); },
+    options(o = {}) { const partyType = S(o.partyType || ''), partyId = S(o.partyId || ''), from = S(o.from || ''), to = S(o.to || today()); if (!['customer', 'supplier', 'agent'].includes(partyType) || !partyId)
+        return []; const ids = PartyFinance.accountIds(partyType), lines = PartyFinance.lines(partyType, partyId, from, to, ids), map = new Map(); for (const l of lines)
+        for (const f of this.lineFilters(l))
+            if (f?.key && !map.has(f.key))
+                map.set(f.key, f); return [...map.values()].sort((a, b) => N(a.order) - N(b.order) || S(a.label).localeCompare(S(b.label), 'ar')); },
+    labelFor(o, key) { if (!key)
+        return 'كل التعاملات'; return this.options({ ...o, from: '', to: o.to || today() }).find((x) => x.key === key)?.label || 'التعامل المحدد'; },
+    report(o = {}) {
+        var _a;
+        const partyType = S(o.partyType || ''), partyId = S(o.partyId || ''), from = S(o.from || ''), to = S(o.to || today()), filterKey = S(o.filterKey || ''), party = Actions.partyRecord(partyType, partyId);
+        if (!party || !['customer', 'supplier', 'agent'].includes(partyType))
+            throw new Error('الطرف غير موجود');
+        if (!filterKey) {
+            if (partyType === 'customer')
+                return Statements.customer(partyId, from, to);
+            if (partyType === 'supplier')
+                return Statements.supplier(partyId, from, to);
+            return Statements.agent(partyId, from, to);
+        }
+        const ids = PartyFinance.accountIds(partyType), prev = Statements.previousDate(from), opening = {};
+        if (from)
+            for (const l of PartyFinance.lines(partyType, partyId, '', prev, ids).filter((x) => this.matches(x, filterKey))) {
+                opening[_a = l.currency] ?? (opening[_a] = 0);
+                opening[l.currency] += N(l.debit) - N(l.credit);
+            }
+        const running = { ...opening }, lines = PartyFinance.lines(partyType, partyId, from, to, ids).filter((x) => this.matches(x, filterKey)).sort((a, b) => a.date.localeCompare(b.date) || S(a.journalNo).localeCompare(S(b.journalNo))), rows = [], dueTotals = {}, creditTotals = {};
+        if (from && Object.values(opening).some((v) => Math.abs(N(v)) > EPS))
+            rows.push(`<tr><td>${formatDate(from)}</td><td>-</td><td><b>رصيد أول المدة</b></td><td>-</td><td>-</td><td>${Object.entries(opening).map(([c, v]) => PartyFinance.balanceHtml(v, c)).join('<br>')}</td></tr>`);
+        for (const l of lines) {
+            const dr = N(l.debit), cr = N(l.credit), c = l.currency;
+            running[c] = (running[c] || 0) + dr - cr;
+            if (dr > EPS)
+                dueTotals[c] = (dueTotals[c] || 0) + dr;
+            if (cr > EPS)
+                creditTotals[c] = (creditTotals[c] || 0) + cr;
+            rows.push(`<tr><td>${formatDate(l.date)}</td><td>${esc(l.journalNo || '-')}</td><td><span class="statement-description-short">${esc(DocumentNarrative.statementLine(l, 'short'))}</span></td><td class="print-party-due">${dr > EPS ? money(dr, c) : '-'}</td><td class="print-party-credit">${cr > EPS ? money(cr, c) : '-'}</td><td>${PartyFinance.balanceHtml(running[c], c)}</td></tr>`);
+        }
+        const currencies = [...new Set([...Object.keys(dueTotals), ...Object.keys(creditTotals), ...Object.keys(running)])], totalRows = currencies.map((c) => `<tr><th colspan="3">إجمالي حركة ${c}</th><th class="print-party-due">${money(dueTotals[c] || 0, c)}</th><th class="print-party-credit">${money(creditTotals[c] || 0, c)}</th><th>${PartyFinance.balanceHtml(running[c] || 0, c)}</th></tr>`).join(''), nonZero = currencies.filter((c) => Math.abs(N(running[c] || 0)) > EPS), breakdown = nonZero.map((c) => { const v = N(running[c]); return `<div class="print-balance-alert ${PartyFinance.tone(v)}"><span>الرصيد النهائي — ${c} — ${PartyFinance.phrase(v)}</span><strong>${money(Math.abs(v), c)}</strong></div>`; }).join(''), base = DB.data.settings.baseCurrency, baseNet = nonZero.reduce((sum, c) => sum + Currency.toBase(N(running[c]), c, to || today()), 0), consolidated = nonZero.length > 1 ? `<div class="print-balance-total">${Print.financialStatus(Math.abs(baseNet) <= EPS ? 'إجمالي الحساب بالعملة الأساسية' : PartyFinance.phrase(baseNet), baseNet, base, Math.abs(baseNet) <= EPS ? 'neutral' : PartyFinance.tone(baseNet), 'تجميع العملات لأغراض العرض فقط حسب سعر الصرف حتى تاريخ الكشف')}</div>` : '', summary = nonZero.length ? `<div class="print-balance-breakdown">${breakdown}${consolidated}</div>` : '<div class="print-balance-alert neutral"><span>موقف الحساب</span><strong>لا يوجد رصيد مستحق</strong></div>', filterLabel = this.labelFor({ partyType, partyId, to }, filterKey), title = partyType === 'customer' ? 'كشف حساب عميل' : partyType === 'supplier' ? 'كشف حساب مورد' : 'كشف حساب مندوب';
+        return Print.wrap(`${title} — ${filterLabel}`, `<div class="print-meta"><span>الطرف: <b>${esc(party.name)}</b></span><span>الكود: <b>${esc(party.no || party.id)}</b></span><span>الفترة: <b>${from ? formatDate(from) : 'البداية'} — ${to ? formatDate(to) : 'اليوم'}</b></span><span>التعامل: <b>${esc(filterLabel)}</b></span></div>${summary}`, `<table class="print-table"><thead><tr><th>التاريخ</th><th>المستند</th><th>التفاصيل</th><th style="color:#b42318">عليه</th><th style="color:#08785b">له</th><th>الرصيد</th></tr></thead><tbody>${rows.join('') || '<tr><td colspan="6">لا توجد حركات لهذا التعامل في الفترة المحددة</td></tr>'}</tbody>${totalRows ? `<tfoot>${totalRows}</tfoot>` : ''}</table>`);
+    }
+};
 const Reports = {
-    partyTransactions(o = {}) { const partyType = S(o.partyType || ''), partyId = S(o.partyId || ''), from = S(o.from || ''), to = S(o.to || today()), scope = S(o.scope || 'all'), programFilter = S(o.programId || ''), serviceFilter = S(o.serviceType || ''), ccFilter = S(o.costCenterId || ''), query = S(o.query || '').trim().toLowerCase(), base = DB.data.settings.baseCurrency, party = Actions.partyRecord(partyType, partyId); if (!party || !['customer', 'supplier', 'agent'].includes(partyType))
-        throw new Error('الطرف غير موجود'); const branchId = BranchScope.currentId(), programs = [...(DB.data.programs || []), ...(DB.data.umrahPrograms || [])], bookings = [...(DB.data.bookings || []), ...(DB.data.umrahBookings || [])], findProgram = id => programs.find((x) => x.id === id), findBooking = id => bookings.find((x) => x.id === id), uniq = (a) => [...new Set(a.filter(Boolean))], empty = () => ({ sourceTypes: [], programIds: [], serviceTypes: [], labels: [], refs: [], costCenterIds: [] }), merge = (...xs) => { const z = empty(); for (const x of xs.filter(Boolean)) {
-        z.sourceTypes.push(...(x.sourceTypes || []));
-        z.programIds.push(...(x.programIds || []));
-        z.serviceTypes.push(...(x.serviceTypes || []));
-        z.labels.push(...(x.labels || []));
-        z.refs.push(...(x.refs || []));
-        z.costCenterIds.push(...(x.costCenterIds || []));
-    } for (const k of Object.keys(z))
-        z[k] = uniq(z[k]); return z; }, sourceCtx = (type, id, depth = 0) => { if (depth > 5)
-        return empty(); if (type === 'invoice') {
-        const inv = byId(DB.data.invoices, id);
-        if (!inv)
-            return empty();
-        const own = { sourceTypes: ['invoice'], programIds: inv.programId ? [inv.programId] : [], serviceTypes: [], labels: [`فاتورة ${inv.no || ''}`], refs: [inv.no || ''], costCenterIds: inv.costCenterId ? [inv.costCenterId] : [] }, st = S(inv.sourceType || ''), sid = S(inv.sourceId || '');
-        if (!st || !sid)
-            return own;
-        return merge(own, sourceCtx(st, sid, depth + 1));
-    } if (type === 'service') {
-        const x = byId(DB.data.services, id);
-        if (!x)
-            return empty();
-        return { sourceTypes: ['service'], programIds: x.programId ? [x.programId] : [], serviceTypes: x.type ? [x.type] : [], labels: [`خدمة ${x.no || ''}${x.type ? ` — ${x.type}` : ''}`], refs: [x.no || ''], costCenterIds: x.costCenterId ? [x.costCenterId] : [] };
-    } if (type === 'booking' || type === 'umrah-booking') {
-        const x = findBooking(id);
-        if (!x)
-            return empty();
-        return { sourceTypes: [type === 'umrah-booking' ? 'umrah-booking' : 'booking'], programIds: x.programId ? [x.programId] : [], serviceTypes: [], labels: [`حجز ${x.no || ''}`], refs: [x.no || ''], costCenterIds: x.costCenterId ? [x.costCenterId] : [] };
-    } if (type === 'purchaseOrder') {
-        const x = byId(DB.data.purchaseOrders, id);
-        if (!x)
-            return empty();
-        return { sourceTypes: ['purchaseOrder'], programIds: x.programId ? [x.programId] : [], serviceTypes: [], labels: [`أمر شراء ${x.no || ''}`], refs: [x.no || ''], costCenterIds: x.costCenterId ? [x.costCenterId] : [] };
-    } if (type === 'commission') {
-        const x = byId(DB.data.commissions, id);
-        if (!x)
-            return empty();
-        const own = { sourceTypes: ['commission'], programIds: [], serviceTypes: [], labels: [`عمولة ${x.no || ''}`], refs: [x.no || ''], costCenterIds: [] };
-        return x.sourceType && x.sourceId ? merge(own, sourceCtx(x.sourceType, x.sourceId, depth + 1)) : x.sourceId ? merge(own, sourceCtx('service', x.sourceId, depth + 1), sourceCtx('booking', x.sourceId, depth + 1)) : own;
-    } if (type === 'receipt' || type === 'payment') {
-        const arr = type === 'receipt' ? DB.data.receipts : DB.data.payments, x = byId(arr, id);
-        if (!x)
-            return empty();
-        const own = { sourceTypes: [type], programIds: [], serviceTypes: [], labels: [`${type === 'receipt' ? 'سند قبض' : 'سند صرف'} ${x.no || ''}`], refs: [x.no || ''], costCenterIds: [] }, linked = (x.allocations || []).map((a) => sourceCtx('invoice', a.invoiceId, depth + 1));
-        if (x.sourceType && x.sourceId)
-            linked.push(sourceCtx(x.sourceType, x.sourceId, depth + 1));
-        if (x.commissionId)
-            linked.push(sourceCtx('commission', x.commissionId, depth + 1));
-        return merge(own, ...linked);
-    } if (type === 'reversal') {
-        const j = byId(DB.data.journals, id);
-        return j ? merge({ sourceTypes: ['reversal'], programIds: [], serviceTypes: [], labels: [`عكس ${j.no || ''}`], refs: [j.no || ''], costCenterIds: j.costCenterId ? [j.costCenterId] : [] }, sourceCtx(j.refType, j.refId, depth + 1)) : empty();
-    } return { sourceTypes: [type || 'other'], programIds: [], serviceTypes: [], labels: [], refs: [], costCenterIds: [] }; }, journalCtx = (l) => { const j = byId(DB.data.journals, l.journalId); const c = j ? sourceCtx(j.refType, j.refId) : empty(); if (l.costCenterId)
-        c.costCenterIds = uniq([...(c.costCenterIds || []), l.costCenterId]); c.refs = uniq([...(c.refs || []), j?.no || '', j?.refId || '']); c.labels = uniq([...(c.labels || []), j?.memo || '']); return c; }, partyLines = Accounting.lines(from, to, { branchId }).filter((l) => l.partyType === partyType && l.partyId === partyId), rows = []; let totalDebit = 0, totalCredit = 0; for (const l of partyLines) {
-        const c = journalCtx(l), hasProgram = (c.programIds || []).length > 0, isIndividual = (c.sourceTypes || []).includes('service') && !hasProgram, scopeOk = scope === 'all' || (scope === 'program' && hasProgram) || (scope === 'individual' && isIndividual) || (scope === 'booking' && ['booking', 'umrah-booking'].some(x => (c.sourceTypes || []).includes(x))) || (scope === 'service' && (c.sourceTypes || []).includes('service')) || (scope === 'purchaseOrder' && (c.sourceTypes || []).includes('purchaseOrder')) || (scope === 'commission' && (c.sourceTypes || []).includes('commission')) || (scope === 'other' && !hasProgram && !['service', 'booking', 'umrah-booking', 'purchaseOrder', 'commission'].some(x => (c.sourceTypes || []).includes(x)));
-        if (!scopeOk)
-            continue;
-        if (programFilter && !(c.programIds || []).includes(programFilter))
-            continue;
-        if (serviceFilter && !(c.serviceTypes || []).includes(serviceFilter))
-            continue;
-        if (ccFilter && !(c.costCenterIds || []).includes(ccFilter))
-            continue;
-        const programNames = (c.programIds || []).map((id) => findProgram(id)?.name || findProgram(id)?.no || id), serviceNames = c.serviceTypes || [], context = hasProgram ? 'برنامج عمرة' : isIndividual ? 'شغل فردي' : ['booking', 'umrah-booking'].some(x => (c.sourceTypes || []).includes(x)) ? 'حجز' : (c.sourceTypes || []).includes('purchaseOrder') ? 'مشتريات' : (c.sourceTypes || []).includes('commission') ? 'عمولة' : (c.sourceTypes || []).includes('service') ? 'خدمة' : 'أخرى', ref = (c.refs || []).filter(Boolean).slice(0, 2).join(' / ') || l.journalNo || '-', label = (c.labels || []).filter(Boolean).slice(0, 2).join(' • ') || DocumentNarrative.statementLine(l, 'short'), hay = [ref, label, context, ...programNames, ...serviceNames, Accounting.account(l.accountId)?.name || ''].join(' ').toLowerCase();
-        if (query && !hay.includes(query))
-            continue;
-        totalDebit += N(l.baseDebit);
-        totalCredit += N(l.baseCredit);
-        rows.push([formatDate(l.date), ref, label, context, programNames.join('، ') || '-', serviceNames.join('، ') || '-', (c.costCenterIds || []).map((id) => byId(DB.data.costCenters, id)?.name || id).join('، ') || '-', money(N(l.baseDebit), base), money(N(l.baseCredit), base)]);
-    } const scopeLabels = { all: 'كل التعاملات', program: 'برامج العمرة', individual: 'شغل فردي', booking: 'حجوزات', service: 'خدمات سياحية', purchaseOrder: 'مشتريات / أوامر شراء', commission: 'عمولات', other: 'أخرى' }, programLabel = programFilter ? (findProgram(programFilter)?.name || findProgram(programFilter)?.no || programFilter) : 'كل البرامج', meta = `<div class="print-meta"><span>الطرف: <b>${esc(party.name)}</b> — ${partyType === 'customer' ? 'عميل' : partyType === 'supplier' ? 'مورد' : 'مندوب'}</span><span>الفترة: <b>${from || 'البداية'} — ${to || today()}</b></span><span>نوع التعامل: <b>${esc(scopeLabels[scope] || scope)}</b></span><span>البرنامج: <b>${esc(programLabel)}</b></span>${serviceFilter ? `<span>الخدمة: <b>${esc(serviceFilter)}</b></span>` : ''}${ccFilter ? `<span>مركز التكلفة: <b>${esc(byId(DB.data.costCenters, ccFilter)?.name || ccFilter)}</b></span>` : ''}</div><div class="info-note">تقرير تحليلي للعرض فقط؛ الفلاتر لا تغيّر كشف الحساب أو الرصيد المحاسبي الرسمي للطرف.</div><div class="print-summary"><div><span>إجمالي مدين</span><b>${money(totalDebit, base)}</b></div><div><span>إجمالي دائن</span><b>${money(totalCredit, base)}</b></div><div><span>صافي حركة التقرير</span><b>${money(totalDebit - totalCredit, base)}</b></div><div><span>عدد الحركات</span><b>${rows.length}</b></div></div>`, table = `<table class="print-table"><thead><tr>${['التاريخ', 'المرجع', 'البيان', 'التصنيف', 'البرنامج', 'الخدمة', 'مركز التكلفة', 'مدين', 'دائن'].map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="9">لا توجد حركات مطابقة للفلاتر المحددة</td></tr>`}</tbody></table>`; return Print.wrap(`تفاصيل التعاملات — ${party.name}`, meta, table); },
+    partyTransactionOptions(o = {}) { return PartyTransactions.options(o); },
+    partyTransactions(o = {}) { return PartyTransactions.report(o); },
     income(from = '', to = '') { const branchId = BranchScope.currentId(), rows = DB.data.accounts.filter(a => a.posting && ['revenue', 'expense'].includes(a.type)).map(a => { const b = Accounting.accountBalance(a.id, from, to, { excludeRefTypes: ['year-close', 'year-reopen'], branchId }); return { a, v: a.type === 'revenue' ? b.credit - b.debit : b.debit - b.credit }; }), rev = rows.filter(x => x.a.type === 'revenue').reduce((s, x) => s + x.v, 0), exp = rows.filter(x => x.a.type === 'expense').reduce((s, x) => s + x.v, 0); return Print.wrap('قائمة الدخل', `<div class="print-meta"><span>الفترة: <b>${from || 'البداية'} — ${to || today()}</b></span><span>العملة الأساسية: <b>${DB.data.settings.baseCurrency}</b></span><span>الفرع: <b>${esc(BranchScope.current()?.name || 'كل الشركة')}</b></span></div>`, `<table class="print-table"><tr><th>الحساب</th><th>النوع</th><th>القيمة</th></tr>${rows.map(x => `<tr><td>${x.a.id} — ${esc(x.a.name)}</td><td>${accountTypeLabel(x.a.type)}</td><td>${fmt(x.v)}</td></tr>`).join('')}<tr><th colspan="2">صافي النتيجة</th><th>${fmt(rev - exp)}</th></tr></table>${Print.financialStatus(rev - exp > EPS ? 'صافي ربح' : rev - exp < -EPS ? 'صافي خسارة' : 'نتيجة متعادلة', rev - exp, DB.data.settings.baseCurrency, rev - exp > EPS ? 'green' : rev - exp < -EPS ? 'red' : 'neutral', rev - exp > EPS ? 'الإيرادات أكبر من المصروفات' : rev - exp < -EPS ? 'المصروفات أكبر من الإيرادات' : 'الإيرادات تساوي المصروفات')}`); },
     balance(to = today()) { const branchId = BranchScope.currentId(), rows = DB.data.accounts.filter(a => a.posting && ['asset', 'liability', 'equity'].includes(a.type)).map(a => ({ a, b: Accounting.accountBalance(a.id, '', to, { branchId }) })), current = DB.data.accounts.filter(a => a.posting && ['revenue', 'expense'].includes(a.type)).reduce((s, a) => { const b = Accounting.accountBalance(a.id, '', to, { branchId }); return s + (a.type === 'revenue' ? b.credit - b.debit : -(b.debit - b.credit)); }, 0), assets = rows.filter(x => x.a.type === 'asset').reduce((s, x) => s + x.b.net, 0), liabEq = rows.filter(x => ['liability', 'equity'].includes(x.a.type)).reduce((s, x) => s - x.b.net, 0) + current; const diff = assets - liabEq; return Print.wrap('الميزانية العمومية', `<div class="print-meta"><span>حتى: <b>${formatDate(to)}</b></span><span>فرق الميزانية: <b>${fmt(diff)}</b></span></div>${Print.financialStatus(Math.abs(diff) <= 0.01 ? 'الميزانية متوازنة' : 'الميزانية تحتاج مراجعة', diff, DB.data.settings.baseCurrency, Math.abs(diff) <= 0.01 ? 'green' : 'red', Math.abs(diff) <= 0.01 ? 'الأصول تساوي الخصوم وحقوق الملكية' : 'راجع القيود وحسابات الأصول والخصوم ونتيجة النشاط')}`, `<table class="print-table"><tr><th>الحساب</th><th>التصنيف</th><th>مدين</th><th>دائن</th></tr>${rows.map(x => `<tr><td>${x.a.id} — ${esc(x.a.name)}</td><td>${accountTypeLabel(x.a.type)}</td><td>${fmt(Math.max(x.b.net, 0))}</td><td>${fmt(Math.max(-x.b.net, 0))}</td></tr>`).join('')}<tr><td><b>نتيجة النشاط الحالية</b></td><td>حقوق ملكية</td><td>${current < 0 ? fmt(-current) : '-'}</td><td>${current >= 0 ? fmt(current) : '-'}</td></tr></table>`); },
     tax(from = '', to = '') { const ledger = Tax.ledger(from, to), rows = []; for (const tc of DB.data.taxCodes.filter(x => x.id !== 'TAX0')) {
@@ -15316,7 +15404,7 @@ const CleanPages = {
         const rows = (DB.data.bankReconciliations || []).slice(0, 100).map(x => `<tr><td><b>${x.no}</b><div class="text-sm muted">${formatDate(x.date)}</div></td><td>${esc(byId(DB.data.treasuries, x.treasuryId)?.name || '-')}</td><td>${money(x.system, x.currency)}</td><td>${money(x.statement, x.currency)}</td><td class="${Math.abs(x.diff) <= .01 ? 'money-in' : 'money-out'}">${money(x.diff, x.currency)}</td><td>${UI.badge(x.status)}</td></tr>`);
         body = UI.table(['المطابقة', 'البنك', 'رصيد النظام', 'كشف البنك', 'الفرق', 'الحالة'], rows, 'لا توجد مطابقات بنكية');
     } return Pages.head('الخزينة والبنوك', 'كل وظيفة في تبويبها بدل خلط الخزن والتحويلات والجرد والمطابقة في شاشة واحدة.', buttons) + body; },
-    reports() { const groups = [['القوائم المالية', [['income', 'قائمة الدخل', 'الإيرادات والمصروفات وصافي النتيجة'], ['balance', 'الميزانية', 'الأصول والخصوم وحقوق الملكية'], ['cashflow', 'التدفقات النقدية', 'تشغيلي / استثماري / تمويلي'], ['gl', 'الأستاذ العام', 'حركة الحسابات'], ['journals', 'القيود', 'سجل القيود']]], ['العملاء والموردون', [['partyTransactions', 'تفاصيل التعاملات', 'عميل أو مورد أو مندوب حسب البرنامج والخدمة والمرجع'], ['arAging', 'أعمار العملاء', 'المستحقات حسب العمر'], ['apAging', 'أعمار الموردين', 'الالتزامات حسب العمر'], ['salesCustomer', 'المبيعات حسب العميل', 'تجميع المبيعات'], ['salesAgent', 'المبيعات حسب المندوب', 'مبيعات المندوبين'], ['supplierCosts', 'تكاليف الموردين', 'تكاليف حسب المورد']]], ['الخزينة والضرائب', [['collections', 'التحصيلات', 'سندات القبض'], ['payments', 'المدفوعات', 'سندات الصرف'], ['treasuryDaily', 'الحركة اليومية للخزن', 'وارد وصادر'], ['tax', 'ملخص الضرائب', 'المخرجات والمدخلات'], ['taxDetail', 'تفاصيل الضرائب', 'تفاصيل الفواتير']]], ['الحج والعمرة', [['travelers', 'المسافرون', 'الجوازات والتأشيرات'], ['bookings', 'الحجوزات', 'حالات الحجوزات'], ['programOccupancy', 'إشغال البرامج', 'السعة والمتاح'], ['programProfitability', 'ربحية البرامج', 'الربحية من الأستاذ العام'], ['passportExpiry', 'انتهاء الجوازات', 'متابعة الصلاحية'], ['visaStatus', 'حالات التأشيرات', 'حالة كل مسافر']]], ['الإدارة والتحليل', [['serviceProfit', 'ربحية الخدمات', 'بيع وتكلفة وربح'], ['commissions', 'العمولات', 'عمولات المندوبين'], ['expenses', 'المصروفات', 'تحليل المصروفات'], ['fx', 'فروق العملة', 'محققة وغير محققة'], ['exposure', 'التعرض للعملات', 'المراكز المفتوحة']]]], allowed = ([k]) => Commercial.canViewCosts() || !['serviceProfit', 'supplierCosts', 'programProfitability'].includes(k); return Pages.head('التقارير', 'التقارير مقسمة حسب الغرض بدل شبكة واحدة مزدحمة.') + `<div class="report-search-box"><input type="search" placeholder="ابحث عن تقرير..." data-filter-report-cards="1"></div><div id="reportGrid" class="clean-report-groups">${groups.map(([name, cards]) => `<section class="report-group"><h3>${name}</h3><div class="report-grid">${cards.filter(allowed).map(([k, n, d]) => `<div class="report-card" data-search="${esc((n + ' ' + d).toLowerCase())}" data-clean-action="reportRange" data-clean-kind="${k}"><div class="report-icon">${icon('reports')}</div><b>${n}</b><small>${d}</small></div>`).join('')}</div></section>`).join('')}</div>`; }
+    reports() { const groups = [['القوائم المالية', [['income', 'قائمة الدخل', 'الإيرادات والمصروفات وصافي النتيجة'], ['balance', 'الميزانية', 'الأصول والخصوم وحقوق الملكية'], ['cashflow', 'التدفقات النقدية', 'تشغيلي / استثماري / تمويلي'], ['gl', 'الأستاذ العام', 'حركة الحسابات'], ['journals', 'القيود', 'سجل القيود']]], ['العملاء والموردون', [['partyTransactions', 'تفاصيل التعاملات', 'كشف الحساب مع تصفية تلقائية حسب تعاملات الطرف الفعلية'], ['arAging', 'أعمار العملاء', 'المستحقات حسب العمر'], ['apAging', 'أعمار الموردين', 'الالتزامات حسب العمر'], ['salesCustomer', 'المبيعات حسب العميل', 'تجميع المبيعات'], ['salesAgent', 'المبيعات حسب المندوب', 'مبيعات المندوبين'], ['supplierCosts', 'تكاليف الموردين', 'تكاليف حسب المورد']]], ['الخزينة والضرائب', [['collections', 'التحصيلات', 'سندات القبض'], ['payments', 'المدفوعات', 'سندات الصرف'], ['treasuryDaily', 'الحركة اليومية للخزن', 'وارد وصادر'], ['tax', 'ملخص الضرائب', 'المخرجات والمدخلات'], ['taxDetail', 'تفاصيل الضرائب', 'تفاصيل الفواتير']]], ['الحج والعمرة', [['travelers', 'المسافرون', 'الجوازات والتأشيرات'], ['bookings', 'الحجوزات', 'حالات الحجوزات'], ['programOccupancy', 'إشغال البرامج', 'السعة والمتاح'], ['programProfitability', 'ربحية البرامج', 'الربحية من الأستاذ العام'], ['passportExpiry', 'انتهاء الجوازات', 'متابعة الصلاحية'], ['visaStatus', 'حالات التأشيرات', 'حالة كل مسافر']]], ['الإدارة والتحليل', [['serviceProfit', 'ربحية الخدمات', 'بيع وتكلفة وربح'], ['commissions', 'العمولات', 'عمولات المندوبين'], ['expenses', 'المصروفات', 'تحليل المصروفات'], ['fx', 'فروق العملة', 'محققة وغير محققة'], ['exposure', 'التعرض للعملات', 'المراكز المفتوحة']]]], allowed = ([k]) => Commercial.canViewCosts() || !['serviceProfit', 'supplierCosts', 'programProfitability'].includes(k); return Pages.head('التقارير', 'التقارير مقسمة حسب الغرض بدل شبكة واحدة مزدحمة.') + `<div class="report-search-box"><input type="search" placeholder="ابحث عن تقرير..." data-filter-report-cards="1"></div><div id="reportGrid" class="clean-report-groups">${groups.map(([name, cards]) => `<section class="report-group"><h3>${name}</h3><div class="report-grid">${cards.filter(allowed).map(([k, n, d]) => `<div class="report-card" data-search="${esc((n + ' ' + d).toLowerCase())}" data-clean-action="reportRange" data-clean-kind="${k}"><div class="report-icon">${icon('reports')}</div><b>${n}</b><small>${d}</small></div>`).join('')}</div></section>`).join('')}</div>`; }
 };
 const Pages = {
     'umrah-dashboard'() { return CoreSuites.render('umrah', 'umrah-dashboard'); },
@@ -16406,15 +16494,26 @@ const Actions = {
     reportRange(type) { try {
         Auth.require('reports', 'print');
         if (type === 'partyTransactions') {
-            const m = ActionsDocument.getElementById('modal'), f = ActionsDocument.getElementById('modalForm'), parties = [['customer', 'العملاء', DB.data.customers || []], ['supplier', 'الموردون', DB.data.suppliers || []], ['agent', 'المندوبون', DB.data.agents || []]], partyOptions = parties.map(([t, label, items]) => `<optgroup label="${label}">${items.filter((x) => x.active !== false).map((x) => `<option value="${t}|${x.id}">${esc(x.name)}${x.no ? ` — ${esc(x.no)}` : ''}</option>`).join('')}</optgroup>`).join(''), programs = [...new Map([...(DB.data.programs || []), ...(DB.data.umrahPrograms || [])].map((x) => [x.id, x])).values()].filter((x) => x.active !== false), serviceTypes = [...new Set((DB.data.services || []).map((x) => S(x.type)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar')), ccs = (DB.data.costCenters || []).filter((x) => x.active !== false);
+            const m = ActionsDocument.getElementById('modal'), f = ActionsDocument.getElementById('modalForm'), parties = [['customer', 'العملاء', DB.data.customers || []], ['supplier', 'الموردون', DB.data.suppliers || []], ['agent', 'المندوبون', DB.data.agents || []]], partyOptions = parties.map(([t, label, items]) => `<optgroup label="${label}">${items.filter((x) => x.active !== false).map((x) => `<option value="${t}|${x.id}">${esc(x.name)}${x.no ? ` — ${esc(x.no)}` : ''}</option>`).join('')}</optgroup>`).join('');
             ActionsDocument.getElementById('modalTitle').textContent = 'تفاصيل التعاملات';
-            ActionsDocument.getElementById('modalSubtitle').textContent = 'تقرير تحليلي للقراءة فقط؛ اختر الطرف ثم صفِّ الحركات حسب النشاط أو البرنامج أو الخدمة.';
+            ActionsDocument.getElementById('modalSubtitle').textContent = 'اختر الطرف والفترة؛ قائمة التعاملات تظهر تلقائيًا من حركاته الفعلية فقط.';
             ActionsDocument.getElementById('modalIcon').innerHTML = icon('reports');
-            ActionsDocument.getElementById('modalSubmitText').textContent = 'عرض التقرير';
-            ActionsDocument.getElementById('modalBody').innerHTML = `<div class="form-grid"><div class="field full"><label>الطرف</label><select name="party" required><option value="">اختر عميلًا أو موردًا أو مندوبًا</option>${partyOptions}</select></div><div class="field"><label>من</label><input name="from" type="date"></div><div class="field"><label>إلى</label><input name="to" type="date" value="${today()}"></div><div class="field"><label>نوع التعامل</label><select name="scope"><option value="all">كل التعاملات</option><option value="program">برامج العمرة</option><option value="individual">شغل فردي</option><option value="booking">حجوزات</option><option value="service">خدمات سياحية</option><option value="purchaseOrder">مشتريات / أوامر شراء</option><option value="commission">عمولات</option><option value="other">أخرى</option></select></div><div class="field"><label>البرنامج — اختياري</label><select name="programId"><option value="">كل البرامج</option>${programs.map((x) => `<option value="${x.id}">${esc(x.name || x.no || x.id)}</option>`).join('')}</select></div><div class="field"><label>نوع الخدمة — اختياري</label><select name="serviceType"><option value="">كل الخدمات</option>${serviceTypes.map((x) => `<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select></div><div class="field"><label>مركز التكلفة — اختياري</label><select name="costCenterId"><option value="">كل المراكز</option>${ccs.map((x) => `<option value="${x.id}">${esc(x.name || x.no || x.id)}</option>`).join('')}</select></div><div class="field full"><label>بحث في المرجع أو البيان — اختياري</label><input name="query" placeholder="رقم فاتورة، حجز، خدمة، أمر شراء أو كلمة من البيان"></div></div><div class="info-note mt-12">هذا التقرير للعرض والتحليل فقط. كشف الحساب والرصيد المحاسبي الرسمي لا يتغيران بأي فلتر هنا.</div>`;
+            ActionsDocument.getElementById('modalSubmitText').textContent = 'عرض كشف الحساب';
+            ActionsDocument.getElementById('modalBody').innerHTML = `<div class="form-grid"><div class="field full"><label>الطرف</label><select name="party" required><option value="">اختر عميلًا أو موردًا أو مندوبًا</option>${partyOptions}</select></div><div class="field"><label>من</label><input name="from" type="date"></div><div class="field"><label>إلى</label><input name="to" type="date" value="${today()}"></div><div class="field full"><label>التعامل</label><select name="filterKey" disabled><option value="">كل التعاملات</option></select><small>تظهر هنا البرامج أو الحجوزات أو الخدمات أو المستندات الموجودة فعليًا لهذا الطرف فقط.</small></div></div>`;
+            const refresh = () => { const fd = new FormData(f), raw = S(fd.get('party') || ''), [partyType, partyId] = raw.split('|'), sel = f.elements.namedItem('filterKey'); if (!sel)
+                return; if (!partyType || !partyId) {
+                sel.innerHTML = '<option value="">كل التعاملات</option>';
+                sel.disabled = true;
+                return;
+            } const opts = Reports.partyTransactionOptions({ partyType, partyId, from: S(fd.get('from') || ''), to: S(fd.get('to') || today()) }); sel.innerHTML = `<option value="">كل التعاملات</option>${opts.map((x) => `<option value="${esc(x.key)}">${esc(x.label)}</option>`).join('')}`; sel.disabled = false; };
+            for (const name of ['party', 'from', 'to']) {
+                const el = f.elements.namedItem(name);
+                if (el)
+                    el.onchange = refresh;
+            }
             m.classList.add('show');
             f.onsubmit = e => { e.preventDefault(); const fd = new FormData(f), raw = S(fd.get('party') || ''), [partyType, partyId] = raw.split('|'); if (!partyType || !partyId)
-                return toast('اختر الطرف', 'error'); UI.closeModal(true); Print.show(Reports.partyTransactions({ partyType, partyId, from: S(fd.get('from') || ''), to: S(fd.get('to') || today()), scope: S(fd.get('scope') || 'all'), programId: S(fd.get('programId') || ''), serviceType: S(fd.get('serviceType') || ''), costCenterId: S(fd.get('costCenterId') || ''), query: S(fd.get('query') || '') })); };
+                return toast('اختر الطرف', 'error'); UI.closeModal(true); Print.show(Reports.partyTransactions({ partyType, partyId, from: S(fd.get('from') || ''), to: S(fd.get('to') || today()), filterKey: S(fd.get('filterKey') || '') })); };
             return;
         }
         if (type === 'programProfitability') {

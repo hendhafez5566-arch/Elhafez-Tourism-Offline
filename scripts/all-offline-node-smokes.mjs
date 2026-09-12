@@ -17,7 +17,7 @@ const scripts=[
   'v32555-auth-ui-clean-smoke.mjs',
   'v32556-ui-consistency-smoke.mjs',
   'v32563-single-pdf-engine-smoke.mjs',
-  'v32565-party-transactions-report-smoke.mjs',
+  'v32566-party-transactions-dynamic-filters-smoke.mjs',
   'system-ux-smoke.mjs',
   'clean-ui-smoke.mjs',
   'rocket-360-performance-smoke.mjs'
