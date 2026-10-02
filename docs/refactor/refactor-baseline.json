@@ -404,43 +404,48 @@
       "file": "scripts/list-performance-browser-smoke.py",
       "status": "ENVIRONMENT BLOCKER",
       "exit": 1,
-      "fingerprint": "26974a09b5783ca4101d070c5e1f1fa8ff9c39abeb1c82f70455c92c07bc5840",
-      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/list-performance-browser-smoke.py\\\", line 3, in <module>\\n    from playwright.async_api import async_playwright\\nModuleNotFoundError: No module named 'playwright'\\n\""
+      "fingerprint": "7bb558e3e883b51a8f220db0083bb1527bdc39ed473ea7414f75eb26efaf7bbe",
+      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/list-performance-browser-smoke.py\\\", line 43, in <module>\\n    asyncio.run(main())\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py\\\", line 195, in run\\n    return runner.run(main)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py\\\", line 118, in run\\n    return self._loop.run_until_complete(task)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/base_events.py\\\", line 691, in run_until_complete\\n    return future.result()\\n           ^^^^^^^^^^^^^^^\\n  File \\\"<ROOT>scripts/list-performance-browser-smoke.py\\\", line 15, in main\\n    browser_path=os.environ.get('CHROMIUM_PATH') or shutil.which('chromium') or shutil.which('chromium-browser') or shutil.which('google-chrome'); browser=await p.chromium.launch(headless=True, executable_path=browser_path or None, args=['--no-sandbox','--disable-dev-shm-usage','--js-flags=--max-old-space-size=2048'])\\n                                                  "
     },
     {
       "file": "scripts/modal-footer-browser-smoke.py",
       "status": "ENVIRONMENT BLOCKER",
       "exit": 1,
-      "fingerprint": "682dc8f8470d8a5364dc8fd34a0e137929b6eda65faba0e9946784557485a557",
-      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/modal-footer-browser-smoke.py\\\", line 2, in <module>\\n    from playwright.async_api import async_playwright\\nModuleNotFoundError: No module named 'playwright'\\n\""
+      "fingerprint": "e5c4165c6af4f7fb976586a273789020c47d35510484c5577c3f939cbd686868",
+      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/modal-footer-browser-smoke.py\\\", line 35, in <module>\\n    asyncio.run(main())\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py\\\", line 195, in run\\n    return runner.run(main)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py\\\", line 118, in run\\n    return self._loop.run_until_complete(task)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/base_events.py\\\", line 691, in run_until_complete\\n    return future.result()\\n           ^^^^^^^^^^^^^^^\\n  File \\\"<ROOT>scripts/modal-footer-browser-smoke.py\\\", line 13, in main\\n    browser_path=os.environ.get('CHROMIUM_PATH') or shutil.which('chromium') or shutil.which('chromium-browser') or shutil.which('google-chrome'); browser=await p.chromium.launch(headless=True,executable_path=browser_path or None,args=['--no-sandbox'])\\n                                                                                                                             "
     },
     {
       "file": "scripts/party-controls-browser-smoke.py",
       "status": "ENVIRONMENT BLOCKER",
       "exit": 1,
-      "fingerprint": "a8d423a286bad00c2b6ca90a722db49cc9f5d44db9a8dd1f52a93e6760382b7c",
-      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/party-controls-browser-smoke.py\\\", line 3, in <module>\\n    from playwright.async_api import async_playwright\\nModuleNotFoundError: No module named 'playwright'\\n\""
+      "fingerprint": "ff08034d0fce7085b81c5a75019781ff60d53bcf3b6c727f0341988d348174bb",
+      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/party-controls-browser-smoke.py\\\", line 234, in <module>\\n    asyncio.run(main())\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py\\\", line 195, in run\\n    return runner.run(main)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py\\\", line 118, in run\\n    return self._loop.run_until_complete(task)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/base_events.py\\\", line 691, in run_until_complete\\n    return future.result()\\n           ^^^^^^^^^^^^^^^\\n  File \\\"<ROOT>scripts/party-controls-browser-smoke.py\\\", line 19, in main\\n    browser_path=os.environ.get('CHROMIUM_PATH') or shutil.which('chromium') or shutil.which('chromium-browser') or shutil.which('google-chrome'); browser=await p.chromium.launch(headless=True, executable_path=browser_path or None, args=['--no-sandbox','--disable-dev-shm-usage'])\\n                                                                                            "
     },
     {
       "file": "scripts/party360-browser-smoke.py",
       "status": "ENVIRONMENT BLOCKER",
       "exit": 1,
-      "fingerprint": "7054cda0aa1fbb3bd4aecf915b650abe2ca1c10f61606a220fa748bc28c36216",
-      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/party360-browser-smoke.py\\\", line 2, in <module>\\n    from playwright.async_api import async_playwright\\nModuleNotFoundError: No module named 'playwright'\\n\""
+      "fingerprint": "a0d0bdedf1fb0c4c5e22d08f1081538eaeb4d5c5dafb301e65a892eed3a8ed5a",
+      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/party360-browser-smoke.py\\\", line 58, in <module>\\n    asyncio.run(main())\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py\\\", line 195, in run\\n    return runner.run(main)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py\\\", line 118, in run\\n    return self._loop.run_until_complete(task)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/base_events.py\\\", line 691, in run_until_complete\\n    return future.result()\\n           ^^^^^^^^^^^^^^^\\n  File \\\"<ROOT>scripts/party360-browser-smoke.py\\\", line 16, in main\\n    browser_path=os.environ.get('CHROMIUM_PATH') or shutil.which('chromium') or shutil.which('chromium-browser') or shutil.which('google-chrome'); browser=await p.chromium.launch(headless=True, executable_path=browser_path or None, args=['--no-sandbox','--disable-dev-shm-usage'])\\n                                                                                                         "
     },
     {
       "file": "scripts/ui-browser-smoke.py",
       "status": "ENVIRONMENT BLOCKER",
       "exit": 1,
-      "fingerprint": "87be6227064f7cb8915bde8e7af5c9e6d6b783ce7336c80b5401209db3edd082",
-      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/ui-browser-smoke.py\\\", line 2, in <module>\\n    from playwright.async_api import async_playwright\\nModuleNotFoundError: No module named 'playwright'\\n\""
+      "fingerprint": "ea146ee3e58269a0dfac1f6517b13c2d8b844911c044971326194c9e6f647d0a",
+      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/ui-browser-smoke.py\\\", line 101, in <module>\\n    asyncio.run(main())\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py\\\", line 195, in run\\n    return runner.run(main)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py\\\", line 118, in run\\n    return self._loop.run_until_complete(task)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/base_events.py\\\", line 691, in run_until_complete\\n    return future.result()\\n           ^^^^^^^^^^^^^^^\\n  File \\\"<ROOT>scripts/ui-browser-smoke.py\\\", line 18, in main\\n    browser_path=os.environ.get('CHROMIUM_PATH') or shutil.which('chromium') or shutil.which('chromium-browser') or shutil.which('google-chrome'); browser=await p.chromium.launch(headless=True, executable_path=browser_path or None, args=['--no-sandbox','--disable-dev-shm-usage'])\\n                                                                                                                    "
     },
     {
       "file": "scripts/v32469-browser-smoke.py",
       "status": "ENVIRONMENT BLOCKER",
       "exit": 1,
-      "fingerprint": "1a753fee82ff8b8632982c058be7345e3f0147ca3bb7813a61614ae63036cb29",
-      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/v32469-browser-smoke.py\\\", line 2, in <module>\\n    from playwright.async_api import async_playwright\\nModuleNotFoundError: No module named 'playwright'\\n\""
+      "fingerprint": "7cb855833da50067f242c777f8ea53a443a29ceaf101dcd000db2a18bb9c780c",
+      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/v32469-browser-smoke.py\\\", line 96, in <module>\\n    asyncio.run(main())\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py\\\", line 195, in run\\n    return runner.run(main)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/runners.py\\\", line 118, in run\\n    return self._loop.run_until_complete(task)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/asyncio/base_events.py\\\", line 691, in run_until_complete\\n    return future.result()\\n           ^^^^^^^^^^^^^^^\\n  File \\\"<ROOT>scripts/v32469-browser-smoke.py\\\", line 16, in main\\n    browser_path=os.environ.get('CHROMIUM_PATH') or shutil.which('chromium') or shutil.which('chromium-browser') or shutil.which('google-chrome'); browser=await p.chromium.launch(headless=True,executable_path=browser_path or None,args=['--no-sandbox','--disable-dev-shm-usage'])\\n                                                                                                               "
     }
-  ]
+  ],
+  "browserEnvironment": {
+    "pythonPlaywright": "1.63.0 installed outside repository",
+    "chromium": "blocked: full Chromium and headless-shell download retries returned invalid/truncated ZIP; End of central directory record signature not found",
+    "observed": "all six scripts fail at launch: Executable does not exist; no functional assertions executed"
+  }
 }

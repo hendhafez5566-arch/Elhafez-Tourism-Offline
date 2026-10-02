@@ -10,7 +10,7 @@ export function layer(file){
  if(/(^src\/ui\/|(?:pages|forms(?:-contracts)?|view|actions-print)\.ts$|src\/core\/umrah\/ui\.ts$)/.test(file))return 'presentation';
  if(file.startsWith('src/security/'))return 'security';
  if(file.startsWith('src/persistence/'))return 'persistence';
- if(/src\/(?:accounting|finance|core)\//.test(file))return 'domain-core';
+ if(/src\/(?:accounting|finance|crm|commercial|core)\//.test(file))return 'domain-core';
  if(file==='src/bootstrap.ts')return 'bootstrap';
  return 'application-platform';
 }
@@ -20,6 +20,7 @@ export function scan(){
   function add(rule,node){const normalized=ts.createPrinter({removeComments:true}).printNode(ts.EmitHint.Unspecified,node,sf).replace(/\s+/g,' ').trim();findings.push({rule,file,signature:createHash('sha256').update(normalized).digest('hex'),sample:normalized.slice(0,180)});}
   function unwrap(n){while(ts.isParenthesizedExpression(n)||ts.isAsExpression(n)||ts.isTypeAssertionExpression(n)||ts.isNonNullExpression(n))n=n.expression;return n;}
   function base(n){n=unwrap(n);while(ts.isPropertyAccessExpression(n)||ts.isElementAccessExpression(n))n=unwrap(n.expression);return ts.isIdentifier(n)?n.text:'';}
+  function directMember(n){n=unwrap(n);if(!ts.isPropertyAccessExpression(n)&&!ts.isElementAccessExpression(n))return '';const receiver=unwrap(n.expression);return ts.isIdentifier(receiver)?receiver.text:'';}
   function mutation(n){if(ts.isBinaryExpression(n)&&n.operatorToken.kind>=ts.SyntaxKind.FirstAssignment&&n.operatorToken.kind<=ts.SyntaxKind.LastAssignment)return n.left;if((ts.isPrefixUnaryExpression(n)||ts.isPostfixUnaryExpression(n))&&[ts.SyntaxKind.PlusPlusToken,ts.SyntaxKind.MinusMinusToken].includes(n.operator))return n.operand;if(ts.isDeleteExpression(n))return n.expression;}
   function visit(n){
    if(ts.isIdentifier(n)){
@@ -32,11 +33,11 @@ export function scan(){
      if(forbidden.includes(n.text))add('ARCH006',p);
     }
    }
-   const target=mutation(n);if(target){const b=base(target);if(['UI','DB','Auth'].includes(b)&&!ts.isIdentifier(unwrap(target)))add('ARCH004',n);if(['window','globalThis'].includes(b))add('ARCH005',n);}
+   const target=mutation(n);if(target){const b=base(target);if(['UI','DB','Auth'].includes(directMember(target)))add('ARCH004',n);if(['window','globalThis'].includes(b))add('ARCH005',n);}
    if(ts.isCallExpression(n)&&ts.isPropertyAccessExpression(n.expression)){
     const call=n.expression.getText(sf);const receiver=n.arguments[0];
     if(receiver&&['Object.assign','Object.defineProperty','Object.defineProperties','Reflect.set','Reflect.defineProperty','Reflect.deleteProperty'].includes(call)){
-     const b=base(receiver);if(['UI','DB','Auth'].includes(b))add('ARCH004',n);if(['window','globalThis'].includes(b))add('ARCH005',n);
+     const b=base(receiver),direct=unwrap(receiver);if(ts.isIdentifier(direct)&&['UI','DB','Auth'].includes(direct.text))add('ARCH004',n);if(['window','globalThis'].includes(b))add('ARCH005',n);
     }
    }
    ts.forEachChild(n,visit);
