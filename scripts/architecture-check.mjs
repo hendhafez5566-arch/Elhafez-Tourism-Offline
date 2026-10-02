@@ -7,6 +7,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 export const rules={ARCH001:'Direct DB global access from presentation',ARCH002:'Reverse UI global dependency from persistence/core/domain',ARCH003:'Auth global coupling outside security/auth/bootstrap',ARCH004:'Monkey-patching/reassignment of UI/DB/Auth public members',ARCH005:'window/globalThis mutation in src',ARCH006:'Forbidden upward cross-layer/global dependency'};
 function walk(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(dir,e.name)):e.name.endsWith('.ts')?[path.join(dir,e.name)]:[]).sort();}
 export function layer(file){
+ if(file.startsWith('src/application/'))return 'application';
  if(/(^src\/ui\/|(?:pages|forms(?:-contracts)?|view|actions-print)\.ts$|src\/core\/umrah\/ui\.ts$)/.test(file))return 'presentation';
  if(file.startsWith('src/security/'))return 'security';
  if(file.startsWith('src/persistence/'))return 'persistence';
@@ -26,6 +27,7 @@ export function scan(){
    if(ts.isIdentifier(n)){
     const p=n.parent;const isName=(ts.isPropertyAccessExpression(p)&&p.name===n)||((ts.isPropertyAssignment(p)||ts.isMethodDeclaration(p)||ts.isVariableDeclaration(p)||ts.isParameter(p)||ts.isFunctionDeclaration(p))&&p.name===n);
     if(!isName){
+     if(role==='application'&&['DB','Auth','UI','Pages','Forms','toast','window','globalThis','document','localStorage','sessionStorage'].includes(n.text))add('ARCH006',p);
      if(n.text==='DB'&&role==='presentation')add('ARCH001',p);
      if(['UI','Pages','Forms','toast','Print'].includes(n.text)&&['persistence','domain-core'].includes(role))add('ARCH002',p);
      if(n.text==='Auth'&&!['security','bootstrap'].includes(role))add('ARCH003',p);

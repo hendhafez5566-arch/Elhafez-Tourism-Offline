@@ -1,3 +1,77 @@
+function composeLegacyCommercialDeps():CommercialWorkflowDeps {
+ return {
+  authorization:{require:(page,action)=>Auth.require(page,action)},
+  transactions:{atomic:(label,work,options)=>DB.atomic(label,work,options),atomicAsync:(label,work,options)=>DB.atomicAsync(label,work,options),fastAtomic:(label,work,options)=>DB.fastAtomic(label,work,options)},
+  persistence:{save:render=>render===undefined?DB.save():DB.save(render),log:(action,type,id,detail)=>DB.log(action,type,id,detail)},
+  activity:{setRange:range=>{DB.data.settings.activityRange=range;},entries:()=>DB.data.auditLog||[],replace:entries=>{DB.data.auditLog=entries;},trimUmrah:(range,cut)=>{try{if(typeof UmrahCore_DB!=='undefined'&&UmrahCore_DB?.data?.activity)UmrahCore_DB.data.activity=(UmrahCore_DB.data.activity||[]).filter(x=>range!=='all'&&Date.parse(x.at)<cut);}catch(_){}},clearRemote:range=>CommercialSupport.clearAudit(range),warn:error=>console.warn('[audit] cleanup failed',typeof error==='object'&&error!==null&&'message' in error?error.message:undefined)},
+  branches:{find:id=>byId(DB.data.branches,id),all:()=>DB.data.branches,create:fields=>Commercial.createBranch(fields),update:(id,fields)=>Commercial.updateBranch(id,fields)},
+  users:{find:id=>byId(DB.data.users,id)},audit:{read:()=>CommercialSupport.audit(),userName:id=>byId(DB.data.users,id)?.name},nowMillis:()=>Date.now()
+ };
+}
+
+// The existing composition root adapts legacy state and authorization once per action.
+// Function declarations are hoisted; returned ports use the live stores, never snapshots.
+function composeLegacyActionDeps():DocumentWorkflowDeps {
+ return {
+  authorization:{require:(page,action)=>Auth.require(page,action)},
+  transactions:{atomic:(label,work,options)=>DB.atomic(label,work,options),atomicAsync:(label,work,options)=>DB.atomicAsync(label,work,options),fastAtomic:(label,work,options)=>DB.fastAtomic(label,work,options)},
+  persistence:{save:render=>render===undefined?DB.save():DB.save(render),log:(action,type,id,detail)=>DB.log(action,type,id,detail)},
+  repository:{invoices:()=>DB.data.invoices,invoice:id=>byId(DB.data.invoices,id),quotation:id=>byId(DB.data.quotations,id),purchaseOrder:id=>byId(DB.data.purchaseOrders,id)},
+  domain:{createInvoice:fields=>Invoices.create(fields),postInvoice:invoice=>Invoices.post(invoice),addReceipt:fields=>Transactions.addReceipt(fields),addPayment:fields=>Transactions.addPayment(fields),addQuotation:fields=>CRM.addQuotation(fields),updateQuotation:(id,fields)=>CRM.updateQuotation(id,fields),addPurchaseOrder:fields=>CRM.addPO(fields),updatePurchaseOrder:(id,fields)=>CRM.updatePO(id,fields),receivePurchaseOrder:(id,quantities)=>CRM.receivePOLines(id,quantities),voidPurchaseOrder:(id,reason)=>CRM.voidPO(id,reason),removePurchaseOrder:id=>CRM.removePO(id)},
+  operations:{
+   removeProgram:(id)=>Transactions.removeProgram(id),
+   confirmBooking:(id)=>Transactions.confirmBooking(id),
+   completeBooking:(id)=>Transactions.completeBooking(id),
+   reopenBooking:(id,reason)=>Transactions.reopenBooking(id,reason),
+   cancelBooking:(id,reason)=>Transactions.cancelBooking(id,reason),
+   confirmService:(id)=>Transactions.confirmService(id),
+   completeService:(id)=>Transactions.completeService(id),
+   reopenService:(id,reason)=>Transactions.reopenService(id,reason),
+   cancelService:(id,reason)=>Transactions.cancelService(id,reason),
+   deleteService:(id)=>Transactions.deleteService(id),
+   voidReceipt:(id,reason)=>Transactions.voidReceipt(id,reason),
+   voidPayment:(id,reason)=>Transactions.voidPayment(id,reason),
+   reverseInvoiceAdjustment:(id,reason)=>Invoices.reverseAdjustment(id,reason),
+   cancelInvoice:(id,reason)=>Invoices.cancel(id,reason),
+   deleteExpense:(id)=>Transactions.deleteExpense(id),
+   voidExpense:(id,reason)=>Transactions.voidExpense(id,reason),
+   recognizePrepaid:(id)=>Transactions.recognizePrepaid(id),
+   reversePrepaid:(id,reason)=>Transactions.reversePrepaid(id,reason),
+   approveCommission:(id)=>Transactions.approveCommission(id),
+   rejectCommission:(id,reason)=>Transactions.rejectCommission(id,reason),
+   reverseCommission:(id,reason)=>Transactions.reverseCommissionPayment(id,reason),
+   toggleTreasury:(id)=>Transactions.toggleTreasury(id),
+   removeTreasury:(id)=>Transactions.removeTreasury(id),
+   reverseTransfer:(id,reason)=>Transactions.reverseTransfer(id,reason),
+   bounceCheque:(id,reason)=>Transactions.bounceCheque(id,reason),
+   toggleCurrency:(id)=>Currency.toggle(id),
+   removeCurrency:(id)=>Currency.remove(id),
+   postManualJournal:(id)=>ManualJournal.postDraft(id),
+   removeManualJournal:(id)=>ManualJournal.removeDraft(id),
+   reverseManualJournal:(id,reason)=>ManualJournal.reverse(id,reason),
+   runRecurringJournal:(id)=>ManualJournal.runRecurring(id),
+   toggleRecurringJournal:(id)=>ManualJournal.toggleRecurring(id),
+   removeRecurringJournal:(id)=>ManualJournal.removeRecurring(id),
+   toggleAccount:(id)=>MasterData.toggleAccount(id),
+   removeAccount:(id)=>MasterData.removeAccount(id),
+   removeCostCenter:(id)=>MasterData.removeCostCenter(id),
+   approveRequest:(id)=>Approvals.approve(id),
+   rejectRequest:(id,reason)=>Approvals.reject(id,reason),
+   convertLead:(id)=>CRM.convertLead(id),
+   removeLead:(id)=>CRM.removeLead(id),
+   removeFollowup:(id)=>CRM.removeFollowup(id),
+   acceptQuotation:(id)=>CRM.acceptQuotation(id),
+   convertQuotation:(id)=>CRM.convertQuotation(id),
+   removeQuotation:(id)=>CRM.removeQuotation(id),
+   approvePO:(id)=>CRM.approvePO(id),
+   convertPO:(id)=>CRM.convertPO(id),
+   toggleUser:(id)=>MasterData.toggleUser(id),
+  },
+  clock:{today:()=>today(),now:()=>now(),formatDate:value=>formatDate(value)},
+  text:value=>S(value),isLive:value=>live(value)
+ };
+}
+
 (async()=>{
   // Never leave credentials in the address bar/history, even if an older
   // login form previously fell back to a native GET submission.
