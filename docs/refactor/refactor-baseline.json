@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-03",
+  "startSha": "e97fa6d9cb52acb22b676e1b975c1b2332bc9a13",
+  "branch": "qwen-code-404f5502-fda0-4972-b967-266e06cc7db2",
+  "clientBuild": "PASS",
+  "serverBuild": "PASS",
+  "nodeTotal": 60,
+  "nodePass": 43,
+  "expectedPreExistingFailures": [
+    "android-connectivity",
+    "brand-asset",
+    "commercial",
+    "contracts-inventory",
+    "data-protection",
+    "unified-more-cleanup",
+    "v32470-regression",
+    "v32472-accounting-lifecycle",
+    "v32481-mobile-ux-action-policy",
+    "v32483-mobile-refresh-compact-filters",
+    "v32485-filter-refresh-font",
+    "v32510-operations-execution-split",
+    "v32511-entity-backed-read",
+    "v32512-entity-backed-write",
+    "v32565-party-transactions-report"
+  ],
+  "knownStructuralFailures": [
+    {
+      "key": "customer-parity",
+      "reason": "mobile-customer/index.html missing (historical structural inconsistency of the offline copy)"
+    },
+    {
+      "key": "mobile-android",
+      "reason": "reads mobile-customer/index.html which is missing (historical structural inconsistency)"
+    }
+  ]
+}
