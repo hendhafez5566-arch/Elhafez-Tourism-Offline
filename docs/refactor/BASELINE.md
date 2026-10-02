@@ -1,0 +1,114 @@
+# Refactor Baseline — Repository Snapshot (B00)
+
+- **Branch:** `qwen-code-404f5502-fda0-4972-b967-266e06cc7db2`
+- **Start SHA:** `e97fa6d9cb52acb22b676e1b975c1b2332bc9a13` (`main`, grafted single commit: "Elhafez Tourism Offline v32.5.66")
+- **Version:** 32.5.66 (`package.json`)
+- **Recorded on:** 2026-10-03
+- **Scope:** This document records the CURRENT state only. No source code was modified in B00.
+
+---
+
+## 1. TypeScript File Inventory (actual counts)
+
+| Metric | Count |
+|---|---|
+| Client TS files (`src/**/*.ts`, excluding `.d.ts`) | **68** |
+| Server TS files (`server/src/**/*.ts`) | **15** |
+| Total project TS files (src + server/src, no dist/node_modules) | **83** |
+| Tracked repo files total (`git ls-files`) | 391 |
+
+All counts verified with `find src server/src -name "*.ts" ! -name "*.d.ts"` at HEAD.
+
+## 2. Smoke Test Inventory (actual counts)
+
+| Metric | Count |
+|---|---|
+| Node smoke tests (`scripts/*-smoke.mjs`) | **60** |
+| Runner | `node scripts/all-node-smokes.mjs` (auto-discovers all `*-smoke.mjs`, sorted) |
+| Python browser smokes (`scripts/*browser-smoke.py`, `all-browser-smokes.py`) | 7 (not part of the Node gate) |
+| Other non-smoke `.mjs` scripts (build/serve/check helpers) | 8 |
+
+Baseline test result (recorded before any change): **43/60 passed, 17 failed** — see TEST_BASELINE.md.
+
+## 3. DB / UI / Auth Global Usage
+
+The client is compiled with `"module": "none"` and a manually ordered `files` list
+(tsconfig manual ordering), so top-level `const`s act as cross-file globals.
+
+| Global | Definition | Usages in `src/**/*.ts` | Files touched |
+|---|---|---|---|
+| `DB` (state store) | `src/persistence/browser-store.ts` | **723** references (`DB.` / `DB.data`) | **57** of 68 client files |
+| `Auth.` | `src/security/auth.ts` | **162** references | **29** files |
+| `window as any` casts | scattered | 24 occurrences | multiple UI files |
+| `localStorage` | direct calls | 20 occurrences | 8 files (`ui/commercial-ux.ts`, `ui/ui.ts`, `documents/attachments-backup.ts`, `mobile.ts`, `persistence/server-store.ts`, `persistence/browser-store.ts`, `commercial/product.ts`, `security/auth.ts`) |
+| `sessionStorage` | direct calls | 11 occurrences | incl. `core/umrah/data.ts` (UmrahCore_LocalUI) |
+| `indexedDB` | direct calls | 2 files | `src/documents/attachments-backup.ts`, `src/persistence/browser-store.ts` |
+
+Server-side DB access goes through `pool` from `server/src/context.ts` (`Pool` from `pg`).
+
+## 4. Monkey-Patching Hotspots
+
+Runtime prototype/namespace patching (order-dependent because of `module:"none"`):
+
+| Pattern | Count / Location |
+|---|---|
+| `Object.assign(<Namespace>, <Extension>)` merges | **56** `Object.assign(` occurrences in `src`; namespace-extension pattern concentrated in: `core/umrah/operations-execution.ts` (L76), `core/umrah/contracts-management.ts` (L192), `core/umrah/program-wizard-view.ts` (L28), `core/umrah/forms-contracts.ts` (L51), `core/umrah/workflow.ts` (L46), plus `ui/forms*.ts`, `ui/navigation.ts`, `accounting/*.ts`, `commercial/*.ts`, `crm/crm.ts`, `persistence/browser-store.ts`, `integrated/*` |
+| Wrap-original-method monkey patch | `src/crm/crm.ts` L10–11: `const CRMConvertPOLifecycleBase = CRM.convertPO.bind(CRM); CRM.convertPO = id => { ... }` |
+| `Object.defineProperty` getter/setter proxying onto `DB.data` roots | `src/core/umrah/data.ts` L14 (`rootView`: live getters mapping logical → physical root keys) |
+| Prototype touches | minimal (1 benign `Object.prototype.hasOwnProperty.call`) |
+
+These patches depend strictly on tsconfig `files` order (extension files must load after their base namespaces).
+
+## 5. tsconfig Manual Ordering
+
+- Root `tsconfig.json`: `"module": "none"`, `"outFile": "dist/app.js"`, `"strict": false`, `skipLibCheck: true`, `noEmitOnError: true`.
+- **68 files listed manually in `"files"`** in load order (runtime.ts first, bootstrap.ts last). Any module refactor must preserve this order or replace it wholesale.
+- `server/tsconfig.json`: `strict: true`, `module/moduleResolution: NodeNext`, `include: ["src/**/*.ts"]`, `outDir: dist`.
+
+## 6. Largest TypeScript Files (line counts)
+
+| Lines | File |
+|---|---|
+| 562 | `src/core/umrah/operations.ts` |
+| 545 | `src/core/umrah/program-wizard.ts` |
+| 366 | `src/core/umrah/contracts.ts` |
+| 319 | `src/mobile.ts` |
+| 293 | `src/core/umrah/guided.ts` |
+| 192 | `src/core/umrah/contracts-management.ts` |
+| 189 | `src/core/umrah/contracts-inventory.ts` |
+| 187 | `src/ui/delegated-actions.ts` |
+| 183 | `src/integrated/service-inventory.ts` / `src/core/umrah/data.ts` |
+| 176 | `src/core/umrah/procurement.ts` |
+| 160 | `server/src/server.ts` (dense single-line style; large byte size per line) |
+
+Total `src` + `server/src`: 6,501 lines.
+
+## 7. Generated Directories (tracked in git despite being build output)
+
+| Directory | Tracked files | Notes |
+|---|---|---|
+| `dist/` | 8 | client build output (`app.js`, `index.html`, `sw.js`, icons…) — regenerated by `npm run build` |
+| `server/dist/` | 15 | server tsc output — regenerated by `tsc -p server/tsconfig.json` |
+| `android/app/src/main/assets/public/` | 8 | Capacitor sync copy of `dist/` |
+| `node_modules/`, `server/node_modules/` | 0 | correctly ignored by `.gitignore` |
+
+Policy note: these are committed build artifacts; they are NOT inputs to builds/tests in the baseline gate and must not be hand-edited.
+
+## 8. RELEASE_* Clutter at Repo Root
+
+- `RELEASE_MANIFEST_V32.5.{31,32,33,34,35,37,38,39,40,41,42,43}.txt` — **12 files**
+- `RELEASE_REPORT_V32.5.*_AR.txt` — **24 files** (versions .31 … .66)
+- Related one-off reports: `QA_SUMMARY_V32.5.15.txt`, `CONTINUATION_AUDIT_AR.txt`, `OFFLINE_FULL_COPY_REPORT_AR.txt`
+- Reference scan (excluding node_modules/.git/dist): the only mentions of `RELEASE_MANIFEST`/`RELEASE_REPORT_*` names are inside those txt files themselves (self-referential lists). **No reference from package.json, scripts/**, src/**, server/**, android/**, tests, CI config (.github) or Dockerfiles.** `UPDATE_DELETE_MANIFEST.txt` / `UPDATE_ONLY_README_AR.txt` / `CUSTOMER_PACKAGE.txt` are referenced by `scripts/install-update.ps1` (Windows update flow) — left untouched per scope.
+
+## 9. Baseline Build/Test State (pre-B01A)
+
+| Gate | Result | Detail |
+|---|---|---|
+| Client `tsc -p tsconfig.json` | **PASS** | emits `dist/app.js` |
+| `node scripts/copy-static.mjs` | PASS | static/PWA copy OK |
+| Server `tsc -p server/tsconfig.json` | **FAIL (types-only)** | `server/src/server.ts(55,80): error TS2769 … 'query_timeout' does not exist in type 'QueryConfig<any[]>'` — runtime supports per-query timeout; @types/pg QueryConfig does not declare it. Fixed types-only in B01A. |
+| Node smoke suite | 43/60 pass, 17 fail | 15 expected pre-existing failures + 2 known structural failures (mobile-customer/index.html missing). See TEST_BASELINE.md |
+| `npm run check` (parity-check) | PASS (exit 0) | uses previously emitted dist |
+
+Full failure list and classification: `docs/refactor/TEST_BASELINE.md`.

@@ -56,6 +56,7 @@
     "test:browser-smokes": "python scripts/all-browser-smokes.py",
     "build:offline": "tsc -p tsconfig.json && node scripts/copy-static.mjs",
     "test:offline": "node scripts/offline-copy-smoke.mjs",
+    "refactor:check": "node scripts/refactor-check.mjs",
     "test:offline-all": "node scripts/all-offline-node-smokes.mjs"
   },
   "devDependencies": {
