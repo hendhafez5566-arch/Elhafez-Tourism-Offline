@@ -1,0 +1,9 @@
+# Regression verification
+
+refactor-check.mjs builds client and server independently with the installed TypeScript compiler, runs static copying, recursively discovers every *-smoke.mjs outside .git/node_modules, compares its exact sorted path set with the immutable baseline, and executes all tests. Browser *-browser-smoke.py names are also pinned and individually attempted. Missing, renamed or extra tests fail before execution.
+
+PASS: expected success; BASELINE IMPROVEMENT: previous failure now succeeds; KNOWN BASELINE FAILURE / KNOWN STRUCTURAL FAILURE: same exit and same failed-check fingerprint; NEW REGRESSION: previously passing test fails, or known failure evidence changes. JSON failed checks/false result fields and explicit error/FAIL lines are fingerprinted. Stack locations, workspace path and fixture dates are normalized when necessary. An unrecognized failure uses normalized output evidence. A pre-existing failing script gaining an additional false check changes its fingerprint.
+
+ENVIRONMENT BLOCKER: subprocess could not start/timeout, missing Playwright or browser executable, or missing compiler package. Exit 1 for regressions/drift/build/static-copy failures; exit 2 for environment blockers with no regressions; exit 0 only when unblocked. This deliberately prevents claiming full validation with browser prerequisites missing. Because full-check uses &&, architecture must additionally run separately when refactor-check exits 2.
+
+Baseline JSON is a reviewed artifact, never automatically updated by either checker. Baseline capture was a temporary scratch driver, not a permissive update flag. Failure evidence does not prove every assertion ran after an early exception; known failures still need eventual remediation in later authorized work. Both gates need normal npm ci dependencies. Do not interpret expected baseline failure as a new regression. Never change existing tests to clear the gate.

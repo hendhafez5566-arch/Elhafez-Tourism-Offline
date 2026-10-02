@@ -1,0 +1,49 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import ts from 'typescript';
+import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
+const root=fileURLToPath(new URL('../',import.meta.url));
+export const rules={ARCH001:'Direct DB global access from presentation',ARCH002:'Reverse UI global dependency from persistence/core/domain',ARCH003:'Auth global coupling outside security/auth/bootstrap',ARCH004:'Monkey-patching/reassignment of UI/DB/Auth public members',ARCH005:'window/globalThis mutation in src',ARCH006:'Forbidden upward cross-layer/global dependency'};
+function walk(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(dir,e.name)):e.name.endsWith('.ts')?[path.join(dir,e.name)]:[]).sort();}
+export function layer(file){
+ if(/(^src\/ui\/|(?:pages|forms(?:-contracts)?|view|actions-print)\.ts$|src\/core\/umrah\/ui\.ts$)/.test(file))return 'presentation';
+ if(file.startsWith('src/security/'))return 'security';
+ if(file.startsWith('src/persistence/'))return 'persistence';
+ if(/src\/(?:accounting|finance|core)\//.test(file))return 'domain-core';
+ if(file==='src/bootstrap.ts')return 'bootstrap';
+ return 'application-platform';
+}
+export function scan(){
+ const findings=[];
+ for(const full of walk(path.join(root,'src'))){const file=path.relative(root,full).replaceAll(path.sep,'/'),text=fs.readFileSync(full,'utf8'),sf=ts.createSourceFile(file,text,ts.ScriptTarget.Latest,true),role=layer(file);
+  function add(rule,node){const normalized=ts.createPrinter({removeComments:true}).printNode(ts.EmitHint.Unspecified,node,sf).replace(/\s+/g,' ').trim();findings.push({rule,file,signature:createHash('sha256').update(normalized).digest('hex'),sample:normalized.slice(0,180)});}
+  function unwrap(n){while(ts.isParenthesizedExpression(n)||ts.isAsExpression(n)||ts.isTypeAssertionExpression(n)||ts.isNonNullExpression(n))n=n.expression;return n;}
+  function base(n){n=unwrap(n);while(ts.isPropertyAccessExpression(n)||ts.isElementAccessExpression(n))n=unwrap(n.expression);return ts.isIdentifier(n)?n.text:'';}
+  function mutation(n){if(ts.isBinaryExpression(n)&&n.operatorToken.kind>=ts.SyntaxKind.FirstAssignment&&n.operatorToken.kind<=ts.SyntaxKind.LastAssignment)return n.left;if((ts.isPrefixUnaryExpression(n)||ts.isPostfixUnaryExpression(n))&&[ts.SyntaxKind.PlusPlusToken,ts.SyntaxKind.MinusMinusToken].includes(n.operator))return n.operand;if(ts.isDeleteExpression(n))return n.expression;}
+  function visit(n){
+   if(ts.isIdentifier(n)){
+    const p=n.parent;const isName=(ts.isPropertyAccessExpression(p)&&p.name===n)||((ts.isPropertyAssignment(p)||ts.isMethodDeclaration(p)||ts.isVariableDeclaration(p)||ts.isParameter(p)||ts.isFunctionDeclaration(p))&&p.name===n);
+    if(!isName){
+     if(n.text==='DB'&&role==='presentation')add('ARCH001',p);
+     if(['UI','Pages','Forms','toast','Print'].includes(n.text)&&['persistence','domain-core'].includes(role))add('ARCH002',p);
+     if(n.text==='Auth'&&!['security','bootstrap'].includes(role))add('ARCH003',p);
+     const forbidden=role==='persistence'?['Accounting','Commercial','CRM','UmrahCore_Ops','Actions','UI','Pages','Forms','Print','toast']:role==='domain-core'?['Actions','CommercialActions','UIDelegatedActions','UI','Pages','Forms','Print','toast']:[];
+     if(forbidden.includes(n.text))add('ARCH006',p);
+    }
+   }
+   const target=mutation(n);if(target){const b=base(target);if(['UI','DB','Auth'].includes(b)&&!ts.isIdentifier(unwrap(target)))add('ARCH004',n);if(['window','globalThis'].includes(b))add('ARCH005',n);}
+   if(ts.isCallExpression(n)&&ts.isPropertyAccessExpression(n.expression)){
+    const call=n.expression.getText(sf);const receiver=n.arguments[0];
+    if(receiver&&['Object.assign','Object.defineProperty','Object.defineProperties','Reflect.set','Reflect.defineProperty','Reflect.deleteProperty'].includes(call)){
+     const b=base(receiver);if(['UI','DB','Auth'].includes(b))add('ARCH004',n);if(['window','globalThis'].includes(b))add('ARCH005',n);
+    }
+   }
+   ts.forEachChild(n,visit);
+  }visit(sf);
+ }
+ return findings.sort((a,b)=>a.rule.localeCompare(b.rule)||a.file.localeCompare(b.file)||a.signature.localeCompare(b.signature));
+}
+export function counts(findings){const out=Object.fromEntries(Object.keys(rules).map(r=>[r,0]));for(const f of findings)out[f.rule]++;out.TOTAL=findings.length;return out;}
+function main(){const baseline=JSON.parse(fs.readFileSync(path.join(root,'docs/refactor/architecture-baseline.json'),'utf8')),current=scan(),allowed=new Map();for(const f of baseline.findings){const key=[f.rule,f.file,f.signature].join('|');allowed.set(key,(allowed.get(key)||0)+1);}const added=[];for(const f of current){const key=[f.rule,f.file,f.signature].join('|'),n=allowed.get(key)||0;if(n)allowed.set(key,n-1);else added.push(f);}console.log(JSON.stringify({counts:counts(current),newViolations:added.length,reductions:[...allowed.values()].reduce((a,b)=>a+b,0)},null,2));if(added.length){console.error(JSON.stringify(added,null,2));process.exitCode=1;}else console.log('PASS architecture ratchet');}
+if(process.argv[1]===fileURLToPath(import.meta.url))main();

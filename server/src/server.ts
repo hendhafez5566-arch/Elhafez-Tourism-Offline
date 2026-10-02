@@ -1,3 +1,4 @@
+import type { ClientConfig, QueryConfig } from 'pg';
 import http from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve, sep } from 'node:path';
@@ -52,7 +53,7 @@ const server=http.createServer(async(req,res)=>{try{
  const requestUrl=new URL(req.url||'/','http://erp.local'),url=requestUrl.pathname,t=tenant(req);
  if(!url.startsWith('/api/'))return serveStatic(req,res);
  if(req.method==='OPTIONS'){const cors=apiCorsHeaders(req);if(!Object.keys(cors).length)return json(res,403,{error:'cors_origin_denied'});res.writeHead(204,{...securityHeaders(),...cors,'Content-Length':'0','Vary':'Origin'});return res.end()}
- if(url==='/api/health'&&req.method==='GET'){await pool.query({text:'select 1',query_timeout:3000});return json(res,200,{ok:true,database:'postgresql',version:appVersion})}
+ if(url==='/api/health'&&req.method==='GET'){const healthQuery: QueryConfig & Pick<ClientConfig, 'query_timeout'> = {text:'select 1',query_timeout:3000};await pool.query(healthQuery);return json(res,200,{ok:true,database:'postgresql',version:appVersion})}
  const forceLicenseRefresh=url==='/api/license'&&req.method==='GET'&&requestUrl.searchParams.get('refresh')==='1';const license=await licenseStatus(t,forceLicenseRefresh);
  if(url==='/api/bootstrap'&&req.method==='GET'){const a=await auth(req,t),st=await currentState(t);if(st?.payload)maybeAutoBackup(t,st).catch(e=>console.warn('Automatic snapshot failed',e?.message||e));return json(res,200,{setupComplete:!!st?.payload?.meta?.setupComplete,resetPending:!!st?.payload?.meta?.resetPending,existingLoginAvailable:!!st?.payload?.meta?.resetExistingLogin,authenticated:!!a,userId:a?.user?.id||'',revision:Number(st?.revision||0),license,emailRecovery:emailRecoveryStatus(),vendor:vendorPublicStatus(a?.user),company:st?{name:st.payload?.company?.name||'',logo:st.payload?.company?.logo||'',productName:(!st.payload?.settings?.productName||['ERP Professional Suite','Elhafez Travel ERP'].includes(st.payload?.settings?.productName))?'Elhafez':st.payload.settings.productName,companyId:st.payload?.company?.companyId||''}:null})}
  if(url==='/api/license'&&req.method==='GET')return json(res,200,license);

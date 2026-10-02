@@ -1,0 +1,446 @@
+{
+  "startSha": "e97fa6d9cb52acb22b676e1b975c1b2332bc9a13",
+  "node": "v24.19.0",
+  "serverOriginalFailure": "TS2769: query_timeout is absent from QueryConfig; typing-only fix required",
+  "tests": [
+    {
+      "file": "scripts/accounting-constitution-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/accounting-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/action-integrity-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/advanced-accounting-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/android-connectivity-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 1,
+      "fingerprint": "49e47297c4fac79b399329d4934e756d217506008c062c3dd02dd2c6641f4ba5",
+      "details": [
+        "Error: connectivity check failed: Android release header is current"
+      ]
+    },
+    {
+      "file": "scripts/archive-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/brand-asset-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 9,
+      "fingerprint": "43a95ae7a4f8a7417483d4963131ab9e1587e1155b5abf76f5a7651bc9338a4c",
+      "details": [
+        "FAIL dist login identity 512 is versioned"
+      ]
+    },
+    {
+      "file": "scripts/cancel-integrity-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/central-vendor-customer-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/clean-ui-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/commercial-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 1,
+      "fingerprint": "b2989fe5daa9f9242ae7feeb67d4b8335d1350f41f16ce30f6f0235d490d9ce9",
+      "details": [
+        [
+          "freshNamespace",
+          false
+        ]
+      ]
+    },
+    {
+      "file": "scripts/concurrency-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/contracts-inventory-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 1,
+      "fingerprint": "737b426d17832bb0c3a91dbf63f2655767aff87ea92d46035e01fd8879db4802",
+      "details": [
+        "Error: العقد غير مؤكد/فعال"
+      ]
+    },
+    {
+      "file": "scripts/core-suite-integration-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/customer-parity-smoke.mjs",
+      "status": "KNOWN STRUCTURAL FAILURE",
+      "exit": 1,
+      "fingerprint": "2d511ca6b76536cf1a9451a971701482e12e97d32599d815810055fa2bad6b92",
+      "details": [
+        "Error: ENOENT: no such file or directory, open '/workspace/scratch/bd26b2259f60/repo/mobile-customer/index.html'"
+      ]
+    },
+    {
+      "file": "scripts/data-protection-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 1,
+      "fingerprint": "8705d8e7c69e9587b7b91dae30480c47da001dd9d9c89feb74ade7e33ed451d4",
+      "details": [
+        "AssertionError [ERR_ASSERTION]: erpbackup extension missing"
+      ]
+    },
+    {
+      "file": "scripts/entity-mirror-read-source-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/hr-removed-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/mobile-android-smoke.mjs",
+      "status": "KNOWN STRUCTURAL FAILURE",
+      "exit": 1,
+      "fingerprint": "2d511ca6b76536cf1a9451a971701482e12e97d32599d815810055fa2bad6b92",
+      "details": [
+        "Error: ENOENT: no such file or directory, open '/workspace/scratch/bd26b2259f60/repo/mobile-customer/index.html'"
+      ]
+    },
+    {
+      "file": "scripts/offline-copy-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/reset-entry-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/rocket-360-performance-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/role-workflow-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/system-ux-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/umrah-ui-parity-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/umrah-workflow-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/unified-more-cleanup-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 1,
+      "fingerprint": "7cbb3e618790440865c367b6915777e1f97bea1858c8d32cbde31235aac06833",
+      "details": [
+        {
+          "name": "print font selection follows settings with safe local fallback",
+          "pass": false,
+          "detail": ""
+        }
+      ]
+    },
+    {
+      "file": "scripts/unified-party-accounting-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32470-regression-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 1,
+      "fingerprint": "bf781eee7b0d76dd1b8153842020243f469719a82e8a58bc5f702e4968e41607",
+      "details": [
+        {
+          "name": "release is current and runtime-aligned",
+          "pass": false
+        }
+      ]
+    },
+    {
+      "file": "scripts/v32472-accounting-lifecycle-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 1,
+      "fingerprint": "af9516e8da294c7f081606055690e25de928107a7b5738756e6c69727e633374",
+      "details": [
+        "Error: تم إغلاق البيع للبرنامج بتاريخ 2026-09-10"
+      ]
+    },
+    {
+      "file": "scripts/v32475-integrity-cleanup-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32481-mobile-ux-action-policy-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 1,
+      "fingerprint": "13e0f782eb5dfc9c5c228836e08782ab507afcc1e06f5f31425c3691b9340b7f",
+      "details": [
+        "✗ Web/mobile live version header matches package release"
+      ]
+    },
+    {
+      "file": "scripts/v32482-smart-filters-traveler-integrity-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32482-traveler-cleanup-runtime-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32483-mobile-refresh-compact-filters-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 1,
+      "fingerprint": "e1bdb06bde18d77c1ceb767663bcf671246dc734391f59a404eeb09948360872",
+      "details": [
+        "FAIL root/server release versions are identical",
+        "FAIL Android header current"
+      ]
+    },
+    {
+      "file": "scripts/v32483-mobile-refresh-filter-traveler-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32484-layout-font-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32485-filter-refresh-font-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 1,
+      "fingerprint": "6ea1f5cc5f161ca61de803b4c83b2850e41c988b8c63809dfc98522ad0b0904b",
+      "details": [
+        "FAIL release aligned"
+      ]
+    },
+    {
+      "file": "scripts/v32510-operations-execution-split-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 1,
+      "fingerprint": "caf4f74fe21638c56de3e97344ead4436acc9befc52c6116e62f6bf85ca60c6d",
+      "details": [
+        {
+          "name": "server package version matches",
+          "pass": false
+        },
+        {
+          "name": "mobile header version matches",
+          "pass": false
+        }
+      ]
+    },
+    {
+      "file": "scripts/v32511-entity-backed-read-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 1,
+      "fingerprint": "e5a8e5f243b39d3c62c049cbbb0f1a0e5b8337bbf9cfb7c3591a9b33006c7258",
+      "details": [
+        {
+          "name": "release remains newer than the 32.5.11 read-source milestone",
+          "pass": false
+        }
+      ]
+    },
+    {
+      "file": "scripts/v32512-entity-backed-write-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 1,
+      "fingerprint": "03168fc4ce2e6d44b6d4874264fd271532c48aaa41ce0ca283e9cca438d140b7",
+      "details": [
+        {
+          "name": "release remains at least 32.5.12",
+          "pass": false
+        }
+      ]
+    },
+    {
+      "file": "scripts/v32512-ui-delegation-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32513-module-boundaries-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32514-auth-ui-delegation-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32515-zero-inline-events-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v3254-global-ux-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32549-keyboard-autofill-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32552-native-backup-delivery-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32554-persistent-android-session-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32555-auth-ui-clean-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32556-ui-consistency-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32563-android-bundle-parity-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32563-single-pdf-engine-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v32565-party-transactions-report-smoke.mjs",
+      "status": "KNOWN BASELINE FAILURE",
+      "exit": 3,
+      "fingerprint": "3210eda5ec2f492bde9405d47c7fcdcb9552614c903b3a46bdd82591ffaad555",
+      "details": [
+        [
+          "individualExcludesProgram",
+          false
+        ]
+      ]
+    },
+    {
+      "file": "scripts/v32566-party-transactions-dynamic-filters-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v3257-security-release-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v3258-structural-hardening-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v3259-customer-type-structure-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/v70-governance-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    },
+    {
+      "file": "scripts/workspace-navigation-smoke.mjs",
+      "status": "PASS",
+      "exit": 0
+    }
+  ],
+  "browser": [
+    {
+      "file": "scripts/list-performance-browser-smoke.py",
+      "status": "ENVIRONMENT BLOCKER",
+      "exit": 1,
+      "fingerprint": "26974a09b5783ca4101d070c5e1f1fa8ff9c39abeb1c82f70455c92c07bc5840",
+      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/list-performance-browser-smoke.py\\\", line 3, in <module>\\n    from playwright.async_api import async_playwright\\nModuleNotFoundError: No module named 'playwright'\\n\""
+    },
+    {
+      "file": "scripts/modal-footer-browser-smoke.py",
+      "status": "ENVIRONMENT BLOCKER",
+      "exit": 1,
+      "fingerprint": "682dc8f8470d8a5364dc8fd34a0e137929b6eda65faba0e9946784557485a557",
+      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/modal-footer-browser-smoke.py\\\", line 2, in <module>\\n    from playwright.async_api import async_playwright\\nModuleNotFoundError: No module named 'playwright'\\n\""
+    },
+    {
+      "file": "scripts/party-controls-browser-smoke.py",
+      "status": "ENVIRONMENT BLOCKER",
+      "exit": 1,
+      "fingerprint": "a8d423a286bad00c2b6ca90a722db49cc9f5d44db9a8dd1f52a93e6760382b7c",
+      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/party-controls-browser-smoke.py\\\", line 3, in <module>\\n    from playwright.async_api import async_playwright\\nModuleNotFoundError: No module named 'playwright'\\n\""
+    },
+    {
+      "file": "scripts/party360-browser-smoke.py",
+      "status": "ENVIRONMENT BLOCKER",
+      "exit": 1,
+      "fingerprint": "7054cda0aa1fbb3bd4aecf915b650abe2ca1c10f61606a220fa748bc28c36216",
+      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/party360-browser-smoke.py\\\", line 2, in <module>\\n    from playwright.async_api import async_playwright\\nModuleNotFoundError: No module named 'playwright'\\n\""
+    },
+    {
+      "file": "scripts/ui-browser-smoke.py",
+      "status": "ENVIRONMENT BLOCKER",
+      "exit": 1,
+      "fingerprint": "87be6227064f7cb8915bde8e7af5c9e6d6b783ce7336c80b5401209db3edd082",
+      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/ui-browser-smoke.py\\\", line 2, in <module>\\n    from playwright.async_api import async_playwright\\nModuleNotFoundError: No module named 'playwright'\\n\""
+    },
+    {
+      "file": "scripts/v32469-browser-smoke.py",
+      "status": "ENVIRONMENT BLOCKER",
+      "exit": 1,
+      "fingerprint": "1a753fee82ff8b8632982c058be7345e3f0147ca3bb7813a61614ae63036cb29",
+      "details": "\"Traceback (most recent call last):\\n  File \\\"<ROOT>scripts/v32469-browser-smoke.py\\\", line 2, in <module>\\n    from playwright.async_api import async_playwright\\nModuleNotFoundError: No module named 'playwright'\\n\""
+    }
+  ]
+}
