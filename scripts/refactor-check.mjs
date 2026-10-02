@@ -69,14 +69,31 @@ const baselineKnown = new Set([...expectedFail, ...structuralFail.keys()]);
 const keySet = new Set(keys);
 
 // ---- Drift (computed before running tests) ----------------------------------
-// TEST SUITE DRIFT means the discovered test set no longer matches the
-// baseline record: a baseline-known test disappeared, or the total number of
-// tests differs from the recorded nodeTotal (added/renamed test).
-const driftMissing = [...baselineKnown].filter((k) => !keySet.has(k));
-const driftExtra = keys.length !== baseline.nodeTotal && driftMissing.length === 0
-  ? [`suite size ${keys.length} != baseline nodeTotal ${baseline.nodeTotal}`]
-  : [];
-const drift = [...driftMissing.map((k) => `missing baseline test: ${k}`), ...driftExtra];
+// TEST SUITE DRIFT means the discovered CURRENT TEST SET no longer matches the
+// full BASELINE nodeTests SET (exact set comparison, not failures-only):
+//   - a baseline test disappeared
+//   - an unexpected/new test appeared
+//   - a test was renamed (surfaces as one missing + one extra)
+// Enforced even when the suite count still equals nodeTotal.
+// Backwards compatibility: if the baseline predates the full nodeTests record,
+// fall back to known-failure membership plus the recorded nodeTotal.
+const baselineTests = Array.isArray(baseline.nodeTests) ? [...baseline.nodeTests] : null;
+let drift;
+if (baselineTests) {
+  const baselineTestSet = new Set(baselineTests);
+  const missing = baselineTests.filter((k) => !keySet.has(k));
+  const extra = keys.filter((k) => !baselineTestSet.has(k));
+  drift = [
+    ...missing.map((k) => `missing baseline test: ${k}`),
+    ...extra.map((k) => `unexpected new test: ${k}`),
+  ];
+} else {
+  const driftMissing = [...baselineKnown].filter((k) => !keySet.has(k));
+  const driftExtra = keys.length !== baseline.nodeTotal && driftMissing.length === 0
+    ? [`suite size ${keys.length} != baseline nodeTotal ${baseline.nodeTotal}`]
+    : [];
+  drift = [...driftMissing.map((k) => `missing baseline test: ${k}`), ...driftExtra];
+}
 
 const failures = [];
 let passCount = 0;
