@@ -4,7 +4,6 @@ import ts from 'typescript';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 const root=fileURLToPath(new URL('../',import.meta.url));
-const GENERATED_MODULE_PLUMBING=new Set(['src/main.ts','src/core/late-bindings.ts']);/* generated entry (legacy window surface) and late-binding registry: no logic of their own */
 export const rules={ARCH001:'Direct DB global access from presentation',ARCH002:'Reverse UI global dependency from persistence/core/domain',ARCH003:'Auth global coupling outside security/auth/bootstrap',ARCH004:'Monkey-patching/reassignment of UI/DB/Auth public members',ARCH005:'window/globalThis mutation in src',ARCH006:'Forbidden upward cross-layer/global dependency'};
 function walk(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(dir,e.name)):e.name.endsWith('.ts')?[path.join(dir,e.name)]:[]).sort();}
 export function layer(file){
@@ -17,8 +16,9 @@ export function layer(file){
  return 'application-platform';
 }
 export function scan(){
+ const generatedModulePlumbing=new Set(['src/main.ts','src/core/late-bindings.ts']);/* generated entry (legacy window surface) and late-binding registry: no logic of their own */
  const findings=[];
- for(const full of walk(path.join(root,'src'))){const file=path.relative(root,full).replaceAll(path.sep,'/');if(GENERATED_MODULE_PLUMBING.has(file))continue;const text=fs.readFileSync(full,'utf8'),sf=ts.createSourceFile(file,text,ts.ScriptTarget.Latest,true),role=layer(file);
+ for(const full of walk(path.join(root,'src'))){const file=path.relative(root,full).replaceAll(path.sep,'/');if(generatedModulePlumbing.has(file))continue;const text=fs.readFileSync(full,'utf8'),sf=ts.createSourceFile(file,text,ts.ScriptTarget.Latest,true),role=layer(file);
   function add(rule,node){const normalized=ts.createPrinter({removeComments:true}).printNode(ts.EmitHint.Unspecified,node,sf).replace(/\s+/g,' ').trim();findings.push({rule,file,signature:createHash('sha256').update(normalized).digest('hex'),sample:normalized.slice(0,180)});}
   function unwrap(n){while(ts.isParenthesizedExpression(n)||ts.isAsExpression(n)||ts.isTypeAssertionExpression(n)||ts.isNonNullExpression(n))n=n.expression;return n;}
   function base(n){n=unwrap(n);while(ts.isPropertyAccessExpression(n)||ts.isElementAccessExpression(n))n=unwrap(n.expression);return ts.isIdentifier(n)?n.text:'';}
