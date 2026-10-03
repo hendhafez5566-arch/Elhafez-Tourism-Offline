@@ -20,7 +20,7 @@ function instrumentRuntimeForVm(source) {
   if (!source.includes(toastMarker)) throw new Error('Runtime toast function was not found');
   let out = source.replace(
     toastMarker,
-    `${toastMarker}const __notify=(globalThis).__notify;if(typeof __notify==='function')return __notify('toast',msg,type);`
+    `${toastMarker}const __notify=(globalThis).__notify;if(typeof __notify==='function')return arguments.length<2?__notify('toast',msg):__notify('toast',msg,type);`
   );
   const todayMarker = 'const today=()=>{';
   if (!out.includes(todayMarker)) throw new Error('Runtime today function was not found');
@@ -57,6 +57,9 @@ if (typeof globalThis.URLSearchParams === 'undefined') {
     has(name) { return this._pairs.some(([key])=>key===String(name)); }
   };
 }
+`;
+
+const browserPostlude = `
 if (typeof globalThis.__notify !== 'function' && typeof globalThis.toast === 'function') globalThis.__notify = (kind,...args) => globalThis.toast(...args);
 if (typeof globalThis.__iid !== 'function' && typeof globalThis.iid === 'function') globalThis.__iid = globalThis.iid;
 if (typeof globalThis.__now !== 'function' && typeof globalThis.now === 'function') globalThis.__now = globalThis.now;
@@ -98,5 +101,5 @@ export async function bundleForVm(entrySource, { suppressBootstrap = false } = {
     tsconfig: 'tsconfig.json',
     plugins
   });
-  return browserPrelude + result.outputFiles[0].text;
+  return browserPrelude + result.outputFiles[0].text + browserPostlude;
 }
