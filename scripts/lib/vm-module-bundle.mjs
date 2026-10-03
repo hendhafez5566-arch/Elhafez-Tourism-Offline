@@ -20,7 +20,7 @@ function instrumentRuntimeForVm(source) {
   if (!source.includes(toastMarker)) throw new Error('Runtime toast function was not found');
   let out = source.replace(
     toastMarker,
-    `${toastMarker}const __notify=(globalThis).__notify;if(typeof __notify==='function')return arguments.length<2?__notify('toast',msg):__notify('toast',msg,type);`
+    `${toastMarker}const __notify=(globalThis).__notify;if(typeof __notify==='function')return globalThis.__vmPreserveToastArity&&arguments.length<2?__notify('toast',msg):__notify('toast',msg,type);`
   );
   const todayMarker = 'const today=()=>{';
   if (!out.includes(todayMarker)) throw new Error('Runtime today function was not found');
@@ -41,6 +41,7 @@ function instrumentUmrahIntegrationForVm(source) {
 }
 
 const browserPrelude = `
+globalThis.__vmPreserveToastArity = typeof globalThis.toast === 'function';
 globalThis.__vmFakeToast = typeof globalThis.toast === 'function' ? globalThis.toast : undefined;
 globalThis.__vmFakeIid = typeof globalThis.iid === 'function' ? globalThis.iid : undefined;
 globalThis.__vmFakeNow = typeof globalThis.now === 'function' ? globalThis.now : undefined;
@@ -80,11 +81,14 @@ if (typeof globalThis.__vmFakeUmrahReceipt === 'function') globalThis.__umrahRec
 `;
 
 export async function bundleForVm(entrySource, { suppressBootstrap = false } = {}) {
+  // Selected differential entries do not always pull every generated late-binding owner.
+  // The production graph always initialises ManualJournalRules, so initialise that owner in VM bundles too.
+  const vmEntrySource = `import './src/accounting/manual-journal-rules.ts';\n${entrySource}`;
   const plugins = [{
     name: 'differential-vm-entry',
     setup(build) {
       build.onResolve({ filter: /^differential:entry$/ }, () => ({ path: 'entry.ts', namespace: 'differential' }));
-      build.onLoad({ filter: /.*/, namespace: 'differential' }, () => ({ contents: entrySource, loader: 'ts', resolveDir: root }));
+      build.onLoad({ filter: /.*/, namespace: 'differential' }, () => ({ contents: vmEntrySource, loader: 'ts', resolveDir: root }));
       build.onLoad({ filter: /[\\/]src[\\/]core[\\/]runtime\.ts$/ }, (args) => ({
         contents: instrumentRuntimeForVm(fs.readFileSync(args.path, 'utf8')),
         loader: 'ts',
