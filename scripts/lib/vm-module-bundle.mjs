@@ -48,7 +48,7 @@ ${explicit}
 export const iid=(...args)=>globalThis.__vmScenarioReady&&typeof globalThis.iid==='function'?globalThis.iid(...args):real.iid(...args);
 export const toast=(...args)=>{
   if(typeof globalThis.__notify==='function'){
-    const message=args[0],type=args.length>1?args[1]:'ok';
+    const message=args[0],type=args[1]===undefined?'ok':args[1];
     return globalThis.__notify('toast',message,type);
   }
   if(globalThis.__vmScenarioReady&&typeof globalThis.toast==='function')return globalThis.toast(...args);
