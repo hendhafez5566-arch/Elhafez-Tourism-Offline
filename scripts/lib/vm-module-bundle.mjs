@@ -14,6 +14,7 @@ import { build } from 'esbuild';
 import { root } from './build-model.mjs';
 
 const runtimePath = path.join(root, 'src/core/runtime.ts');
+const authPath = path.join(root, 'src/security/auth.ts');
 const umrahIntegrationPath = path.join(root, 'src/core/umrah/integration.ts');
 
 const runtimeGlobalOverrides = [
@@ -54,6 +55,14 @@ export const toast=(...args)=>{
   if(globalThis.__vmScenarioReady&&typeof globalThis.toast==='function')return globalThis.toast(...args);
   return real.toast(...args);
 };
+`;
+}
+
+function authAdapter(realSpecifier) {
+  return `
+import * as real from ${JSON.stringify(realSpecifier)};
+export * from ${JSON.stringify(realSpecifier)};
+export const License=Object.prototype.hasOwnProperty.call(globalThis,'License')&&globalThis.License!==undefined?globalThis.License:real.License;
 `;
 }
 
@@ -100,15 +109,22 @@ export async function bundleForVm(entrySource, { suppressBootstrap = false } = {
     setup(build) {
       build.onResolve({ filter: /^differential:entry$/ }, () => ({ path: 'entry.ts', namespace: 'differential' }));
       build.onResolve({ filter: /^differential:real-runtime$/ }, () => ({ path: runtimePath }));
+      build.onResolve({ filter: /^differential:real-auth$/ }, () => ({ path: authPath }));
       build.onResolve({ filter: /^differential:real-umrah-integration$/ }, () => ({ path: umrahIntegrationPath }));
       build.onResolve({ filter: /.*/ }, (args) => {
         if (resolvesTo(args, runtimePath)) return { path: runtimePath, namespace: 'differential-runtime-adapter' };
+        if (resolvesTo(args, authPath)) return { path: authPath, namespace: 'differential-auth-adapter' };
         if (resolvesTo(args, umrahIntegrationPath)) return { path: umrahIntegrationPath, namespace: 'differential-umrah-adapter' };
         return null;
       });
       build.onLoad({ filter: /.*/, namespace: 'differential' }, () => ({ contents: vmEntrySource, loader: 'ts', resolveDir: root }));
       build.onLoad({ filter: /.*/, namespace: 'differential-runtime-adapter' }, () => ({
         contents: runtimeAdapter('differential:real-runtime'),
+        loader: 'ts',
+        resolveDir: root
+      }));
+      build.onLoad({ filter: /.*/, namespace: 'differential-auth-adapter' }, () => ({
+        contents: authAdapter('differential:real-auth'),
         loader: 'ts',
         resolveDir: root
       }));
