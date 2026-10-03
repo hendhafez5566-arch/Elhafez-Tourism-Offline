@@ -27,6 +27,7 @@ const currentBundle=await bundleForVm(`
  import {AdvancedAccounting} from './src/accounting/advanced.ts'; import {Insights} from './src/finance/insights.ts';
  import {PurchaseOrderFulfillment} from './src/crm/purchase-order-fulfillment.ts';
  import {VoucherWorkflows} from './src/application/voucher-workflows.ts';
+ import {UmrahLifecycleWorkflows} from './src/application/umrah-lifecycle-workflows.ts';
  import {JournalRules} from './src/accounting/journal-rules.ts'; import {InvoiceRules} from './src/accounting/invoice-rules.ts'; import {VoucherRules} from './src/accounting/voucher-rules.ts';
  import {CommercialLifecycleRules} from './src/crm/commercial-lifecycle-rules.ts'; import {AdministrationRules} from './src/commercial/administration-rules.ts';
  import {UmrahBusinessRules} from './src/core/umrah/business-rules.ts'; import {AdvancedAccountingRules} from './src/accounting/advanced-rules.ts';
@@ -34,7 +35,7 @@ const currentBundle=await bundleForVm(`
  import {DB} from './src/persistence/browser-store.ts'; import {Auth} from './src/security/auth.ts';
  import {Numbering} from './src/core/numbering.ts'; import {Currency,Periods} from './src/accounting/currency-periods.ts';
  import {BranchScope,Commercial as BranchCommercial} from './src/commercial/product.ts'; import {UI} from './src/ui/ui.ts';
- globalThis.__current={Transactions,Invoices,Accounting,CRM,Approvals,ManualJournal,AdvancedAccounting,Insights,UnifiedParty,PurchaseOrderFulfillment,VoucherWorkflows,composeLegacyVoucherDeps,JournalRules,InvoiceRules,VoucherRules,CommercialLifecycleRules,AdministrationRules,UmrahBusinessRules,AdvancedAccountingRules,DB,Auth,Numbering,Currency,Periods,BranchScope,BranchCommercial,UI};
+ globalThis.__current={Transactions,Invoices,Accounting,CRM,Approvals,ManualJournal,AdvancedAccounting,Insights,UnifiedParty,PurchaseOrderFulfillment,VoucherWorkflows,UmrahLifecycleWorkflows,composeLegacyVoucherDeps,JournalRules,InvoiceRules,VoucherRules,CommercialLifecycleRules,AdministrationRules,UmrahBusinessRules,AdvancedAccountingRules,DB,Auth,Numbering,Currency,Periods,BranchScope,BranchCommercial,UI};
 `,{suppressBootstrap:true});
 const plain=x=>JSON.parse(JSON.stringify(x??null));
 let checks=0,scenarios=0,accountingScenarios=0;
@@ -55,9 +56,32 @@ function setup(current){
  run(original('src/core/action-policy.ts'));
  if(!current)for(const f of ['src/accounting/advanced.ts','src/accounting/engine.ts','src/accounting/invoices.ts','src/accounting/transactions.ts','src/crm/purchase-order-fulfillment.ts','src/crm/crm.ts','src/crm/unified-party.ts','src/finance/insights.ts'])run(original(f));
  if(current)sandbox.BranchTest=sandbox.__current.BranchCommercial;else{const branchMethods=['createBranch','updateBranch','canViewCosts','maxDiscountPct'].map(name=>method(original('src/commercial/product.ts'),'Commercial',name));run('const BranchTest={'+branchMethods.join(',')+'};');}
- const umrahMethods=['bookingGross','validateBookingDiscount','assertNewBookingSaleAllowed','syncPaymentStatus','setProgramStatus','setBookingStatus'].map(name=>method(current?read('src/core/umrah/operations.ts'):original('src/core/umrah/operations.ts'),'UmrahCore_Ops',name));
  Object.assign(sandbox,{UmrahCore_today:sandbox.today,UmrahCore_now:sandbox.now,UmrahCore_N:sandbox.N,UmrahCore_S:sandbox.S,UmrahCore_fmt:(n,d)=>String(n),UmrahCore_programLabel:s=>s,UmrahCore_Bridge:{require:sandbox.Auth.require,audit:(...args)=>trace.push(['umrahAudit',...args]),financeSnapshot:()=>({invoiceId:'I',paid:20,remaining:80})},UmrahCore_DB:{data:{bookings:[]},atomic:DB.atomic.bind(DB)},UmrahCore_Procurement:{cancelProgramCommitments:(...args)=>trace.push(['cancelCommitments',...args]),onProgramOpen:p=>trace.push(['programOpen',p.id]),onProgramTraveling:p=>trace.push(['programTraveling',p.id]),onProgramReturned:p=>trace.push(['programReturned',p.id])},UmrahCore_ContractCenter:{releaseProgram:id=>trace.push(['releaseProgram',id])}});
- run('const UmrahTest={program(id){return DB.data.umrahPrograms.find(x=>x.id===id)},booking(id){return DB.data.umrahBookings.find(x=>x.id===id)},assertProgramOpenReady(id){},blockers(id){return{travelers:[{id:"TR"}],total:0}},financialSetupGaps(id){return[]},resourceBookingStatuses:new Set(["confirmed"]),bookingReadiness(b){return{score:100}},bookingDiscountLimit(){return 10},'+umrahMethods.join(',')+'};');
+ if(current){
+  const x=sandbox.__current;
+  let UmrahTest;
+  const lifecycleDeps=()=>({
+   transactions:{atomic:(label,work,options)=>DB.atomic(label,work,options)},
+   authorization:{require:(page,action)=>sandbox.Auth.require(page,action)},
+   repository:{program:id=>UmrahTest.program(id),booking:id=>UmrahTest.booking(id),bookings:()=>sandbox.UmrahCore_DB.data.bookings},
+   operations:{assertProgramOpenReady:id=>UmrahTest.assertProgramOpenReady(id),blockers:id=>UmrahTest.blockers(id),financialSetupGaps:id=>UmrahTest.financialSetupGaps(id),get resourceBookingStatuses(){return UmrahTest.resourceBookingStatuses;},bookingReadiness:b=>UmrahTest.bookingReadiness(b)},
+   procurement:{cancelProgramCommitments:(...args)=>sandbox.UmrahCore_Procurement.cancelProgramCommitments(...args),onProgramOpen:p=>sandbox.UmrahCore_Procurement.onProgramOpen(p),onProgramTraveling:p=>sandbox.UmrahCore_Procurement.onProgramTraveling(p),onProgramReturned:p=>sandbox.UmrahCore_Procurement.onProgramReturned(p)},
+   releaseProgram:id=>sandbox.UmrahCore_ContractCenter.releaseProgram(id),clock:{today:sandbox.UmrahCore_today,now:sandbox.UmrahCore_now},programLabel:sandbox.UmrahCore_programLabel,audit:(...args)=>sandbox.UmrahCore_Bridge.audit(...args)
+  });
+  UmrahTest={
+   program(id){return DB.data.umrahPrograms.find(x=>x.id===id)},booking(id){return DB.data.umrahBookings.find(x=>x.id===id)},assertProgramOpenReady(id){},blockers(id){return{travelers:[{id:'TR'}],total:0}},financialSetupGaps(id){return[]},resourceBookingStatuses:new Set(['confirmed']),bookingReadiness(b){return{score:100}},bookingDiscountLimit(){return 10},
+   bookingGross(program,b){return x.UmrahBusinessRules.bookingGross(program,b)},
+   validateBookingDiscount(p,b){return x.UmrahBusinessRules.discount(this.bookingGross(p,b),b.discount,b.discountReason,()=>this.bookingDiscountLimit(),sandbox.UmrahCore_fmt)},
+   assertNewBookingSaleAllowed(p,status){return x.UmrahBusinessRules.saleAllowed(p,status,sandbox.UmrahCore_today)},
+   syncPaymentStatus(b,f=null){f=f||sandbox.UmrahCore_Bridge.financeSnapshot(b);return x.UmrahBusinessRules.syncPaymentStatus(b,f,sandbox.UmrahCore_now)},
+   setProgramStatus(id,status){return x.UmrahLifecycleWorkflows.setProgramStatus(lifecycleDeps(),id,status)},
+   setBookingStatus(id,status){return x.UmrahLifecycleWorkflows.setBookingStatus(lifecycleDeps(),id,status)}
+  };
+  sandbox.UmrahTest=UmrahTest;
+ }else{
+  const umrahMethods=['bookingGross','validateBookingDiscount','assertNewBookingSaleAllowed','syncPaymentStatus','setProgramStatus','setBookingStatus'].map(name=>method(original('src/core/umrah/operations.ts'),'UmrahCore_Ops',name));
+  run('const UmrahTest={program(id){return DB.data.umrahPrograms.find(x=>x.id===id)},booking(id){return DB.data.umrahBookings.find(x=>x.id===id)},assertProgramOpenReady(id){},blockers(id){return{travelers:[{id:"TR"}],total:0}},financialSetupGaps(id){return[]},resourceBookingStatuses:new Set(["confirmed"]),bookingReadiness(b){return{score:100}},bookingDiscountLimit(){return 10},'+umrahMethods.join(',')+'};');
+ }
  const api=vm.runInContext('({Transactions,Invoices,Accounting,CRM,Approvals,ManualJournal,AdvancedAccounting,Insights,UnifiedParty,PurchaseOrderFulfillment,BranchTest,UmrahTest'+(current?',VoucherWorkflows,composeLegacyVoucherDeps,JournalRules,InvoiceRules,VoucherRules,CommercialLifecycleRules,AdministrationRules,UmrahBusinessRules,AdvancedAccountingRules':'')+'})',ctx);
  for(const[object,names]of [[api.Accounting,['post','reverse','documentStatus']],[api.Invoices,['create','post','refresh','allocate']]])for(const name of names){const previous=object[name];object[name]=function(...args){trace.push(['call',name,...plain(args)]);return previous.apply(this,args);};}
  return{api,DB,trace,user,setDenied:value=>{denied=value;},sandbox};
