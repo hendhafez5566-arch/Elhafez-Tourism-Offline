@@ -28,6 +28,12 @@ const browserPrelude = `
 if (typeof globalThis.location === 'undefined') {
   globalThis.location = { href:'https://vm.invalid/', origin:'https://vm.invalid', hostname:'vm.invalid', protocol:'https:', pathname:'/', search:'', hash:'', reload(){} };
 }
+if (typeof globalThis.document !== 'undefined') {
+  if (typeof globalThis.document.addEventListener !== 'function') globalThis.document.addEventListener = () => {};
+  if (typeof globalThis.document.removeEventListener !== 'function') globalThis.document.removeEventListener = () => {};
+  if (typeof globalThis.document.querySelector !== 'function') globalThis.document.querySelector = () => null;
+  if (typeof globalThis.document.querySelectorAll !== 'function') globalThis.document.querySelectorAll = () => [];
+}
 if (typeof globalThis.URLSearchParams === 'undefined') {
   globalThis.URLSearchParams = class URLSearchParams {
     constructor(input='') {
