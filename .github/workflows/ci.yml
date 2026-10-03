@@ -27,7 +27,7 @@ jobs:
       - name: Architecture ratchet
         run: npm run architecture:check
       - name: Temporary pin diagnostics
-        run: sha256sum scripts/application-workflow-check.mjs scripts/business-workflow-check.mjs scripts/architecture-check.mjs scripts/lib/vm-module-bundle.mjs
+        run: sha256sum scripts/application-workflow-check.mjs scripts/business-workflow-check.mjs scripts/presentation-platform-check.mjs scripts/architecture-check.mjs scripts/lib/vm-module-bundle.mjs
       # Known baseline failures are allowed ONLY as recorded in docs/refactor/refactor-baseline.json.
       # Any new failure, test-inventory drift or pinned-file drift fails this job. No continue-on-error anywhere.
       - name: Release gate (aggregate)
