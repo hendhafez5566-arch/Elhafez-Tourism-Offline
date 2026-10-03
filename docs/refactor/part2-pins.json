@@ -26,7 +26,7 @@
   "scripts/entity-mirror-read-source-smoke.mjs": "80f7f6d58d847e148b6c9bb05c7d704fadd53b9dbbccbcdb8b7b8ed5b727b1a3",
   "scripts/hr-removed-smoke.mjs": "e04f890ee284212fcb258d549b97d69efc5c3d0f7aa3ea6b3931bde88574b1bc",
   "scripts/lib/build-model.mjs": "c5ae2b5266bbb9b9e7c38ee812fa2c0ecf1b35ce77f2aceb88d6251421c57135",
-  "scripts/lib/vm-module-bundle.mjs": "d5c7e517c233b255cda2e29e65bfd5e0ef2c69633345bbc542cc8ab99ea18956",
+  "scripts/lib/vm-module-bundle.mjs": "0b1913b0cd7c7fe7b8b948738adb9575fc1de681f0b15e100b0b698afbac0fab",
   "scripts/list-performance-browser-smoke.py": "253aa19edce621ac4117f6e0eacf01e0f974d83e753a8b5a8546fd47c539c965",
   "scripts/mobile-android-smoke.mjs": "b7280cc4194b482deb6c63990e6820a0eae82d92109b6977ba19ec985d0616e8",
   "scripts/modal-footer-browser-smoke.py": "810a7033a9e96c57d0c413266b5f5ed443e116d19753161b80b8dec7fd808cf8",
