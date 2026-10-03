@@ -4,7 +4,8 @@ PHASE: 2 / 5
 BRANCH: phase-2-core-decoupling-work (already existing; no alternate branch created)
 START SHA: 4b188965931d396f40b0b545b486e97da12462b8
 FINAL COMMIT SHA: resolve the published branch HEAD; the exact hash is in the execution final report. The containing commit cannot embed its own SHA without changing that SHA.
-COMMIT MESSAGE: refactor: decouple core application workflows
+IMPLEMENTATION COMMIT MESSAGE: refactor: decouple core application workflows
+FINAL CORRECTIVE COMMIT MESSAGE: fix: preserve synchronous form submission timing
 
 PRODUCTION BUSINESS BEHAVIOR INTENTIONALLY CHANGED: NO
 DB SCHEMA CHANGED: NO
@@ -54,6 +55,10 @@ Additional use cases: sendQuotation draft/expiry validation, status/time/audit/s
 
 CommercialWorkflows coordinates activity filtering/Umrah trimming/local-save/remote cleanup with identical failure warning behavior; branch authorization/load/atomic save; user branch validation/update/audit/save; server audit read/user-name resolution. CommercialActionViews owns only presentation: unchanged read-only ArchiveViewer, activity navigation/toast, and audit modal/table rendering. No DB/Auth reads were moved into this presentation file. Existing CommercialActions and Actions APIs and assignments are preserved.
 
+## Final review timing correction
+
+The first Phase 2 implementation allowed the generic non-strict fast form path to return the value produced by `fastAtomic`. Because `Forms.open` conditionally awaits a truthy returned value, a callback returning an object or Promise could introduce an await/microtask that did not exist in the Phase 1 implementation. The final review correction keeps authorization and strict/async decisions inside the application layer but deliberately discards the `fastAtomic` return value and returns `undefined` for the normal fast path. Strict/async paths still return the `atomicAsync` Promise and preserve rejection propagation. No UI code, business output, schema, API, or smoke baseline was changed for this correction.
+
 ## Intentionally retained presentation and legacy scope
 
 DOM reading, FormData conversion, form validation, labels, templates, colors, modal callbacks, toast handling, navigation, printing and dialog confirmation stay in presentation facades. No CSS/index/PWA/native changes. Existing backup/reset/license and advanced accounting/domain routines remain intact; removing every global in the system is not claimed. Existing settings rendering, domain globals and legacy monkey patches remain for later phases. The standalone read-only archive renderer was moved without markup/behavior redesign. One legacy meta:any annotation traveled unchanged with that renderer; no new any was introduced into the application seams or composition.
@@ -80,7 +85,7 @@ npm ci: PASS (115 packages).
 Before-source refactor:check: exit 2 only for six browser blockers, all Node baseline results confirmed.
 After-source refactor:check and refactor:full-check: exit 2 only for the same six browser blockers. Client/server builds PASS; Node total 60, PASS 43, known baseline failures 15, known structural failures 2, baseline improvements 0, NEW REGRESSIONS 0, TEST SUITE DRIFT NO.
 architecture:check run independently because && short-circuits on browser blockers: PASS, no new findings.
-application-workflow-check.mjs: PASS 151 differential boundary checks over 48 document facades using original approved-start source and injected fakes: authorization denial, immediate/deferred order, labels/domain args/messages, quotation/activity persistence sequences, invoice close/save barrier, strict receipt submission, live user branch queries and transaction rejection propagation. These checks isolate seams, not real-browser layout or live database behavior. The new check is outside the exact pinned *-smoke.mjs set.
+application-workflow-check.mjs: PASS 154 differential boundary checks over 48 document facades using original approved-start source and injected fakes: authorization denial, immediate/deferred order, labels/domain args/messages, quotation/activity persistence sequences, invoice close/save barrier, strict receipt submission, live user branch queries, synchronous fast-path return/timing compatibility, and transaction rejection propagation. These checks isolate seams, not real-browser layout or live database behavior. The new check is outside the exact pinned *-smoke.mjs set.
 
 BROWSER BASELINE BEFORE SOURCE CHANGE: ENVIRONMENT BLOCKER. Python Playwright remains installed externally. playwright install --with-deps chromium failed with apt setgroups/setegid/seteuid permission failures and exit 100. Compatible executable scan found no installed Chromium/Chrome. Clean headless-shell retry failed repeatedly with invalid/truncated ZIP (End of central directory record signature not found). The six original browser scripts were attempted in the unmodified baseline gate before source edits and again after; all fail at launch because the executable does not exist. No functional browser PASS claimed and no browser tests/packages/binaries/environment files committed. Authorized fallback to Node + architecture gates used for Phase 2.
 
@@ -96,4 +101,4 @@ Browser acceptance remains an environment gap, not a refactor regression; review
 
 Phase 3 can start from the named domain operation contracts and inspect Transactions receipt/payment posting, invoice lifecycle and CRM quotation/PO domain rules; remove their remaining presentation-global dependencies behind explicit services. Do not change accounting outputs or reset guardrail debt. Deferred GUI/advanced-accounting/backup/license consumers remain visible debt, not silently treated as complete decoupling.
 
-FINAL STATUS: PHASE 2 READY FOR REVIEW with the documented browser environment blocker; browser release validation remains blocked.
+FINAL STATUS: PHASE 2 READY FOR FINAL REVIEW with the documented browser environment blocker; browser release validation remains blocked.

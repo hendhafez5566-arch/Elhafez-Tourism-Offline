@@ -245,7 +245,8 @@ const DocumentWorkflows={
   const strictTypes=new Set(['receipt','payment','expense','commissionPay','transfer','cashCount','bankReconcile','invoiceAdjust','supplierCancellation','customerWriteOff','customerCancellation','revenueDeferral','costDeferral','accruedRevenue','fixedAsset','loan','provision','doubtfulAllowance','allowanceWriteOff','payroll','openingBalance','budget','bankStatement','changePassword','user']);
   return (submit:()=>unknown|Promise<unknown>)=>{
    if(asyncSubmit||strictTypes.has(type))return deps.transactions.atomicAsync(type,async()=>{if(asyncSubmit)await submit();else submit();},{save:true,strict:true});
-   else deps.transactions.fastAtomic(type,submit,{save:true,render:true});
+   deps.transactions.fastAtomic(type,submit,{save:true,render:true});
+   return undefined;
   };
  },
  createReceipt(deps:DocumentWorkflowDeps,fields:ApplicationFields){
