@@ -15,12 +15,45 @@ function withoutBootstrapStartup(source) {
   return source.slice(0, startup.getFullStart()) + source.slice(startup.end);
 }
 
+function instrumentRuntimeForVm(source) {
+  const marker = "function toast(msg,type='ok'){";
+  if (!source.includes(marker)) throw new Error('Runtime toast function was not found');
+  return source.replace(
+    marker,
+    `${marker}const __notify=(globalThis).__notify;if(typeof __notify==='function')return __notify('toast',msg,type);`
+  );
+}
+
+const browserPrelude = `
+if (typeof globalThis.location === 'undefined') {
+  globalThis.location = { href:'https://vm.invalid/', origin:'https://vm.invalid', hostname:'vm.invalid', protocol:'https:', pathname:'/', search:'', hash:'', reload(){} };
+}
+if (typeof globalThis.URLSearchParams === 'undefined') {
+  globalThis.URLSearchParams = class URLSearchParams {
+    constructor(input='') {
+      const text=String(input||'').replace(/^\\?/,'');
+      this._pairs=text?text.split('&').filter(Boolean).map(part=>{
+        const i=part.indexOf('='), key=i<0?part:part.slice(0,i), value=i<0?'':part.slice(i+1);
+        return [decodeURIComponent(key.replace(/\\+/g,' ')),decodeURIComponent(value.replace(/\\+/g,' '))];
+      }):[];
+    }
+    get(name) { const row=this._pairs.find(([key])=>key===String(name)); return row?row[1]:null; }
+    has(name) { return this._pairs.some(([key])=>key===String(name)); }
+  };
+}
+`;
+
 export async function bundleForVm(entrySource, { suppressBootstrap = false } = {}) {
   const plugins = [{
     name: 'differential-vm-entry',
     setup(build) {
       build.onResolve({ filter: /^differential:entry$/ }, () => ({ path: 'entry.ts', namespace: 'differential' }));
       build.onLoad({ filter: /.*/, namespace: 'differential' }, () => ({ contents: entrySource, loader: 'ts', resolveDir: root }));
+      build.onLoad({ filter: /[\\/]src[\\/]core[\\/]runtime\.ts$/ }, (args) => ({
+        contents: instrumentRuntimeForVm(fs.readFileSync(args.path, 'utf8')),
+        loader: 'ts',
+        resolveDir: path.dirname(args.path)
+      }));
       if (suppressBootstrap) {
         build.onLoad({ filter: /[\\/]src[\\/]bootstrap\.ts$/ }, (args) => ({
           contents: withoutBootstrapStartup(fs.readFileSync(args.path, 'utf8')),
@@ -45,5 +78,5 @@ export async function bundleForVm(entrySource, { suppressBootstrap = false } = {
     tsconfig: 'tsconfig.json',
     plugins
   });
-  return result.outputFiles[0].text;
+  return browserPrelude + result.outputFiles[0].text;
 }
