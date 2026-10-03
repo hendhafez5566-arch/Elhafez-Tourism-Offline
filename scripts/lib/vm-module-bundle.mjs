@@ -38,9 +38,12 @@ function resolvesTo(args, targetPath) {
 }
 
 function globalAdapter(realSpecifier, names) {
-  const explicit = names.map((name) =>
-    `export const ${name}=Object.prototype.hasOwnProperty.call(globalThis,${JSON.stringify(name)})&&globalThis[${JSON.stringify(name)}]!==undefined?globalThis[${JSON.stringify(name)}]:real.${name};`
-  ).join('\n');
+  const explicit = names.map((name) => {
+    if (name === 'toast') {
+      return `export const toast=Object.prototype.hasOwnProperty.call(globalThis,'toast')&&typeof globalThis.toast==='function'?globalThis.toast:(...args)=>typeof globalThis.__notify==='function'?globalThis.__notify('toast',...args):real.toast(...args);`;
+    }
+    return `export const ${name}=Object.prototype.hasOwnProperty.call(globalThis,${JSON.stringify(name)})&&globalThis[${JSON.stringify(name)}]!==undefined?globalThis[${JSON.stringify(name)}]:real.${name};`;
+  }).join('\n');
   return `import * as real from ${JSON.stringify(realSpecifier)};\nexport * from ${JSON.stringify(realSpecifier)};\n${explicit}\n`;
 }
 
