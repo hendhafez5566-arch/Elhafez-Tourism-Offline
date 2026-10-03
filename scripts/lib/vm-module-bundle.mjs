@@ -3,10 +3,10 @@
 // using their original concatenated-script compiler in the individual checks.
 //
 // Important: this helper never rewrites production function bodies. When a
-// legacy differential test already provides deterministic globals (toast,
-// today, formatDate, etc.), ES-module adapters expose those same fakes to the
-// current module graph at import time. That keeps both sides of the comparison
-// in the same test environment instead of mutating modules after evaluation.
+// legacy differential test already provides deterministic globals, ES-module
+// adapters expose those same fakes to the current graph. Stateful scenario
+// fakes are activated only after module initialisation, so bootstrap work cannot
+// consume scenario counters before the comparison starts.
 import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
@@ -17,9 +17,9 @@ const runtimePath = path.join(root, 'src/core/runtime.ts');
 const umrahIntegrationPath = path.join(root, 'src/core/umrah/integration.ts');
 
 const runtimeGlobalOverrides = [
-  'EPS', 'S', 'N', 'deep', 'byId', 'live', 'today', 'now', 'iid',
+  'EPS', 'S', 'N', 'deep', 'byId', 'live', 'today', 'now',
   'formatDate', 'fmt', 'money', 'daysBetween', 'dateAddMonthsClamped',
-  'Money', 'toast'
+  'Money'
 ];
 
 function withoutBootstrapStartup(source) {
@@ -37,17 +37,35 @@ function resolvesTo(args, targetPath) {
     .some((candidate) => path.normalize(candidate) === path.normalize(targetPath));
 }
 
+function runtimeAdapter(realSpecifier) {
+  const explicit = runtimeGlobalOverrides.map((name) =>
+    `export const ${name}=Object.prototype.hasOwnProperty.call(globalThis,${JSON.stringify(name)})&&globalThis[${JSON.stringify(name)}]!==undefined?globalThis[${JSON.stringify(name)}]:real.${name};`
+  ).join('\n');
+  return `
+import * as real from ${JSON.stringify(realSpecifier)};
+export * from ${JSON.stringify(realSpecifier)};
+${explicit}
+export const iid=(...args)=>globalThis.__vmScenarioReady&&typeof globalThis.iid==='function'?globalThis.iid(...args):real.iid(...args);
+export const toast=(...args)=>{
+  if(typeof globalThis.__notify==='function'){
+    const message=args[0],type=args.length>1?args[1]:'ok';
+    return globalThis.__notify('toast',message,type);
+  }
+  if(globalThis.__vmScenarioReady&&typeof globalThis.toast==='function')return globalThis.toast(...args);
+  return real.toast(...args);
+};
+`;
+}
+
 function globalAdapter(realSpecifier, names) {
-  const explicit = names.map((name) => {
-    if (name === 'toast') {
-      return `export const toast=Object.prototype.hasOwnProperty.call(globalThis,'toast')&&typeof globalThis.toast==='function'?globalThis.toast:(...args)=>typeof globalThis.__notify==='function'?globalThis.__notify('toast',...args):real.toast(...args);`;
-    }
-    return `export const ${name}=Object.prototype.hasOwnProperty.call(globalThis,${JSON.stringify(name)})&&globalThis[${JSON.stringify(name)}]!==undefined?globalThis[${JSON.stringify(name)}]:real.${name};`;
-  }).join('\n');
+  const explicit = names.map((name) =>
+    `export const ${name}=Object.prototype.hasOwnProperty.call(globalThis,${JSON.stringify(name)})&&globalThis[${JSON.stringify(name)}]!==undefined?globalThis[${JSON.stringify(name)}]:real.${name};`
+  ).join('\n');
   return `import * as real from ${JSON.stringify(realSpecifier)};\nexport * from ${JSON.stringify(realSpecifier)};\n${explicit}\n`;
 }
 
 const browserPrelude = `
+globalThis.__vmScenarioReady=false;
 if (typeof globalThis.location === 'undefined') {
   globalThis.location = { href:'https://vm.invalid/', origin:'https://vm.invalid', hostname:'vm.invalid', protocol:'https:', pathname:'/', search:'', hash:'', reload(){} };
 }
@@ -71,6 +89,7 @@ if (typeof globalThis.URLSearchParams === 'undefined') {
   };
 }
 `;
+const browserPostlude = `\nglobalThis.__vmScenarioReady=true;\n`;
 
 export async function bundleForVm(entrySource, { suppressBootstrap = false } = {}) {
   // Selected differential entries do not always pull every generated late-binding owner.
@@ -89,7 +108,7 @@ export async function bundleForVm(entrySource, { suppressBootstrap = false } = {
       });
       build.onLoad({ filter: /.*/, namespace: 'differential' }, () => ({ contents: vmEntrySource, loader: 'ts', resolveDir: root }));
       build.onLoad({ filter: /.*/, namespace: 'differential-runtime-adapter' }, () => ({
-        contents: globalAdapter('differential:real-runtime', runtimeGlobalOverrides),
+        contents: runtimeAdapter('differential:real-runtime'),
         loader: 'ts',
         resolveDir: root
       }));
@@ -122,5 +141,5 @@ export async function bundleForVm(entrySource, { suppressBootstrap = false } = {
     tsconfig: 'tsconfig.json',
     plugins
   });
-  return browserPrelude + result.outputFiles[0].text;
+  return browserPrelude + result.outputFiles[0].text + browserPostlude;
 }
