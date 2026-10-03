@@ -16,12 +16,22 @@ function withoutBootstrapStartup(source) {
 }
 
 function instrumentRuntimeForVm(source) {
-  const marker = "function toast(msg,type='ok'){";
-  if (!source.includes(marker)) throw new Error('Runtime toast function was not found');
-  return source.replace(
-    marker,
-    `${marker}const __notify=(globalThis).__notify;if(typeof __notify==='function')return __notify('toast',msg,type);`
+  const toastMarker = "function toast(msg,type='ok'){";
+  if (!source.includes(toastMarker)) throw new Error('Runtime toast function was not found');
+  let out = source.replace(
+    toastMarker,
+    `${toastMarker}const __notify=(globalThis).__notify;if(typeof __notify==='function')return __notify('toast',msg,type);`
   );
+  const todayMarker = 'const today=()=>{';
+  if (!out.includes(todayMarker)) throw new Error('Runtime today function was not found');
+  out = out.replace(todayMarker, `${todayMarker}const __today=globalThis.__today;if(typeof __today==='function')return __today();`);
+  const nowMarker = 'const now=()=>new Date().toISOString();';
+  if (!out.includes(nowMarker)) throw new Error('Runtime now function was not found');
+  out = out.replace(nowMarker, "const now=()=>{const __now=globalThis.__now;return typeof __now==='function'?__now():new Date().toISOString()};");
+  const iidMarker = "const iid=()=>globalThis.crypto?.randomUUID?.()||('i-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10));";
+  if (!out.includes(iidMarker)) throw new Error('Runtime iid function was not found');
+  out = out.replace(iidMarker, "const iid=()=>{const __iid=globalThis.__iid;return typeof __iid==='function'?__iid():(globalThis.crypto?.randomUUID?.()||('i-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10)))};");
+  return out;
 }
 
 const browserPrelude = `
@@ -47,6 +57,10 @@ if (typeof globalThis.URLSearchParams === 'undefined') {
     has(name) { return this._pairs.some(([key])=>key===String(name)); }
   };
 }
+if (typeof globalThis.__notify !== 'function' && typeof globalThis.toast === 'function') globalThis.__notify = (kind,...args) => globalThis.toast(...args);
+if (typeof globalThis.__iid !== 'function' && typeof globalThis.iid === 'function') globalThis.__iid = globalThis.iid;
+if (typeof globalThis.__now !== 'function' && typeof globalThis.now === 'function') globalThis.__now = globalThis.now;
+if (typeof globalThis.__today !== 'function' && typeof globalThis.today === 'function') globalThis.__today = globalThis.today;
 `;
 
 export async function bundleForVm(entrySource, { suppressBootstrap = false } = {}) {
