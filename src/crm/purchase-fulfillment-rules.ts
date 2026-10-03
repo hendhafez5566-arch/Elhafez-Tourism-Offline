@@ -1,3 +1,6 @@
+import { EPS } from '../core/runtime';
+import { BusinessValues } from '../core/business-values';
+import type { BusinessClock, BusinessInvoice, BusinessLine, BusinessPurchaseOrder } from '../application/business-contracts';
 // Quantities, invoice linkage and status decisions are independent of the legacy store.
 function createPurchaseFulfillmentRules(clock: Pick<BusinessClock, 'id' | 'now'>, recorded: (action: string, type: string, id: string, detail: string) => unknown) {
     return {
@@ -97,3 +100,4 @@ function createPurchaseFulfillmentRules(clock: Pick<BusinessClock, 'id' | 'now'>
         }
     };
 }
+export { createPurchaseFulfillmentRules };

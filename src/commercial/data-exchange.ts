@@ -1,3 +1,10 @@
+import { N, S, esc, icon, iid, now, toast, today } from '../core/runtime';
+import { Numbering } from '../core/numbering';
+import { DB } from '../persistence/browser-store';
+import { BranchScope } from './product';
+import { Transactions } from '../accounting/transactions';
+import { Auth } from '../security/auth';
+import { UI } from '../core/late-bindings';
 const CommercialData={
  csv(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<=text.length;i++){const c=text[i]??'\n',n=text[i+1];if(q){if(c==='"'&&n==='"'){cell+='"';i++}else if(c==='"')q=false;else cell+=c}else if(c==='"')q=true;else if(c===','){row.push(cell);cell=''}else if(c==='\n'){row.push(cell.replace(/\r$/,''));cell='';if(row.some(x=>S(x).trim()))rows.push(row);row=[]}else cell+=c}return rows},
  async unzipEntry(buf,name){const dv=new DataView(buf),len=dv.byteLength,min=Math.max(0,len-66000);let eocd=-1;for(let i=len-22;i>=min;i--)if(dv.getUint32(i,true)===0x06054b50){eocd=i;break}if(eocd<0)throw new Error('ملف إكسل غير صالح');const count=dv.getUint16(eocd+10,true),off=dv.getUint32(eocd+16,true);let p=off;for(let i=0;i<count;i++){if(dv.getUint32(p,true)!==0x02014b50)break;const method=dv.getUint16(p+10,true),size=dv.getUint32(p+20,true),fn=dv.getUint16(p+28,true),ex=dv.getUint16(p+30,true),cm=dv.getUint16(p+32,true),lo=dv.getUint32(p+42,true),file=new TextDecoder().decode(new Uint8Array(buf,p+46,fn));if(file===name){if(dv.getUint32(lo,true)!==0x04034b50)throw new Error('بنية ملف إكسل غير صالحة');const lfn=dv.getUint16(lo+26,true),lex=dv.getUint16(lo+28,true),start=lo+30+lfn+lex,raw=new Uint8Array(buf,start,size);if(method===0)return raw;if(method===8&&typeof DecompressionStream!=='undefined'){const ds=new DecompressionStream('deflate-raw'),out=await new Response(new Blob([raw]).stream().pipeThrough(ds)).arrayBuffer();return new Uint8Array(out)}throw new Error('طريقة ضغط ملف إكسل غير مدعومة في هذا المتصفح')}p+=46+fn+ex+cm}return null},
@@ -15,3 +22,4 @@ const CommercialData={
  exportType(type){Auth.require('dataexchange','export');const arr=DB.data[type]||[];if(!arr.length)throw new Error('لا توجد بيانات للتصدير');const keys:string[]=[...new Set<string>(arr.flatMap((x:any)=>Object.keys(x)).filter((k:string)=>!['passwordHash','passwordSalt'].includes(k)))];this.downloadCsv(`${type}_${today()}.csv`,[keys,...arr.map(x=>keys.map(k=>typeof x[k]==='object'?JSON.stringify(x[k]??''):x[k]??''))])},
  downloadCsv(name,rows){const cell=v=>`"${S(v).replace(/"/g,'""').replace(/\r?\n/g,' ')}"`,blob=new Blob(['\ufeff'+rows.map(r=>r.map(cell).join(',')).join('\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 };
+export { CommercialData };

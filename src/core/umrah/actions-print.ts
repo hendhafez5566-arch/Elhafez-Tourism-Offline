@@ -1,3 +1,13 @@
+import { N, formatDate, formatDateTime, live, sl } from '../runtime';
+import { DB } from '../../persistence/browser-store';
+import { Print } from '../../reports/printing';
+import { UmrahCore_N, UmrahCore_S, UmrahCore_bookingLabel, UmrahCore_dateAdd, UmrahCore_daysBetween, UmrahCore_esc, UmrahCore_hajjPermitStatusLabel, UmrahCore_money, UmrahCore_programDisplay, UmrahCore_programLabel, UmrahCore_programTypeLabel, UmrahCore_roomLabel, UmrahCore_segLabel, UmrahCore_tone, UmrahCore_vehicleLabel } from './runtime';
+import { UmrahCore_Bridge, UmrahCore_Cost, UmrahCore_DB } from './data';
+import { UmrahCore_Procurement } from './procurement';
+import { UmrahCore_Ops } from './operations';
+import { UmrahCore_State, UmrahCore_UI, UmrahCore_travelerCategory, UmrahCore_visaStatusLabel } from './ui';
+import { UmrahCore_Forms } from './forms';
+import { __set_UmrahCore_Actions, __set_UmrahCore_PrintView } from '../late-bindings';
 const UmrahCore_Actions: any = {
     serverAckRequired(label) { return new Set(['confirmBooking','confirmBookingModal','procureCost','programStatus','programStatusFromModal','programCancel','programClose']).has(label); },
     async commit(label, work, success: any = '', after: any = null) { try {
@@ -67,6 +77,7 @@ const UmrahCore_Actions: any = {
     closeIncident(id) { return this.commit('closeIncident', () => UmrahCore_Ops.setIncidentStatus(id, 'closed')); },
     saveSettings(e) { e.preventDefault(); const o = Object.fromEntries(new FormData(e.target)); return this.commit('saveSettings', () => { UmrahCore_Bridge.require('umrah.settings', 'edit'); UmrahCore_DB.data.settings.holdHours = Math.max(1, UmrahCore_N(o.holdHours)); UmrahCore_DB.data.settings.holdWarnHours = Math.max(1, UmrahCore_N(o.holdWarnHours) || 6); UmrahCore_DB.data.settings.passportValidityMonths = Math.max(1, UmrahCore_N(o.passportValidityMonths)); UmrahCore_DB.data.settings.baseCurrency = UmrahCore_Bridge.baseCurrency(); UmrahCore_DB.data.settings.defaultMarginPct = Math.max(0, UmrahCore_N(o.defaultMarginPct)); UmrahCore_DB.data.settings.financialClearanceRequired = o.financialClearanceRequired === 'yes'; UmrahCore_DB.data.settings.financialClearanceMaxDue = Math.max(0, UmrahCore_N(o.financialClearanceMaxDue)); return UmrahCore_DB.data.settings; }, 'تم حفظ الإعدادات'); }
 };
+__set_UmrahCore_Actions(UmrahCore_Actions);
 const UmrahCore_PrintView = {
     show(title, body, context = null) { return Print.moduleDocument(title, body, context); },
     manifest(pid) { const p = UmrahCore_Ops.program(pid); if (!p)
@@ -91,3 +102,5 @@ const UmrahCore_PrintView = {
     itinerary(pid) { const p = UmrahCore_Ops.program(pid); if (!p)
         return; const segs = UmrahCore_Ops.segments(pid); this.show(`برنامج الرحلة — ${p.name}`, `<div class="meta"><span>${p.departureDate} → ${p.returnDate}</span><span>${p.durationDays} أيام</span></div><table><tr><th>الترتيب</th><th>الخدمة</th><th>العنوان</th><th>التاريخ</th><th>المكان/المسار</th><th>التفاصيل</th></tr>${segs.map(s => `<tr><td>${s.sequence}</td><td>${UmrahCore_segLabel(s.type)}</td><td>${UmrahCore_esc(s.title)}</td><td>${s.start}${s.end !== s.start ? ' → ' + s.end : ''}</td><td>${UmrahCore_esc(s.route || s.city || '')}</td><td>${UmrahCore_esc(s.details || '')}</td></tr>`).join('')}</table>`); }
 };
+__set_UmrahCore_PrintView(UmrahCore_PrintView);
+export { UmrahCore_Actions, UmrahCore_PrintView };

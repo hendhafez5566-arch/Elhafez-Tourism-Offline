@@ -1,3 +1,7 @@
+import { EPS } from '../core/runtime';
+import { BusinessValues } from '../core/business-values';
+import { ApprovalRules, ExpenseRules } from '../accounting/expense-rules';
+import type { BusinessInvoice, ExpenseApprovalOptions, ExpenseFields, ExpenseRecord, ExpenseWorkflowDeps } from './business-contracts';
 const ExpenseWorkflows = {
     addExpense(d: ExpenseWorkflowDeps, o: ExpenseFields) {
         return d.transactions.atomic('addExpense', () => {
@@ -153,3 +157,4 @@ const ExpenseWorkflows = {
         s.journalRef = false;
     }
 };
+export { ExpenseWorkflows };

@@ -1,3 +1,18 @@
+import { APP, byId } from '../runtime';
+import { Numbering } from '../numbering';
+import { ServerStore } from '../../persistence/server-store';
+import { DB } from '../../persistence/browser-store';
+import { BranchScope, Commercial } from '../../commercial/product';
+import { Currency } from '../../accounting/currency-periods';
+import { Transactions } from '../../accounting/transactions';
+import { Attachments } from '../../documents/attachments-backup';
+import { Auth } from '../../security/auth';
+import { Party360 } from '../../crm/party360';
+import { UI } from '../../ui/ui';
+import { UmrahCore_META, UmrahCore_N, UmrahCore_S, UmrahCore_Seed, UmrahCore_deep, UmrahCore_iid, UmrahCore_now, UmrahCore_today } from './runtime';
+import { UmrahCore_ERP } from './integration';
+import { UmrahCore_Ops, UmrahCore_UI, composeUmrahPresentationCommands } from '../late-bindings';
+import { __set_UmrahCore_Bridge, __set_UmrahCore_DB } from '../late-bindings';
 const UmrahCore_RootMap = {
     meta: 'umrahMeta', settings: 'umrahSettings', seasons: 'umrahSeasons', hotelContracts: 'umrahHotelContracts', flightBlocks: 'umrahFlightBlocks', transportContracts: 'umrahTransportContracts', visaContracts: 'umrahVisaContracts', serviceContracts: 'umrahServiceContracts', contractReservations: 'umrahContractReservations', programs: 'umrahPrograms', programSegments: 'umrahProgramSegments', programCosts: 'umrahProgramCosts', bookings: 'umrahBookings', travelers: 'umrahTravelers', hotelRooms: 'umrahHotelRooms', visaBatches: 'umrahVisaBatches', visaItems: 'umrahVisaItems', tickets: 'umrahTickets', busRuns: 'umrahBusRuns', operationTasks: 'umrahOperationTasks', incidents: 'umrahIncidents', supplierCommitments: 'umrahSupplierCommitments', activity: 'umrahActivity', outbox: 'umrahOutbox', sequences: 'umrahSequences'
 };
@@ -148,6 +163,7 @@ const UmrahCore_DB = {
     next(type) { const map = { season: 'seasonPrefix', program: 'programPrefix', booking: 'bookingPrefix', visa: 'visaPrefix', bus: 'busPrefix', incident: 'incidentPrefix' }, p = this.data.settings[map[type]] || type.toUpperCase(), n = (UmrahCore_N(this.data.sequences[type]) + 1); this.data.sequences[type] = n; return `${p}${String(n).padStart(4, '0')}`; },
     log(action, entity, id, details = '') { this.data.activity.unshift({ id: UmrahCore_iid(), at: UmrahCore_now(), action, entity, entityId: id, details, user: UmrahCore_Bridge.currentUser().name }); const days = Math.max(7, Math.min(365, UmrahCore_N(DB.data.settings?.activityRetentionDays || 90))), cut = Date.now() - days * 86400000; this.data.activity = this.data.activity.filter(x => !x.at || Date.parse(x.at) >= cut).slice(0, 1500); }
 };
+__set_UmrahCore_DB(UmrahCore_DB);
 const UmrahCore_scopePage = scope => { scope = UmrahCore_S(scope); if (!scope.startsWith('umrah.')) return scope; const part = scope.split('.')[1] || ''; const map = { contracts: 'umrah-contracts', costing: 'umrah-costing', procurement: 'umrah-procurement', programs: 'umrah-programs', seasons: 'umrah-seasons', control: 'umrah-control', tripops: 'umrah-tripops', documents: 'umrah-documents', settings: 'umrah-settings', travelers: 'umrah-travelers', visas: 'umrah-visas', flights: 'umrah-flights', transport: 'umrah-transport' }; return map[part] || 'umrah-bookings'; };
 const UmrahCore_Bridge = {
     currentUser() { return Auth.user || { id: '', name: 'مستخدم النظام' }; }, branchId() { return BranchScope.currentId() || ''; }, branchName() { return BranchScope.current()?.name || 'الفرع الحالي'; }, branchMatch(x) { const id = this.branchId(); return !id || !x?.branchId || x.branchId === id; }, can(scope, action = 'view') { return Auth.can(UmrahCore_scopePage(scope), action); }, canViewCosts() { return Commercial.canViewCosts() !== false; }, require(scope, action = 'view') { return Auth.require(UmrahCore_scopePage(scope), action); },
@@ -169,6 +185,7 @@ const UmrahCore_Bridge = {
     applyBranchDefaults(d) { const id = this.branchId(); if (!id) return d; for (const k of ['seasons', 'hotelContracts', 'flightBlocks', 'transportContracts', 'visaContracts', 'serviceContracts', 'contractReservations', 'programs', 'programSegments', 'programCosts', 'bookings', 'travelers', 'hotelRooms', 'visaBatches', 'visaItems', 'tickets', 'busRuns', 'operationTasks', 'incidents', 'supplierCommitments', 'activity', 'outbox']) for (const x of d?.[k] || []) if (x && !x.branchId) x.branchId = id; return d; },
     openERP(page) { return composeUmrahPresentationCommands().openPage(page); }, openERPForm(type, ctx = {}) { return composeUmrahPresentationCommands().openForm(type, ctx || {}); }, openParty360(type, id) { return Party360.openMore(type, id); }, openPartyMore(type, id) { return Party360.openMore(type, id); }, openPartyActions(type, id) { return composeUmrahPresentationCommands().openPartyActions(type, id); }, partyControls(type, id) { return (UI as any).partyControls(type, id, { compact: true }); }, openAttachment(entityType, entityId) { Auth.require('documents', 'add'); return composeUmrahPresentationCommands().openForm('attachment', { entityType, entityId }); }, rememberLocation() { return true; }
 };
+__set_UmrahCore_Bridge(UmrahCore_Bridge);
 const UmrahCore_Cost = {
     toBase(amount, currency, fx) { const r = UmrahCore_N(fx) || UmrahCore_Bridge.rate(currency); if (!(r > 0))
         throw new Error(`لا يوجد سعر صرف صالح للعملة ${currency}`); return UmrahCore_N(amount) * r; },
@@ -181,3 +198,4 @@ const UmrahCore_Cost = {
         throw new Error('وصف وقيمة التكلفة مطلوبان'); if (x.procurementPolicy !== 'budgetOnly' && !x.supplierId)
         throw new Error('اختر المورد عند تفعيل إنشاء التزام فعلي'); UmrahCore_DB.data.programCosts.push(x); UmrahCore_Bridge.audit('create', 'umrahBudgetCost', x.id, p.no); return x; }
 };
+export { UmrahCore_Bridge, UmrahCore_Cost, UmrahCore_DB, UmrahCore_LocalUI, UmrahCore_RootMap, UmrahCore_scopePage };

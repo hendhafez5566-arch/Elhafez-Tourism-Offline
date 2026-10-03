@@ -1,3 +1,6 @@
+import { BusinessValues } from '../core/business-values';
+import { InvoiceRules } from '../accounting/invoice-rules';
+import type { BusinessInvoice, BusinessJournalLine, InvoiceWorkflowDeps } from './business-contracts';
 const InvoiceWorkflows = {
     post(d: InvoiceWorkflowDeps, inv: BusinessInvoice) {
         if (!inv || inv.status !== 'draft')
@@ -58,3 +61,4 @@ const InvoiceWorkflows = {
         return inv;
     }
 };
+export { InvoiceWorkflows };

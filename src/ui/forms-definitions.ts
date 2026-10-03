@@ -1,3 +1,19 @@
+import { N, S, byId, deep, iid, live, money, monthNameAr, today } from '../core/runtime';
+import { DocumentWorkflows } from '../application/document-actions';
+import { Numbering } from '../core/numbering';
+import { AdvancedAccounting } from '../accounting/advanced';
+import { DB } from '../persistence/browser-store';
+import { BranchScope } from '../commercial/product';
+import { Currency } from '../accounting/currency-periods';
+import { Accounting } from '../accounting/engine';
+import { Invoices, MasterData, Tax } from '../accounting/invoices';
+import { ExpenseCategories } from '../accounting/expense-categories';
+import { Transactions } from '../accounting/transactions';
+import { CRM } from '../crm/crm';
+import { Attachments } from '../documents/attachments-backup';
+import { Auth, License, RolePermissions, Security } from '../security/auth';
+import { Forms, FormsDocument } from './forms';
+import { Actions, composeLegacyActionDeps } from '../core/late-bindings';
 const FormsDefinitions: any = {
  def(type,c){const cur=this.currencyItems(),tr=this.items(DB.data.treasuries.filter(x=>x.active!==false)),cus=this.items(DB.data.customers.filter(x=>x.active!==false)),sup=this.items(DB.data.suppliers.filter(x=>x.active!==false)),agt=this.items(DB.data.agents.filter(x=>x.active!==false)),prg=this.items([...DB.data.programs.filter(x=>x.active!==false),...(DB.data.umrahPrograms||[]).filter(x=>x.active!==false)]),cc=this.items(DB.data.costCenters.filter(x=>x.active!==false)),payMethods=[{value:'cash',label:'نقدي'},{value:'bank',label:'تحويل بنكي'},{value:'card',label:'بطاقة / نقطة بيع'},{value:'cheque',label:'شيك'},{value:'wallet',label:'محفظة إلكترونية'}],customer=c.editId&&byId(DB.data.customers,c.editId),supplier=c.editId&&byId(DB.data.suppliers,c.editId),agent=c.editId&&byId(DB.data.agents,c.editId),program=c.editId&&(byId(DB.data.umrahPrograms||[],c.editId)||byId(DB.data.programs,c.editId)),treasury=c.editId&&byId(DB.data.treasuries,c.editId),currency=c.code&&Currency.get(c.code),costcenter=c.editId&&byId(DB.data.costCenters,c.editId),account=c.editId&&Accounting.account(c.editId),tax=c.editId&&Tax.get(c.editId),user=c.editId&&byId(DB.data.users,c.editId),traveler=c.editId&&byId(DB.data.travelers,c.editId),lead=c.editId&&byId(DB.data.leads,c.editId),expense=c.editId&&byId(DB.data.expenses,c.editId);const defs={
  customer:{page:'customers',action:customer?'edit':'add',title:customer?'تعديل ملف العميل':'عميل جديد',icon:'customers',advancedFrom:5,fields:[['type','نوع العميل','select',{value:customer?.type||'individual',items:[{value:'individual',label:'فرد'},{value:'company',label:'شركة'}]}],['name','الاسم','text',{value:customer?.name||''}],['phone','الهاتف','tel',{value:customer?.phone||'',required:false}],['whatsapp','واتساب','tel',{value:customer?.whatsapp||'',required:false}],['email','البريد','email',{value:customer?.email||'',required:false}],['nationality','الجنسية','text',{value:customer?.nationality||'',required:false}],['birthDate','تاريخ الميلاد','date',{value:customer?.birthDate||'',required:false}],['gender','النوع','select',{value:customer?.gender||'',required:false,items:[{value:'male',label:'ذكر'},{value:'female',label:'أنثى'}]}],['nationalId','الرقم القومي','text',{value:customer?.nationalId||'',required:false}],['passport','رقم الجواز','text',{value:customer?.passport||'',required:false}],['passportIssue','إصدار الجواز','date',{value:customer?.passportIssue||'',required:false}],['passportExpiry','انتهاء الجواز','date',{value:customer?.passportExpiry||'',required:false}],['issuePlace','جهة الإصدار','text',{value:customer?.issuePlace||'',required:false}],['taxNo','الرقم الضريبي','text',{value:customer?.taxNo||'',required:false}],['creditLimit','حد الائتمان','number',{value:customer?.creditLimit||0,min:0,required:false}],['creditDays','أيام الائتمان','number',{value:customer?.creditDays||0,min:0,required:false,hint:'يحدد تاريخ استحقاق الفواتير تلقائيًا.'}],['paymentTerms','ملاحظات شروط الدفع','text',{value:customer?.paymentTerms||'',required:false}],['agentId','المندوب','picker',{value:customer?.agentId||'',kind:'agent',required:false,placeholder:'ابحث عن المندوب...'}],['address','العنوان','textarea',{value:customer?.address||'',required:false},true],['notes','ملاحظات','textarea',{value:customer?.notes||'',required:false},true]],submit:o=>customer?MasterData.updateCustomer(customer.id,o):Transactions.addCustomer(o)},
@@ -43,3 +59,4 @@ const FormsDefinitions: any = {
  };return defs[type]},
 };
 Object.assign(Forms, FormsDefinitions);
+export { FormsDefinitions };

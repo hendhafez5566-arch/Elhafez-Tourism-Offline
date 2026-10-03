@@ -1,3 +1,4 @@
+import type { ContactBridgePort, CurrentPrintPort, NativeDocumentPrintPort, PresentationDomPort, PresentationScheduler, PrintFramePort, PwaRegistrationPort } from './platform-contracts';
 // Browser mechanics only. Presentation logic receives these focused ports.
 interface NativePresentationWindow extends Window {
     NativePrint?: NativeDocumentPrintPort;
@@ -93,3 +94,4 @@ const BrowserPlatform = (() => {
         reloadOnOnline() { window.addEventListener('online', () => location.reload(), { once: true }); }
     };
 })();
+export { BrowserPlatform };

@@ -1,3 +1,7 @@
+import { EPS, N, S, byId, esc, iid, live, now, today } from '../core/runtime';
+import { DB } from '../persistence/browser-store';
+import { Accounting, Auth } from '../core/late-bindings';
+import { __set_Currency, __set_Periods } from '../core/late-bindings';
 const Currency={
  active(){return DB.data.currencies.filter(x=>x.active!==false)},get(code){return DB.data.currencies.find(x=>x.code===S(code).toUpperCase())},
  rate(code,date=today()){code=S(code||DB.data.settings.baseCurrency).toUpperCase();if(code===DB.data.settings.baseCurrency)return 1;let best=null;for(const x of DB.data.fxRates)if(x.code===code&&x.date<=date&&(!best||x.date>=best.date))best=x;return N(best?.rate)},
@@ -11,6 +15,7 @@ const Currency={
  toggle(code){const c=this.get(code);if(!c)throw new Error('العملة غير موجودة');if(code===DB.data.settings.baseCurrency)throw new Error('لا يمكن إيقاف العملة الأساسية');c.active=c.active===false;DB.log(c.active?'activate':'deactivate','currency',code,c.name)},
  remove(code){const c=this.get(code);if(!c)throw new Error('العملة غير موجودة');if(code===DB.data.settings.baseCurrency)throw new Error('لا يمكن حذف العملة الأساسية');if(this.used(code))throw new Error('العملة مستخدمة تاريخيًا؛ يمكن إيقافها فقط');DB.data.currencies=DB.data.currencies.filter(x=>x.code!==code);DB.data.fxRates=DB.data.fxRates.filter(x=>x.code!==code);DB.log('delete','currency',code,c.name)}
 };
+__set_Currency(Currency);
 
 const Periods={
  fiscalForDate(date){return DB.data.fiscalYears.find(f=>date>=f.from&&date<=f.to)},
@@ -23,3 +28,5 @@ const Periods={
  closeYear(fyId){const fy=byId(DB.data.fiscalYears,fyId);if(!fy||fy.status==='closed')throw new Error('السنة غير متاحة');const open=DB.data.periods.filter(p=>p.fiscalYearId===fy.id&&p.status!=='closed');if(open.length)throw new Error('يجب إغلاق جميع فترات السنة أولًا');const lines=[];for(const a of DB.data.accounts.filter(a=>a.posting&&['revenue','expense'].includes(a.type))){const b=Accounting.accountBalance(a.id,fy.from,fy.to,{excludeRefTypes:['year-close','year-reopen']});const net=b.debit-b.credit;if(Math.abs(net)<=EPS)continue;if(net<0){lines.push({accountId:a.id,debit:-net,currency:DB.data.settings.baseCurrency,baseDebit:-net,baseOnly:true});lines.push({accountId:'3200',credit:-net,currency:DB.data.settings.baseCurrency,baseCredit:-net,baseOnly:true})}else{lines.push({accountId:'3200',debit:net,currency:DB.data.settings.baseCurrency,baseDebit:net,baseOnly:true});lines.push({accountId:a.id,credit:net,currency:DB.data.settings.baseCurrency,baseCredit:net,baseOnly:true})}}if(lines.length)Accounting.post({date:fy.to,memo:`إقفال السنة المالية ${fy.label}`,refType:'year-close',refId:fy.id,lines,skipPeriod:true});fy.status='closed';fy.closedAt=now();fy.closedBy=Auth.user?.id||'';DB.log('close','fiscalYear',fy.id,fy.label)},
  reopenYear(fyId,reason){const fy=byId(DB.data.fiscalYears,fyId);if(!fy||fy.status!=='closed')throw new Error('السنة غير مغلقة');if(!S(reason).trim())throw new Error('سبب إعادة الفتح مطلوب');const closeJs=DB.data.journals.filter(j=>live(j)&&j.refType==='year-close'&&j.refId===fy.id&&j.status==='posted'),reopenIds=[];for(const j of closeJs){j.status='reversed';j.voidReason=`إعادة فتح السنة — ${reason}`;Accounting.documentStatus('journal',j.id,'reversed');const r=Accounting.post({date:fy.to,memo:`إعادة فتح السنة ${fy.label} — عكس ${j.no} — ${reason}`,refType:'year-reopen',refId:fy.id,skipPeriod:true,lines:Accounting.reversalLines(j.lines)});reopenIds.push(r.id)}fy.status='open';fy.reopenedAt=now();fy.reopenedBy=Auth.user?.id||'';fy.reopenReason=reason;fy.reopenJournalIds=reopenIds;DB.log('reopen','fiscalYear',fy.id,reason)}
 };
+__set_Periods(Periods);
+export { Currency, Periods };

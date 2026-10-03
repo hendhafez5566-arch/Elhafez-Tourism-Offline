@@ -1,3 +1,11 @@
+import { APP, S, esc, icon, now } from '../core/runtime';
+import { ServerStore } from '../persistence/server-store';
+import { DB } from '../persistence/browser-store';
+import { Commercial } from '../commercial/product';
+import { Auth } from '../security/auth';
+import { UI } from './ui';
+import { Pages } from './pages';
+import { __set_CommercialUX } from '../core/late-bindings';
 /* Commercial UX layer: shared safeguards and presentation rules for every module. */
 const CommercialUX={
  dirtyForm:null,saveTimer:0,saveDelay:0,saveSequence:0,saveVisible:false,notificationFilter:'all',
@@ -29,6 +37,7 @@ const CommercialUX={
  markRead(id,page){const s=this.readSet();s.add(id);try{localStorage.setItem(APP.storage+'_read_notifications',JSON.stringify([...s].slice(-300)))}catch(_){};UI.closeMenus();UI.openPage(page)},
  filterNotifications(key){this.notificationFilter=key;(UI as any).renderNotificationPanel(document.getElementById('notificationPanel'))}
 };
+__set_CommercialUX(CommercialUX);
 CommercialUX.initTraining();
 
 const uxSave=DB.save.bind(DB);DB.save=function(render=true,options:any={}){const silent=options?.silentUi===true,background=options?.background===true;if(silent)return uxSave(render,options);if(background){const task=Promise.resolve(uxSave(render,options));task.then(r=>{if(r?.serverAvailable&&!r?.server){if(ServerStore.lastConflict)CommercialUX.saveState('error',DB.lastSaveError||'يوجد تعارض يحتاج مراجعة');else CommercialUX.saveState('warning','محفوظ محليًا • المزامنة بالخلفية')}}).catch(e=>CommercialUX.saveState('warning',e?.message||'المزامنة بالخلفية'));return task}const token=CommercialUX.beginSave();return Promise.resolve(uxSave(render,options)).then(r=>{CommercialUX.finishSave(token,r);return r}).catch(e=>{CommercialUX.finishSave(token,null,e);throw e})};
@@ -48,3 +57,4 @@ document.addEventListener('change',e=>{const f=(e.target as Element)?.closest?.(
 document.addEventListener('submit',e=>{const f=e.target;if(f instanceof HTMLFormElement){f.dataset.clean='1';if(CommercialUX.dirtyForm===f)CommercialUX.dirtyForm=null}},true);
 document.addEventListener('submit',e=>{const f=e.target;if(!(f instanceof HTMLFormElement)||S(f.onsubmit).includes('submitOnce')||f.dataset.submitting==='1'||f.dataset.busy==='1'||f.id==='modalForm')return;f.dataset.submitting='1';const b=f.querySelector<HTMLButtonElement>('[type=submit]');if(b)b.disabled=true;setTimeout(()=>{delete f.dataset.submitting;if(b)b.disabled=false},300)},true);
 const uxModal=document.getElementById('modal');if(uxModal)new MutationObserver(records=>{if(!uxModal.classList.contains('show'))return;const relevant=records.some(r=>r.type==='childList'||(r.type==='attributes'&&r.target===uxModal));if(relevant)CommercialUX.enhance(uxModal)}).observe(uxModal,{attributes:true,attributeFilter:['class'],childList:true,subtree:true});
+export { CommercialUX, uxClose, uxDashboard, uxHome, uxModal, uxOpen, uxRender, uxSave, uxTopbar, uxUserMenu, uxWorkspace };

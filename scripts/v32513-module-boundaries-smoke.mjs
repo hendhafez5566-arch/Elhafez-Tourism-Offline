@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {compiledFilesText} from './lib/build-model.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const bytes=p=>fs.statSync(path.join(root,p)).size;
-const ts=read('tsconfig.json');
+const ts=compiledFilesText();
 const wizard=read('src/core/umrah/program-wizard.ts'),wizardView=read('src/core/umrah/program-wizard-view.ts');
 const forms=read('src/ui/forms.ts'),defs=read('src/ui/forms-definitions.ts');
 const uforms=read('src/core/umrah/forms.ts'),contractForms=read('src/core/umrah/forms-contracts.ts');

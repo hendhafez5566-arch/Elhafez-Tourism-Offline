@@ -1,0 +1,58 @@
+import { pool } from './context.js';
+import { allowedBranches, BRANCH_COLLECTIONS } from './authz.js';
+import { MIRRORED_COLLECTION_KEYS, hydrateMirroredPayload } from './entity-mirror-core.js';
+import { readEntityMirror, entityBackedWritePlan, markEntityMirrorRevision } from './entity-mirror.js';
+export { mergeConcurrentPayload } from './state-merge.js';
+async function readState(c, t, lock = false) {
+    const lockSql = lock ? ' for update of s' : '';
+    const light = await c.query(`select s.schema_version,s.revision,s.updated_at,s.storage_mode,s.entity_row_count,s.entity_present_keys,s.payload-$2::text[] as payload,m.revision as mirror_revision,m.row_count,m.present_keys from erp_state s left join erp_entity_mirror_meta m on m.tenant_key=s.tenant_key where s.tenant_key=$1${lockSql}`, [t, [...MIRRORED_COLLECTION_KEYS]]);
+    if (!light.rowCount)
+        return null;
+    const row = light.rows[0], revision = Number(row.revision || 0), mirrorRevision = Number(row.mirror_revision || 0), storageMode = String(row.storage_mode || 'legacy-full');
+    if (storageMode === 'entity-backed') {
+        const mirror = await readEntityMirror(c, t, revision, Number(row.entity_row_count || 0), row.entity_present_keys || []);
+        if (mirror)
+            return { payload: hydrateMirroredPayload(row.payload, mirror.rows, mirror.presentKeys), schema_version: row.schema_version, revision, updated_at: row.updated_at, entityBacked: true, storageMode };
+        throw Object.assign(new Error('entity_storage_inconsistent'), { statusCode: 503 });
+    }
+    if (mirrorRevision === revision) {
+        const mirror = await readEntityMirror(c, t, revision, Number(row.row_count || 0), row.present_keys || []);
+        if (mirror)
+            return { payload: hydrateMirroredPayload(row.payload, mirror.rows, mirror.presentKeys), schema_version: row.schema_version, revision, updated_at: row.updated_at, entityBacked: true, storageMode };
+    }
+    const fallback = await c.query('select payload,schema_version,revision,updated_at,storage_mode from erp_state where tenant_key=$1', [t]);
+    return fallback.rows[0] || null;
+}
+export async function currentState(t) { return readState(pool, t, false); }
+export async function currentStateForUpdate(c, t) { return readState(c, t, true); }
+export function mergeUserSecrets(oldPayload, newPayload) { const oldUsers = new Map((oldPayload?.users || []).map((u) => [u.id, u])); newPayload.users = (newPayload.users || []).map((u) => { const old = oldUsers.get(u.id); if (!old)
+    return { ...u, emailVerifiedAt: '' }; const sameEmail = String(u.email || '').trim().toLowerCase() === String(old.email || '').trim().toLowerCase(); return { ...u, passwordHash: u.passwordHash || old.passwordHash, passwordSalt: u.passwordSalt || old.passwordSalt, passwordAlgo: u.passwordAlgo || old.passwordAlgo, passwordIterations: u.passwordIterations || old.passwordIterations, emailVerifiedAt: sameEmail ? String(old.emailVerifiedAt || '') : '' }; }); return newPayload; }
+export function assertUserDirectoryChangeAllowed(sessionUser, oldPayload, newPayload) { if (sessionUser?.role === 'admin' || sessionUser?.permissions?.all)
+    return; const strip = (u, self = false) => { const x = { ...u }; delete x.passwordHash; delete x.passwordSalt; if (self) {
+    delete x.lastLogin;
+    delete x.mustChangePassword;
+} return x; }, oldUsers = oldPayload?.users || [], newById = new Map((newPayload?.users || []).map((u) => [u.id, u])); if (oldUsers.length !== (newPayload?.users || []).length)
+    throw Object.assign(new Error('غير مسموح بتغيير المستخدمين بهذه الصلاحية'), { statusCode: 403 }); for (const old of oldUsers) {
+    const nu = newById.get(old.id);
+    if (!nu || JSON.stringify(strip(old, old.id === sessionUser.id)) !== JSON.stringify(strip(nu, old.id === sessionUser.id)))
+        throw Object.assign(new Error('غير مسموح بتغيير بيانات المستخدم أو الصلاحيات'), { statusCode: 403 });
+} }
+export function clientPayload(payload, user, license) { const p = structuredClone(payload); p.license = { ...p.license, ...license, activationKey: '' }; for (const u of p.users || []) {
+    delete u.passwordHash;
+    delete u.passwordSalt;
+    delete u.password;
+} const allowed = allowedBranches(user, payload); if (allowed) {
+    for (const name of BRANCH_COLLECTIONS)
+        p[name] = (p[name] || []).filter((x) => !x.branchId || allowed.has(String(x.branchId)));
+    p.branches = (p.branches || []).filter((b) => allowed.has(String(b.id)));
+} return p; }
+export function mergeScopedPayload(server, submitted, user) { const allowed = allowedBranches(user, server); if (!allowed)
+    return submitted; const out = structuredClone(server); for (const k of Object.keys(submitted))
+    if (!BRANCH_COLLECTIONS.has(k) && k !== 'branches')
+        out[k] = submitted[k]; for (const name of BRANCH_COLLECTIONS) {
+    const hidden = (server?.[name] || []).filter((x) => x.branchId && !allowed.has(String(x.branchId))), visible = (submitted?.[name] || []).filter((x) => !x.branchId || allowed.has(String(x.branchId)));
+    out[name] = [...hidden, ...visible];
+} out.branches = server.branches; return out; }
+export async function persistStateRecord(c, t, payload, schemaVersion) { const plan = await entityBackedWritePlan(c, t, payload); const up = await c.query(`update erp_state set schema_version=coalesce($2,schema_version),payload=$3::jsonb,storage_mode=$4,entity_row_count=$5,entity_present_keys=$6::text[],revision=revision+1,updated_at=now() where tenant_key=$1 returning revision,updated_at,storage_mode`, [t, schemaVersion ?? null, JSON.stringify(plan.payload), plan.storageMode, plan.rowCount, plan.presentKeys]); if (!up.rowCount)
+    throw Object.assign(new Error('company_not_initialized'), { statusCode: 409 }); const revision = Number(up.rows[0].revision); await markEntityMirrorRevision(c, t, revision, payload); return { revision, updated_at: up.rows[0].updated_at, storageMode: up.rows[0].storage_mode }; }
+export async function insertStateRecord(c, t, payload, schemaVersion, revision = 1) { const plan = await entityBackedWritePlan(c, t, payload); await c.query(`insert into erp_state(tenant_key,schema_version,payload,storage_mode,entity_row_count,entity_present_keys,revision,created_at,updated_at) values($1,$2,$3::jsonb,$4,$5,$6::text[],$7,now(),now())`, [t, schemaVersion, JSON.stringify(plan.payload), plan.storageMode, plan.rowCount, plan.presentKeys, revision]); await markEntityMirrorRevision(c, t, revision, payload); return { revision, storageMode: plan.storageMode }; }

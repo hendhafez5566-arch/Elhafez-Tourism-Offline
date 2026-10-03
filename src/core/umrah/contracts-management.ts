@@ -1,3 +1,8 @@
+import { UmrahCore_N, UmrahCore_S, UmrahCore_dateAdd, UmrahCore_esc, UmrahCore_money, UmrahCore_programDisplay, UmrahCore_roomCap, UmrahCore_roomLabel, UmrahCore_today } from './runtime';
+import { UmrahCore_Bridge, UmrahCore_DB } from './data';
+import { UmrahCore_Inventory } from './contracts-inventory';
+import { UmrahCore_ContractCenter } from './contracts';
+import { UmrahCore_Forms, UmrahCore_Ops, UmrahCore_Procurement, UmrahCore_UI } from '../late-bindings';
 const UmrahCore_ContractManagement: any = {
     edit(kind, id) { const f = kind === 'hotel' ? 'hotelContract' : kind === 'flight' ? 'flightBlock' : kind === 'visa' ? 'visaContract' : kind === 'service' ? 'serviceContract' : 'transportContract'; UmrahCore_Forms[f](id); },
     handleAlert(kind, id, action = 'details', ref = '') { try {
@@ -190,3 +195,4 @@ const UmrahCore_ContractManagement: any = {
 docs(kind,id){ UmrahCore_Bridge.openAttachment(`${kind}Contract`, id); }
 };
 Object.assign(UmrahCore_ContractCenter, UmrahCore_ContractManagement);
+export { UmrahCore_ContractManagement };

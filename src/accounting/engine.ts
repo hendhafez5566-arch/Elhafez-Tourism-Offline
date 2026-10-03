@@ -1,3 +1,14 @@
+import { EPS, N, S, byId, fmt, iid, live, money, now, sl, today } from '../core/runtime';
+import { JournalRules } from './journal-rules';
+import { ManualJournalWorkflows } from '../application/manual-journal-workflows';
+import { IntegrityWorkflows } from '../application/integrity-workflows';
+import { Numbering } from '../core/numbering';
+import { AdvancedAccounting } from './advanced';
+import { DB } from '../persistence/browser-store';
+import { BranchScope } from '../commercial/product';
+import { Currency, Periods } from './currency-periods';
+import { Auth, Invoices, Tax, UI, composeLegacyIntegrityDeps, composeLegacyJournalRules, composeLegacyManualJournalDeps } from '../core/late-bindings';
+import { __set_Accounting } from '../core/late-bindings';
 const Accounting={
  account(id){return byId(DB.data.accounts,id)},descendants(id){const out=[],seen=new Set();const walk=p=>{if(seen.has(p))return;seen.add(p);for(const a of DB.data.accounts.filter(x=>x.parentId===p)){out.push(a.id);walk(a.id)}};walk(id);return out},
  treasuryAccountId(tid){const t=byId(DB.data.treasuries,tid);return t?.glAccountId||(t?.no?`11T${S(t.no).split('-').pop()}`:`11T${S(tid).slice(-5)}`)},ensureTreasuryAccount(t){const id=this.treasuryAccountId(t.id);t.glAccountId=id;const e=this.account(id);if(e){e.name=`${t.name} (${t.currency})`;e.currency=t.currency;e.active=t.active!==false;return id}DB.data.accounts.push({id,name:`${t.name} (${t.currency})`,type:'asset',nature:'debit',parentId:'1100',posting:true,system:true,active:true,treasuryId:t.id,currency:t.currency});return id},
@@ -127,5 +138,7 @@ const Accounting={
  openIssue(page,refId=''){if(page)UI.openPage(page,refId);},
  autoFix(){return IntegrityWorkflows.repair(composeLegacyIntegrityDeps(this));}
 };
+__set_Accounting(Accounting);
 
 const ManualJournal={createDraft(o){return ManualJournalWorkflows.createDraft(composeLegacyManualJournalDeps(),o)},updateDraft(id,o){return ManualJournalWorkflows.updateDraft(composeLegacyManualJournalDeps(),id,o)},postDraft(id){return ManualJournalWorkflows.postDraft(composeLegacyManualJournalDeps(),id)},removeDraft(id){return ManualJournalWorkflows.removeDraft(composeLegacyManualJournalDeps(),id)},reverse(id,reason){return ManualJournalWorkflows.reverse(composeLegacyManualJournalDeps(),id,reason)},addRecurring(o){return ManualJournalWorkflows.addRecurring(composeLegacyManualJournalDeps(),o)},toggleRecurring(id){return ManualJournalWorkflows.toggleRecurring(composeLegacyManualJournalDeps(),id)},removeRecurring(id){return ManualJournalWorkflows.removeRecurring(composeLegacyManualJournalDeps(),id)},runRecurring(id){return ManualJournalWorkflows.runRecurring(composeLegacyManualJournalDeps(),id)}};
+export { Accounting, ManualJournal };

@@ -1,3 +1,6 @@
+import { N, S } from '../core/runtime';
+import { DB } from '../persistence/browser-store';
+import { __set_SearchSelect } from '../core/late-bindings';
 const Nav:any[]=[
  ['الرئيسية',[['dashboard','dashboard','لوحة التحكم','مركز النظام والأقسام']]],
  ['الحج والعمرة',[['umrah-dashboard','programs','نظام الحج والعمرة','من إنشاء البرنامج حتى إقفال الفوج'],['umrah-contracts','documents','التعاقدات والمخزون','عقود الفنادق والطيران والنقل ومتابعة السعة'],['umrah-control','settings','إدارة الحج والعمرة','الرقابة والتسعير والجاهزية والتشغيل']]],
@@ -81,3 +84,5 @@ const SearchSelect={
   const move=step=>{const buttons=[...results.querySelectorAll('.search-select-option')];if(!buttons.length)return;activeIndex=(activeIndex+step+buttons.length)%buttons.length;buttons.forEach((b,i)=>b.classList.toggle('active',i===activeIndex));buttons[activeIndex].scrollIntoView({block:'nearest'})};input.addEventListener('focus',()=>{if(!sel.value||input.value===label())input.value='';render()});input.addEventListener('input',render);input.addEventListener('keydown',e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();move(e.key==='ArrowDown'?1:-1)}else if(e.key==='Enter'&&activeIndex>=0){e.preventDefault();results.querySelectorAll('.search-select-option')[activeIndex]?.click()}else if(e.key==='Escape'){results.classList.remove('open');input.value=label()}})},
  enhanceDocument(root=document){if(!root?.querySelectorAll)return;const doc=root.ownerDocument||globalThis.document||root;this.styles(doc);this.bindDocument(doc);NumericUX.enhanceDocument(root);root.querySelectorAll('select').forEach(s=>s.dataset.searchSelectReady==='1'?this.sync(s):this.enhance(s))}
 };
+__set_SearchSelect(SearchSelect);
+export { Nav, NumericUX, PageGroup, PageTheme, RecentEntities, SearchSelect, SuiteWorkspaceNav, adminNav };

@@ -1,3 +1,4 @@
+import type { PresentationDomPort } from '../platform/platform-contracts';
 interface AuthEntryPresentationDeps {
     dom: PresentationDomPort;
     initialize(): unknown;
@@ -27,3 +28,5 @@ function enterAuthenticatedPresentation(deps: AuthEntryPresentationDeps): boolea
     deps.after();
     return true;
 }
+export { enterAuthenticatedPresentation };
+export type { AuthEntryPresentationDeps };

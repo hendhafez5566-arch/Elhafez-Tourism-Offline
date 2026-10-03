@@ -1,3 +1,13 @@
+import { EPS, S, approvalTypeLabel, byId, daysBetween, esc, icon, iid, live, money, sl, today } from '../core/runtime';
+import { DB } from '../persistence/browser-store';
+import { BranchScope, Commercial } from '../commercial/product';
+import { Invoices } from '../accounting/invoices';
+import { UI } from './ui';
+import { UmrahCore_Procurement } from '../core/umrah/procurement';
+import { UmrahCore_Ops } from '../core/umrah/operations';
+import { UmrahCore_Insights } from '../core/umrah/insights';
+import { Actions, Pages } from '../core/late-bindings';
+import { __set_WorkCenter } from '../core/late-bindings';
 /* Actionable daily work center. Deliberately excludes HR; it combines finance, CRM and Hajj/Umrah follow-up. */
 const WorkCenter={
  _expanded:false,
@@ -23,3 +33,5 @@ const WorkCenter={
  open(page,id=''){UI.openPage(page,id)},
  page(){const items=this.items(),s=this.summary(),native=document.documentElement.classList.contains('native-android'),shown=native&&!this._expanded?items.slice(0,60):items,groups=[...new Set(shown.map(x=>x.group))],more=native&&shown.length<items.length?`<div class="card table-load-more"><button type="button" class="btn ghost" data-work-action="expand">عرض باقي المهام <span>${items.length-shown.length}</span></button></div>`:'';return Pages.head('مركز العمل اليومي','قائمة واحدة للأعمال التي تحتاج تنفيذًا الآن بدل الدوران بين الأقسام.',`<button class="btn ghost" data-work-action="collapse">${icon('activity','sm')} تحديث</button>`)+`<div class="grid kpi-grid work-center-kpis">${UI.kpi('تحتاج متابعة',s.all,'كل الأعمال المفتوحة',s.all?'warn':'good','activity')}${UI.kpi('حرجة',s.critical,'ابدأ بها أولًا',s.critical?'bad':'good','warning')}${UI.kpi('الحج والعمرة',s.umrah,'تشغيل وحجوزات ومستندات',s.umrah?'info':'good','programs')}${UI.kpi('مالية واعتمادات',s.finance,'تحصيل وسداد وقرارات',s.finance?'purple':'good','invoices')}</div><div class="work-center">${shown.length?groups.map(g=>{const xs=shown.filter(x=>x.group===g);return`<section class="card work-group"><div class="card-head"><h3>${esc(g)}</h3><span class="badge ${xs.some(x=>x.level==='critical')?'red':xs.some(x=>x.level==='warning')?'orange':'blue'}">${xs.length}</span></div><div class="work-list">${xs.map(x=>`<div class="work-item ${esc(x.level)}"><div class="work-copy"><b>${esc(x.title)}</b><p>${esc(x.text||'')}</p></div><button class="btn small ${x.level==='critical'?'danger':x.level==='warning'?'soft':'ghost'}" data-work-action="open" data-work-page="${x.page}" data-work-id="${x.recordId||''}">${esc(x.action||'فتح')}</button></div>`).join('')}</div></section>`}).join(''):'<div class="card empty-state work-empty"><div class="empty-icon">'+icon('check')+'</div><h3>لا توجد أعمال عاجلة الآن</h3><p>كل العناصر التي يراقبها النظام في وضع سليم حاليًا.</p></div>'}</div>${more}`}
 };
+__set_WorkCenter(WorkCenter);
+export { WorkCenter };

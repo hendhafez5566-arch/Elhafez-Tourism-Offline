@@ -1,3 +1,26 @@
+import { EPS, N, S, byId, deep, esc, fmt, formatDate, icon, iid, live, money, sl, toast, today } from '../core/runtime';
+import { PartyBusinessRules } from '../crm/party-business-rules';
+import { DocumentWorkflows } from '../application/document-actions';
+import { Seed } from '../core/seed';
+import { AdvancedAccounting } from '../accounting/advanced';
+import { DB } from '../persistence/browser-store';
+import { Commercial } from '../commercial/product';
+import { Currency, Periods } from '../accounting/currency-periods';
+import { Accounting } from '../accounting/engine';
+import { Invoices, MasterData, Tax } from '../accounting/invoices';
+import { ExpenseCategories } from '../accounting/expense-categories';
+import { Transactions } from '../accounting/transactions';
+import { PurchaseOrderFulfillment } from '../crm/purchase-order-fulfillment';
+import { Attachments } from '../documents/attachments-backup';
+import { Auth, RolePermissions } from '../security/auth';
+import { Print, Reports } from '../reports/printing';
+import { Nav } from './navigation';
+import { UI } from './ui';
+import { Forms } from './forms';
+import { ERPIntegration } from '../integrated/bridge';
+import { CommercialPages } from '../commercial/pages';
+import { composeLegacyActionDeps, composeLegacyPartyNames, composeLegacyPhonePolicy } from '../core/late-bindings';
+import { __set_Actions } from '../core/late-bindings';
 const ActionsDocument: any = document;
 const Actions: any={
  manageWorkspaces(){try{Auth.require('settings','edit');const list=DB.data.settings.workspaces||[],modal=ActionsDocument.getElementById('modal'),form=ActionsDocument.getElementById('modalForm');ActionsDocument.getElementById('modalTitle').textContent='ترتيب أقسام الصفحة الرئيسية';ActionsDocument.getElementById('modalSubtitle').textContent='التقسيم الوظيفي ثابت؛ يمكنك فقط تغيير ترتيب الأقسام أو إظهارها وإخفاءها بدون أي تأثير على البيانات.';ActionsDocument.getElementById('modalIcon').innerHTML=icon('dashboard');ActionsDocument.getElementById('modalSubmitText').textContent='إغلاق';ActionsDocument.getElementById('modalBody').innerHTML=`<div class="page-actions" style="justify-content:flex-start"><button type="button" class="btn ghost" data-action-panel="restoreWorkspaces">استعادة الترتيب الافتراضي</button></div><div class="workspace-manage-list">${list.length?list.map((w,i)=>`<div class="workspace-manage-row" style="--ws:${esc(w.color||'#52647a')}"><div class="workspace-manage-icon">${icon(w.icon||'file')}</div><div><h4>${esc(w.name)}</h4><small>${(w.pages||[]).length} وحدة • ${w.active!==false?'ظاهر':'موقوف'}</small></div><div class="workspace-manage-actions"><button type="button" class="btn small ghost" data-action-panel="moveWorkspace" data-action-id="${w.id}" data-action-dir="-1" ${i===0?'disabled':''}>↑</button><button type="button" class="btn small ghost" data-action-panel="moveWorkspace" data-action-id="${w.id}" data-action-dir="1" ${i===list.length-1?'disabled':''}>↓</button><button type="button" class="btn small ghost" data-action-panel="toggleWorkspace" data-action-id="${w.id}">${w.active!==false?'إخفاء':'إظهار'}</button></div></div>`).join(''):'<div class="empty-state">لا توجد أقسام.</div>'}</div>`;modal.classList.add('show');form.onsubmit=e=>{e.preventDefault();UI.closeModal(true)}}catch(e){toast(e.message,'error')}},
@@ -55,3 +78,5 @@ const Actions: any={
  reconcileImportedBank(treasuryId){try{DB.atomic('bank-auto-reconcile',()=>{const r=AdvancedAccounting.reconcileBankLines(treasuryId);toast(`تمت مطابقة ${r.matched} حركة، والمتبقي ${r.unmatched}`)});UI.renderCurrent()}catch(e){toast(e.message,'error')}},
 
 };
+__set_Actions(Actions);
+export { Actions, ActionsDocument };

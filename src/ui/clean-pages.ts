@@ -1,3 +1,17 @@
+import { EPS, N, byId, currencyFlag, esc, expenseModeLabel, fmt, formatDate, icon, live, money, paymentMethodLabel, today } from '../core/runtime';
+import { ActionPolicy } from '../core/action-policy';
+import { DB } from '../persistence/browser-store';
+import { Commercial } from '../commercial/product';
+import { Currency } from '../accounting/currency-periods';
+import { Accounting } from '../accounting/engine';
+import { Invoices } from '../accounting/invoices';
+import { PurchaseOrderFulfillment } from '../crm/purchase-order-fulfillment';
+import { CRM } from '../crm/crm';
+import { Auth } from '../security/auth';
+import { Insights } from '../finance/insights';
+import { UI } from './ui';
+import { Pages } from '../core/late-bindings';
+import { __set_CleanPages } from '../core/late-bindings';
 const CleanPages={
  invoiceKind:'customer',
  setInvoiceKind(kind){this.invoiceKind=kind==='supplier'?'supplier':'customer';(UI.listFilters as any).invoices='all';UI.renderCurrent()},
@@ -59,3 +73,5 @@ const CleanPages={
  reports(){const groups:any[]=[['القوائم المالية',[['income','قائمة الدخل','الإيرادات والمصروفات وصافي النتيجة'],['balance','الميزانية','الأصول والخصوم وحقوق الملكية'],['cashflow','التدفقات النقدية','تشغيلي / استثماري / تمويلي'],['gl','الأستاذ العام','حركة الحسابات'],['journals','القيود','سجل القيود']]],['العملاء والموردون',[['partyTransactions','تفاصيل التعاملات','كشف الحساب مع تصفية تلقائية حسب تعاملات الطرف الفعلية'],['arAging','أعمار العملاء','المستحقات حسب العمر'],['apAging','أعمار الموردين','الالتزامات حسب العمر'],['salesCustomer','المبيعات حسب العميل','تجميع المبيعات'],['salesAgent','المبيعات حسب المندوب','مبيعات المندوبين'],['supplierCosts','تكاليف الموردين','تكاليف حسب المورد']]],['الخزينة والضرائب',[['collections','التحصيلات','سندات القبض'],['payments','المدفوعات','سندات الصرف'],['treasuryDaily','الحركة اليومية للخزن','وارد وصادر'],['tax','ملخص الضرائب','المخرجات والمدخلات'],['taxDetail','تفاصيل الضرائب','تفاصيل الفواتير']]],['الحج والعمرة',[['travelers','المسافرون','الجوازات والتأشيرات'],['bookings','الحجوزات','حالات الحجوزات'],['programOccupancy','إشغال البرامج','السعة والمتاح'],['programProfitability','ربحية البرامج','الربحية من الأستاذ العام'],['passportExpiry','انتهاء الجوازات','متابعة الصلاحية'],['visaStatus','حالات التأشيرات','حالة كل مسافر']]],['الإدارة والتحليل',[['serviceProfit','ربحية الخدمات','بيع وتكلفة وربح'],['commissions','العمولات','عمولات المندوبين'],['expenses','المصروفات','تحليل المصروفات'],['fx','فروق العملة','محققة وغير محققة'],['exposure','التعرض للعملات','المراكز المفتوحة']]]],allowed=([k])=>Commercial.canViewCosts()||!['serviceProfit','supplierCosts','programProfitability'].includes(k);return Pages.head('التقارير','التقارير مقسمة حسب الغرض بدل شبكة واحدة مزدحمة.')+`<div class="report-search-box"><input type="search" placeholder="ابحث عن تقرير..." data-filter-report-cards="1"></div><div id="reportGrid" class="clean-report-groups">${groups.map(([name,cards])=>`<section class="report-group"><h3>${name}</h3><div class="report-grid">${cards.filter(allowed).map(([k,n,d])=>`<div class="report-card" data-search="${esc((n+' '+d).toLowerCase())}" data-clean-action="reportRange" data-clean-kind="${k}"><div class="report-icon">${icon('reports')}</div><b>${n}</b><small>${d}</small></div>`).join('')}</div></section>`).join('')}</div>`}
 
 };
+__set_CleanPages(CleanPages);
+export { CleanPages };

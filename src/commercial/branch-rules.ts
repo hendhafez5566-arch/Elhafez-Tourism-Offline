@@ -1,3 +1,4 @@
+import type { BusinessActor, BusinessBranch } from '../application/business-contracts';
 const BranchRules = {
     assertDeactivation(b: BusinessBranch, id: string, active: boolean, branches: BusinessBranch[], users: BusinessActor[]) {
         if (!active && b.active !== false) {
@@ -13,3 +14,4 @@ const BranchRules = {
         }
     }
 };
+export { BranchRules };

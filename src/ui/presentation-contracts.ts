@@ -1,3 +1,5 @@
+import type { PresentationDomPort, PresentationScheduler } from '../platform/platform-contracts';
+import type { NettingFields } from '../application/business-contracts';
 interface PartyPresentationBase {
     dom: PresentationDomPort;
     close(): unknown;
@@ -57,3 +59,4 @@ interface UnifiedPartyPresentationDeps extends PartyPresentationBase {
         no: string;
     } | undefined;
 }
+export type { Party360PresentationDeps, UnifiedPartyPresentationDeps };

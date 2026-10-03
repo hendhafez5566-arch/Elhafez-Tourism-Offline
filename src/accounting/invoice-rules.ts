@@ -1,3 +1,6 @@
+import { EPS } from '../core/runtime';
+import { BusinessValues } from '../core/business-values';
+import type { BusinessInvoice, BusinessJournalLine, BusinessLine, InvoicePostingRuleDeps, InvoiceRuleDeps } from '../application/business-contracts';
 const InvoiceRules = {
     cancelable(inv: BusinessInvoice | undefined, reason: string, allocated: () => number, hasAdjustments: () => boolean) {
         if (!inv || !BusinessValues.live(inv))
@@ -63,3 +66,4 @@ const InvoiceRules = {
         return lines;
     }
 };
+export { InvoiceRules };

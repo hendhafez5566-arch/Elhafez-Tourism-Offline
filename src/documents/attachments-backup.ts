@@ -1,3 +1,11 @@
+import { APP, FileNames, N, S, byId, deep, iid, now, toast, today } from '../core/runtime';
+import { Numbering } from '../core/numbering';
+import { SequenceMigration } from '../core/seed';
+import { ServerStore } from '../persistence/server-store';
+import { DB, DataStore } from '../persistence/browser-store';
+import { Currency } from '../accounting/currency-periods';
+import { Auth, Party360 } from '../core/late-bindings';
+import { __set_AttachmentStore, __set_Attachments, __set_Backup } from '../core/late-bindings';
 const AttachmentStore={db:null,legacyDb:null,
  async open(name=APP.filesDb){if(name===APP.filesDb&&this.db)return this.db;if(name===APP.legacyFilesDb&&this.legacyDb)return this.legacyDb;const db=await new Promise((res,rej)=>{const r=indexedDB.open(name,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('files'))r.result.createObjectStore('files')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});if(name===APP.filesDb)this.db=db;else if(name===APP.legacyFilesDb)this.legacyDb=db;return db},
  async localPut(id,file){try{const db=await this.open();return await new Promise((res,rej)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').put(file,id);tx.oncomplete=()=>res(true);tx.onerror=()=>rej(tx.error)})}catch(_){return false}},
@@ -8,6 +16,7 @@ const AttachmentStore={db:null,legacyDb:null,
  async remove(id){if(ServerStore.available===true&&ServerStore.authenticated){const r=await fetch(`/api/files/${encodeURIComponent(id)}`,{method:'DELETE',headers:ServerStore.headers(),credentials:'include'});if(!r.ok&&r.status!==404)throw new Error('تعذر حذف المرفق من الخادم')}await this.localRemove(id)},
  async clear(){try{const db=await this.open();return await new Promise<void>((res,rej)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').clear();tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}catch(_){}}
 };
+__set_AttachmentStore(AttachmentStore);
 const Attachments={
  _countSource:null,_countIndex:null,
  _counts(){const src=DB.data.attachments||[];if(this._countSource===src&&this._countIndex)return this._countIndex;const m=new Map();for(const x of src){const k=`${x.entityType}|${x.entityId}`;m.set(k,(m.get(k)||0)+1)}this._countSource=src;this._countIndex=m;return m},
@@ -20,6 +29,7 @@ const Attachments={
  async download(id){Auth.require('documents','view');const{a,file}=await this.file(id),u=URL.createObjectURL(file),e=document.createElement('a');e.href=u;e.download=a.fileName;e.click();setTimeout(()=>URL.revokeObjectURL(u),1000)},
  async remove(id){Auth.require('documents','delete');const a=byId(DB.data.attachments,id);if(!a)return;await AttachmentStore.remove(id);DB.data.attachments=DB.data.attachments.filter(x=>x.id!==id);this.invalidateCounts();DB.log('delete','attachment',id,a.fileName);setTimeout(()=>{try{if(typeof Party360!=='undefined')Party360.refreshFilesIfVisible(a.entityType,a.entityId)}catch(_){}},40)}
 };
+__set_Attachments(Attachments);
 const Backup={
  async blobToBase64(blob){const buf=new Uint8Array(await blob.arrayBuffer());let bin='';const step=0x8000;for(let i=0;i<buf.length;i+=step)bin+=String.fromCharCode(...buf.subarray(i,i+step));return btoa(bin)},
  base64ToBlob(b64,mime='application/octet-stream'){const bin=atob(b64),buf=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)buf[i]=bin.charCodeAt(i);return new Blob([buf],{type:mime})},
@@ -46,4 +56,6 @@ const Backup={
  async restorePackage(pkg){if(pkg.kind==='archive')throw new Error('ملف الأرشيف للعرض فقط ولا يمكن استعادته كبيانات تشغيل');await this.verifyPackage(pkg);const d=deep(pkg.data),blobMap=new Map<string,any>((pkg.blobs||[]).map((x:any)=>[x.sha256,x] as [string,any]));d.meta={...(d.meta||{}),schema:APP.schema,version:APP.version,setupComplete:d.meta?.setupComplete!==false,restoredAt:now(),restoredFrom:'backup'};if(ServerStore.available===true||ServerStore.remoteRequired?.()){if(!(await ServerStore.probe(true))||!ServerStore.authenticated)throw new Error('يجب تسجيل الدخول كمدير لاستعادة النسخة');for(const f of pkg.attachments||[]){const b=blobMap.get(f.sha256),blob=this.base64ToBlob(b.data,b.mime||f.mime),file=new File([blob],f.name||f.id,{type:f.mime||b.mime||'application/octet-stream'});await AttachmentStore.put(f.id,file)}const r=await ServerStore.restoreState(d,(pkg.attachments||[]).map(f=>f.id));if(!r?.ok)throw new Error('تعذر استعادة النسخة على الخادم');await AttachmentStore.clear();await DataStore.localPut(d);try{sessionStorage.removeItem(APP.session)}catch(_){}toast('تمت استعادة النسخة بنجاح. سيتم إعادة تسجيل الدخول.','ok');setTimeout(()=>location.reload(),700);return r}DB.data=d;DB.ensure();SequenceMigration.run(DB.data);await AttachmentStore.clear();for(const f of pkg.attachments||[]){const b=blobMap.get(f.sha256);await AttachmentStore.localPut(f.id,new File([this.base64ToBlob(b.data,b.mime||f.mime)],f.name||f.id,{type:f.mime||b.mime||'application/octet-stream'}))}await DataStore.localPut(DB.data);toast('تمت استعادة النسخة على الجهاز','ok');setTimeout(()=>location.reload(),500);return{ok:true}},
  async import(file){const pkg=await this.read(file);return this.restorePackage(pkg)}
 };
+__set_Backup(Backup);
 const AutoOps={async snapshot(){return false},async refreshLiveFx(){if(!navigator.onLine)return;for(const c of Currency.active().filter(x=>x.code!==DB.data.settings.baseCurrency&&x.rateMode==='live')){const last=DB.data.fxRates.filter(r=>r.code===c.code).sort((a,b)=>b.date.localeCompare(a.date))[0];if(last?.date===today())continue;try{await Currency.fetchLive(c.code)}catch(e){DB.log('automation-warning','currency',c.code,'تعذر تحديث السعر المباشر: '+S(e.message||e))}}DB.save(false)},run(){this.refreshLiveFx()}};
+export { AttachmentStore, Attachments, AutoOps, Backup };

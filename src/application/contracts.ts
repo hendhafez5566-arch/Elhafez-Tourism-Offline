@@ -108,3 +108,4 @@ interface CommercialWorkflowDeps {
 
 interface ServerAuditEntry {created_at:string;user_id?:string;action:string;ip_address?:string;user_agent?:string;changes?:unknown;}
 interface ServerAuditPresentationEntry extends ServerAuditEntry {userName:string;}
+export type { ActionAuthorizationPort, ActionPersistencePort, ActionTransactionPort, ApplicationFields, CommercialBranch, CommercialWorkflowDeps, DocumentWorkflowDeps, InvoiceDraftFields, ServerAuditPresentationEntry, WorkflowInvoice };

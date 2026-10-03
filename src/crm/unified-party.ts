@@ -1,3 +1,12 @@
+import { EPS, Money, N, S, byId, esc, formatDate, icon, iid, live, money, now, today } from '../core/runtime';
+import { PartyNettingRules } from './party-business-rules';
+import { NettingWorkflows } from '../application/netting-workflows';
+import { DB } from '../persistence/browser-store';
+import { Accounting } from '../accounting/engine';
+import { Invoices } from '../accounting/invoices';
+import { Transactions } from '../accounting/transactions';
+import { Auth } from '../security/auth';
+import { Actions, Party360, Print, UI, composeLegacyNettingDeps, composeLegacyPhonePolicy, composeUnifiedPartyPresentation } from '../core/late-bindings';
 /* Unified commercial party identity. Role ledgers stay separate (AR/AP/agent) and
    are only offset through an explicit, auditable netting document. */
 const UnifiedParty={
@@ -50,3 +59,4 @@ const UnifiedParty={
  openStatementOptions(type,id){const g=this.groupFor(type,id);if(!g)return Actions.statement(type,id);const modal=document.getElementById('modal'),form=document.getElementById('modalForm') as HTMLFormElement;document.getElementById('modalTitle').textContent='كشف الحساب الشامل للطرف';document.getElementById('modalSubtitle').textContent='يجمع العميل والمورد والمندوب في بيان واحد مع بقاء كل ذمة منفصلة محاسبيًا.';document.getElementById('modalIcon').innerHTML=icon('statement');document.getElementById('modalSubmitText').textContent='عرض الكشف';document.getElementById('modalBody').innerHTML=`<div class="form-grid"><div class="field"><label>من تاريخ</label><input name="from" type="date"></div><div class="field"><label>إلى تاريخ</label><input name="to" type="date" value="${today()}"></div><div class="field full"><label>مستوى البيان</label><select name="level"><option value="short">مختصر</option><option value="full">تفصيلي</option></select></div></div>`;modal.classList.add('show');form.onsubmit=e=>{e.preventDefault();const fd=new FormData(form);UI.closeModal(true);Print.showUnifiedStatement(g.id,S(fd.get('from')),S(fd.get('to')),S(fd.get('level')||'short'))}},
  async reversePrompt(type,id,nettingId){return composeUnifiedPartyPresentation(this).reversePrompt(type,id,nettingId)}
 };
+export { UnifiedParty };

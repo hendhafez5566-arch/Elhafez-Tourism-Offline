@@ -7,9 +7,14 @@ import ts from 'typescript';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {compiledFiles} from './lib/build-model.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 process.chdir(root);
 const START='b6569036062b5b2c775631face10c06dcdc9a2e5';
+// Differential checks need the pre-Part-2 git history (the `original()` oracle). Without it they are ENVIRONMENT BLOCKED (exit 3) - never PASS.
+{const have=(sha)=>{try{execFileSync('git',['cat-file','-e',`${sha}^{commit}`],{stdio:'ignore'});return true;}catch{return false;}};
+ if(!have(START)){console.error('ENVIRONMENT BLOCKED: original git history (Phase 2 start) is not available in this checkout; run with a full clone (fetch-depth: 0).');process.exit(3);}}
+
 const sourceCache=new Map(),originalCache=new Map(),compileCache=new Map();
 const read=p=>{if(!sourceCache.has(p))sourceCache.set(p,fs.readFileSync(p,'utf8'));return sourceCache.get(p);};
 const original=p=>{if(!originalCache.has(p))originalCache.set(p,execFileSync('git',['show',`${START}:${p}`],{encoding:'utf8',maxBuffer:8*1024*1024}));return originalCache.get(p);};
@@ -30,7 +35,7 @@ function setup(current){
  const sandbox={console,Date,Set,Map,DB,EPS:0.000001,S:x=>String(x??''),N:x=>Number(x)||0,deep:plain,byId:(arr,key)=>arr.find(x=>x.id===key),live:x=>x&&x.status!=='void'&&x.status!=='cancelled'&&x.status!=='rejected'&&x.deleted!==true,today:()=> '2026-01-31',now:()=> '2026-01-31T12:00:00Z',iid:()=> 'id-'+(++id),Numbering:{next:(kind,date)=>{trace.push(['number',kind,date??null]);return kind+'-'+(sequence[kind]=(sequence[kind]||0)+1);}},formatDate:x=>'date:'+x,fmt:x=>String(x),money:(n,c)=>`${n} ${c}`,daysBetween:(a,b)=>Math.floor((new Date(b)-new Date(a))/86400000),dateAddMonthsClamped:(d,m)=>{const dt=new Date(d+'T00:00:00Z'),day=dt.getUTCDate();dt.setUTCDate(1);dt.setUTCMonth(dt.getUTCMonth()+m);const last=new Date(Date.UTC(dt.getUTCFullYear(),dt.getUTCMonth()+1,0)).getUTCDate();dt.setUTCDate(Math.min(day,last));return dt.toISOString().slice(0,10);},Money:{round:(v,c)=>Math.round((Number(v)+Number.EPSILON)*100)/100,decimals:()=>2,epsilon:()=>.005,format:(value)=>String(value)},Currency:{rate:(c,d)=>rate(c,d),toBase:(a,c,d)=>Number(a)*rate(c,d),convert:(a,f,t,d)=>Number(a)*rate(f,d)/rate(t,d),active:()=>data.currencies},Periods:{assertOpen:d=>{trace.push(['period',d]);}},BranchScope:{currentId:()=> 'B',storageKey:()=> 'branch'},Auth:{user,require:(...args)=>{trace.push(['require',...args]);if(denied)throw Error('denied');}},toast:(...args)=>trace.push(['toast',...args]),UI:{renderCurrent:()=>trace.push(['render']),openPage:(...args)=>trace.push(['openPage',...args])},localStorage:{setItem:(...args)=>trace.push(['preference',...args])},License:{maxBranches:()=>5},Commercial:{assertDiscount:()=>{}},UmrahCore_ERP:{onReceipt:r=>trace.push(['onReceipt',r.id])},TourismServiceInventory:{release:(...args)=>trace.push(['inventory.release',...args]),prepare:()=>null,bind:()=>{}},performance:{now:()=>0},ServerStore:{available:false}};
  const ctx=vm.createContext(sandbox);
  const run=s=>vm.runInContext(compile(s),ctx);
- if(current){const files=JSON.parse(read('tsconfig.json')).files;for(const f of files.filter(f=>f.startsWith('src/application/')||/\/(?:advanced-rules|lead-rules|manual-journal-rules|expense-rules|journal-rules|invoice-rules|voucher-rules|commercial-lifecycle-rules|purchase-fulfillment-rules|administration-rules|branch-rules|tourism-rules|business-rules|business-values|party-business-rules|query-rules)\.ts$/.test(f)))run(read(f));run(declarations(read('src/bootstrap.ts')));}
+ if(current){const files=compiledFiles();for(const f of files.filter(f=>f.startsWith('src/application/')||/\/(?:advanced-rules|lead-rules|manual-journal-rules|expense-rules|journal-rules|invoice-rules|voucher-rules|commercial-lifecycle-rules|purchase-fulfillment-rules|administration-rules|branch-rules|tourism-rules|business-rules|business-values|party-business-rules|query-rules)\.ts$/.test(f)))run(read(f));run(declarations(read('src/bootstrap.ts')));}
  run(original('src/core/action-policy.ts'));
  for(const f of ['src/accounting/advanced.ts','src/accounting/engine.ts','src/accounting/invoices.ts','src/accounting/transactions.ts','src/crm/purchase-order-fulfillment.ts','src/crm/crm.ts','src/crm/unified-party.ts','src/finance/insights.ts'])run(current?read(f):original(f));
  const branchMethods=['createBranch','updateBranch','canViewCosts','maxDiscountPct'].map(name=>method(current?read('src/commercial/product.ts'):original('src/commercial/product.ts'),'Commercial',name));run('const BranchTest={'+branchMethods.join(',')+'};');

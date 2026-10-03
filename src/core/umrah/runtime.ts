@@ -1,3 +1,5 @@
+import { StatusCatalog } from '../runtime';
+import { __set_UmrahCore_vehicleCaps } from '../late-bindings';
 // Integrated host mode
 const UmrahCore_META = {
     id: 'hajj-umrah-core', name: 'إدارة الحج والعمرة', version: '32.4.45-core-clean', mode: 'core',
@@ -12,6 +14,7 @@ const UmrahCore_dateAdd = (d, days) => { if (!d)
 const UmrahCore_daysBetween = (a, b) => a && b ? Math.round((new Date(b + 'T00:00:00Z').getTime() - new Date(a + 'T00:00:00Z').getTime()) / 86400000) : 0;
 const UmrahCore_roomCap = { single: 1, double: 2, triple: 3, quad: 4, quint: 5 }, UmrahCore_roomLabel = t => ({ single: 'فردي', double: 'ثنائي', triple: 'ثلاثي', quad: 'رباعي', quint: 'خماسي' })[t] || t;
 const UmrahCore_vehicleCaps = { sedan: 4, staria_h1: 7, hiace: 11, coaster: 25, bus: 50 }, UmrahCore_vehicleLabel = t => ({ sedan: 'سيدان', staria_h1: 'ستاريا / H1', hiace: 'هايس', coaster: 'كوستر', bus: 'أوتوبيس / باص' })[t] || t, UmrahCore_programDisplay = p => p ? `${p.name}${p.groupNo ? ' — ' + p.groupNo : ''}${p.groupDescription ? ' — ' + p.groupDescription : ''}` : '-';
+__set_UmrahCore_vehicleCaps(UmrahCore_vehicleCaps);
 const UmrahCore_segLabel = t => ({ hotel: 'فندق', flight: 'طيران', transport: 'نقل', visit: 'زيارة', meal: 'وجبات', visa: 'تأشيرات', meeting: 'تجمع', camp: 'مخيم / مشاعر', permit: 'تصاريح / نسك', guide: 'مشرف / مرشد', rawda: 'الروضة', insurance: 'تأمين', custom: 'خدمة أخرى' })[t] || t;
 const UmrahCore_programTypeLabel = t => t === 'hajj' ? 'حج' : 'عمرة', UmrahCore_travelerTitle = p => p?.programType === 'hajj' ? 'الحاج' : 'المعتمر', UmrahCore_travelersTitle = p => p?.programType === 'hajj' ? 'الحجاج' : 'المعتمرون';
 const UmrahCore_hajjPermitStatusLabel = s => ({ not_started: 'لم يبدأ', documents_received: 'تم استلام المستندات', submitted: 'تم التقديم', processing: 'تحت الإجراء', issued: 'صادر', rejected: 'مرفوض' })[s] || s || 'لم يبدأ';
@@ -25,3 +28,4 @@ const UmrahCore_Seed = {
     uiState: { lastPage: 'dashboard', lastAction: '', bookingWizard: null, programWizard: null },
     sequences: { season: 0, program: 0, booking: 0, visa: 0, bus: 0, incident: 0 }
 };
+export { UmrahCore_META, UmrahCore_N, UmrahCore_S, UmrahCore_Seed, UmrahCore_bookingLabel, UmrahCore_dateAdd, UmrahCore_daysBetween, UmrahCore_deep, UmrahCore_esc, UmrahCore_fmt, UmrahCore_hajjPermitStatusLabel, UmrahCore_iid, UmrahCore_localDateTime, UmrahCore_money, UmrahCore_monthsAdd, UmrahCore_now, UmrahCore_programDisplay, UmrahCore_programLabel, UmrahCore_programTypeLabel, UmrahCore_roomCap, UmrahCore_roomLabel, UmrahCore_segLabel, UmrahCore_today, UmrahCore_tone, UmrahCore_travelerTitle, UmrahCore_travelersTitle, UmrahCore_vehicleCaps, UmrahCore_vehicleLabel };

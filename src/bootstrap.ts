@@ -1,3 +1,42 @@
+import { Money, S, byId, dateAddMonthsClamped, daysBetween, deep, esc, fmt, formatDate, icon, iid, live, money, now, toast, today } from './core/runtime';
+import { BrowserPlatform } from './platform/browser-platform';
+import { AdministrationRules } from './commercial/administration-rules';
+import { PartyBusinessRules } from './crm/party-business-rules';
+import { ActionPolicy } from './core/action-policy';
+import { Numbering } from './core/numbering';
+import { AdvancedAccounting } from './accounting/advanced';
+import { ServerStore } from './persistence/server-store';
+import { DB } from './persistence/browser-store';
+import { BranchScope, Commercial, CommercialSupport } from './commercial/product';
+import { Currency, Periods } from './accounting/currency-periods';
+import { Accounting, ManualJournal } from './accounting/engine';
+import { Invoices, MasterData, Tax } from './accounting/invoices';
+import { Approvals, Transactions } from './accounting/transactions';
+import { PurchaseOrderFulfillment } from './crm/purchase-order-fulfillment';
+import { CRM } from './crm/crm';
+import { Auth, License } from './security/auth';
+import { createParty360Presentation, createUnifiedPartyPresentation } from './ui/party-presentation';
+import { Party360 } from './crm/party360';
+import { Insights } from './finance/insights';
+import { UI } from './ui/ui';
+import { Forms } from './ui/forms';
+import { UmrahCore_now, UmrahCore_programLabel, UmrahCore_today } from './core/umrah/runtime';
+import { UmrahCore_ERP } from './core/umrah/integration';
+import { UmrahCore_Bridge, UmrahCore_DB } from './core/umrah/data';
+import { UmrahCore_ContractCenter } from './core/umrah/contracts';
+import { UmrahCore_Procurement } from './core/umrah/procurement';
+import { VendorOwner } from './commercial/vendor-owner';
+import { Actions } from './ui/actions';
+import { CommercialUX } from './ui/commercial-ux';
+import type { DocumentPrintPresentationDeps, UmrahPresentationCommands } from './platform/platform-contracts';
+import type { AuthEntryPresentationDeps } from './ui/auth-entry-presentation';
+import type { ContactPresentationDeps } from './ui/contact-presentation';
+import type { CommercialWorkflowDeps, DocumentWorkflowDeps } from './application/contracts';
+import type { ApprovalWorkflowDeps, BranchWorkflowDeps, BusinessClock, BusinessJournalLine, BusinessMoneyPort, BusinessTreasury, CrmWorkflowDeps, ExpenseRecord, ExpenseWorkflowDeps, FinancialQueryDeps, IntegrityReportResult, IntegrityWorkflowDeps, InvoiceRuleDeps, InvoiceWorkflowDeps, JournalRuleDeps, ManualJournalWorkflowDeps, NettingRecord, NettingWorkflowDeps, TourismService, TourismWorkflowDeps, TransferWorkflowDeps, UmrahLifecycleBooking, UmrahLifecycleDeps, UmrahLifecycleProgram, VoucherWorkflowDeps } from './application/business-contracts';
+import type { PartyNameRepository } from './crm/party-business-rules';
+import type { UnifiedParty } from './crm/unified-party';
+import { __set_composeAuthEntryPresentation, __set_composeContactPresentation, __set_composeLegacyActionDeps, __set_composeLegacyApprovalDeps, __set_composeLegacyBranchAccess, __set_composeLegacyBranchDeps, __set_composeLegacyCommercialDeps, __set_composeLegacyCommercialPermissions, __set_composeLegacyCrmDeps, __set_composeLegacyExpenseDeps, __set_composeLegacyFinancialQueries, __set_composeLegacyIntegrityDeps, __set_composeLegacyInvoiceDeps, __set_composeLegacyInvoiceRules, __set_composeLegacyJournalRules, __set_composeLegacyManualJournalDeps, __set_composeLegacyNettingDeps, __set_composeLegacyPartyNames, __set_composeLegacyPhonePolicy, __set_composeLegacyTourismDeps, __set_composeLegacyTransferDeps, __set_composeLegacyUmrahLifecycleDeps, __set_composeLegacyVoucherDeps, __set_composeParty360Presentation, __set_composePrintPresentation, __set_composeUmrahPresentationCommands, __set_composeUnifiedPartyPresentation } from './core/late-bindings';
+__set_composeAuthEntryPresentation(composeAuthEntryPresentation); __set_composeContactPresentation(composeContactPresentation); __set_composeLegacyActionDeps(composeLegacyActionDeps); __set_composeLegacyApprovalDeps(composeLegacyApprovalDeps); __set_composeLegacyBranchAccess(composeLegacyBranchAccess); __set_composeLegacyBranchDeps(composeLegacyBranchDeps); __set_composeLegacyCommercialDeps(composeLegacyCommercialDeps); __set_composeLegacyCommercialPermissions(composeLegacyCommercialPermissions); __set_composeLegacyCrmDeps(composeLegacyCrmDeps); __set_composeLegacyExpenseDeps(composeLegacyExpenseDeps); __set_composeLegacyFinancialQueries(composeLegacyFinancialQueries); __set_composeLegacyIntegrityDeps(composeLegacyIntegrityDeps); __set_composeLegacyInvoiceDeps(composeLegacyInvoiceDeps); __set_composeLegacyInvoiceRules(composeLegacyInvoiceRules); __set_composeLegacyJournalRules(composeLegacyJournalRules); __set_composeLegacyManualJournalDeps(composeLegacyManualJournalDeps); __set_composeLegacyNettingDeps(composeLegacyNettingDeps); __set_composeLegacyPartyNames(composeLegacyPartyNames); __set_composeLegacyPhonePolicy(composeLegacyPhonePolicy); __set_composeLegacyTourismDeps(composeLegacyTourismDeps); __set_composeLegacyTransferDeps(composeLegacyTransferDeps); __set_composeLegacyUmrahLifecycleDeps(composeLegacyUmrahLifecycleDeps); __set_composeLegacyVoucherDeps(composeLegacyVoucherDeps); __set_composeParty360Presentation(composeParty360Presentation); __set_composePrintPresentation(composePrintPresentation); __set_composeUmrahPresentationCommands(composeUmrahPresentationCommands); __set_composeUnifiedPartyPresentation(composeUnifiedPartyPresentation);
 // Phase 3: legacy infrastructure composition. Live getters survive atomic rollback.
 function composeBusinessClock(): BusinessClock {
     return {
@@ -475,11 +514,6 @@ function composeLegacyUmrahLifecycleDeps(operations: UmrahLifecycleDeps['operati
         }, programLabel: UmrahCore_programLabel, audit: (action, type, id, detail) => UmrahCore_Bridge.audit(action, type, id, detail)
     };
 }
-function composeLegacyPurchaseFulfillment() {
-    return createPurchaseFulfillmentRules({
-        id: iid, now
-    }, (action, type, id, detail) => DB.log(action, type, id, detail));
-}
 function composeLegacyNettingDeps(queries: NettingWorkflowDeps['queries'] & {
     ensureData(): {
         partyNettings: NettingRecord[];
@@ -562,20 +596,6 @@ function composeAuthEntryPresentation(): AuthEntryPresentationDeps {
 function composeContactPresentation(): ContactPresentationDeps {
     return { dom: BrowserPlatform.dom, bridge: BrowserPlatform.contacts, notification: { notify: (message, kind) => toast(message, kind) } };
 }
-
-function composeStorePresentation(): StorePresentationEffects {
-    return {
-        canRender: () => typeof UI !== 'undefined' && !!UI?.renderCurrent,
-        render: () => UI.renderCurrent(), notify: (message, kind) => toast(message, kind),
-        schedule: work => BrowserPlatform.renderFrame(work)
-    };
-}
-function composeSessionPresentation(): SessionPresentationEffects {
-    return {
-        clear: key => BrowserPlatform.clearSession(key),
-        expired: message => { if (typeof Auth !== 'undefined') Auth.expirePresentation(); if (typeof toast === 'function') toast(message, 'error'); }
-    };
-}
 function composeParty360Presentation(queries: Pick<typeof Party360, 'base' | 'shell' | 'loadTab'>) {
     return createParty360Presentation({
         dom: BrowserPlatform.dom, icon: name => icon(name), close: () => UI.closeModal(true),
@@ -607,3 +627,4 @@ function composePrintPresentation(): DocumentPrintPresentationDeps {
 function composeUmrahPresentationCommands(): UmrahPresentationCommands {
     return { openPage: page => UI.openPage(page), openForm: (type, context) => Forms.open(type, context), openPartyActions: (type, id) => Actions.openPartyActions(type, id) };
 }
+export { composeAuthEntryPresentation, composeBusinessClock, composeBusinessMoney, composeContactPresentation, composeLegacyActionDeps, composeLegacyApprovalDeps, composeLegacyBranchAccess, composeLegacyBranchDeps, composeLegacyCommercialDeps, composeLegacyCommercialPermissions, composeLegacyCrmDeps, composeLegacyExpenseDeps, composeLegacyFinancialQueries, composeLegacyIntegrityDeps, composeLegacyInvoiceDeps, composeLegacyInvoiceRules, composeLegacyJournalRules, composeLegacyManualJournalDeps, composeLegacyNettingDeps, composeLegacyPartyNames, composeLegacyPhonePolicy, composeLegacyTourismDeps, composeLegacyTransferDeps, composeLegacyUmrahLifecycleDeps, composeLegacyVoucherDeps, composeParty360Presentation, composePrintPresentation, composeUmrahPresentationCommands, composeUnifiedPartyPresentation };

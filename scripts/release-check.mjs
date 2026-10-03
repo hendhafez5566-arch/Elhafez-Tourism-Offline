@@ -1,118 +1,138 @@
+// `npm run release:check` — the final aggregate gate for the Part 2 ES-module baseline.
+// Statuses: PASS | FAIL | ENVIRONMENT BLOCKED | NOT EXECUTED. A blocked or unexecuted step is NEVER reported as PASS.
+// Exit code: 0 = everything PASS (browser may be NOT EXECUTED without --with-browser), 1 = at least one FAIL, 2 = no FAIL but something is BLOCKED.
 import fs from 'node:fs';
 import path from 'node:path';
-import {spawnSync} from 'node:child_process';
-import {fileURLToPath} from 'node:url';
-import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import ts from 'typescript';
-import {discover} from './refactor-check.mjs';
-import {scan, counts} from './architecture-check.mjs';
+import { discover, toolchainProblems } from './refactor-check.mjs';
+import { scan, counts } from './architecture-check.mjs';
+import { root, ENTRY, compiledFiles, moduleGraph, orphanModules } from './lib/build-model.mjs';
 
-// Final source acceptance is separate from live browser/device acceptance.
-const root=fileURLToPath(new URL('../',import.meta.url));
-const start='0b10995eaf4c1bddeb30c0fcd1ad7c000a6b5b01';
-const phaseOne='4b188965931d396f40b0b545b486e97da12462b8';
-const expected={ARCH001:426,ARCH002:118,ARCH003:266,ARCH004:39,ARCH005:10,ARCH006:132,TOTAL:991};
-let checks=0;
-function check(condition,label){assert.ok(condition,label);checks++;}
-function run(command,args){
- const r=spawnSync(command,args,{cwd:root,encoding:'utf8',timeout:300000,maxBuffer:32*1024*1024});
- assert.equal(r.error,undefined,`${command} ${args.join(' ')}: ${r.error?.message}`);
- return r;
-}
-function git(...args){const r=run('git',args);assert.equal(r.status,0,r.stderr);return r.stdout;}
-function read(file){return fs.readFileSync(path.join(root,file),'utf8');}
-function original(file,ref=start){return git('show',`${ref}:${file}`);}
-function same(file,ref=start){check(read(file)===original(file,ref),`Immutable source/gate: ${file}`);}
-const tracked=git('ls-files','-z').split('\0').filter(Boolean);
-const baseline=JSON.parse(read('docs/refactor/refactor-baseline.json'));
-check(JSON.stringify(discover())===JSON.stringify(baseline.tests.map(t=>t.file)),'Pinned Node inventory');
-check(baseline.tests.length===60,'Exactly 60 pinned Node tests');
-check(JSON.stringify(discover(root,'-browser-smoke.py'))===JSON.stringify(baseline.browser.map(t=>t.file)),'Pinned browser inventory');
-check(baseline.browser.length===6,'Exactly six original browser tests');
-check(read('.gitignore')==='node_modules/\n.env\n.env.*\n!.env.example\n*SECRETS*.txt\n*.log\n.DS_Store\n','Exact .gitignore');
-check(!tracked.some(f=>/(^|\/)node_modules\//.test(f)||/(^|\/)\.env(?:\.|$)/.test(f)&&!f.endsWith('.env.example')||/SECRETS.*\.txt$/i.test(f)),'No tracked dependencies/credential files');
-for(const file of ['scripts/application-workflow-check.mjs','scripts/business-workflow-check.mjs','scripts/presentation-platform-check.mjs','scripts/architecture-check.mjs','scripts/refactor-check.mjs','docs/refactor/architecture-baseline.json','docs/refactor/refactor-baseline.json','package.json','package-lock.json','.gitignore','tsconfig.json','server/tsconfig.json'])same(file);
-for(const test of [...baseline.tests,...baseline.browser])same(test.file);
-// This phase deliberately ships audit/tooling/documentation only. Build outputs
-// may differ during validation, but no client/server implementation is changed.
-for(const file of tracked.filter(f=>/^(src\/|server\/src\/|android\/)/.test(f)))same(file);
-for(const file of tracked.filter(f=>/\.(?:html|css|svg|png|jpe?g|webp|ico|woff2?|ttf)$/.test(f)&&! /^(dist\/|server\/dist\/)/.test(f))) {
- const current=fs.readFileSync(path.join(root,file));
- const r=spawnSync('git',['show',`${start}:${file}`],{cwd:root,maxBuffer:32*1024*1024});
- check(r.status===0&&current.equals(r.stdout),`Visual/native asset unchanged: ${file}`);
-}
-const changes=[...git('diff','--name-only',start).trim().split('\n'),...git('ls-files','--others','--exclude-standard').trim().split('\n')].filter(Boolean);
-check(!changes.some(f=>/(?:schema|migration)/i.test(f)),'No schema/migration changes');
-check(changes.every(f=>f==='scripts/release-check.mjs'||f.startsWith('docs/refactor/')||f.startsWith('dist/')||f.startsWith('server/dist/')),'Phase 5 scope: release audit/docs and temporary official build output only');
-for(const f of tracked.filter(f=>/^(src\/|server\/src\/).*\.ts$/.test(f)))check(!/@ts-(?:ignore|expect-error)/.test(read(f)),`No type suppressions: ${f}`);
-check(!changes.some(f=>f.endsWith('.ts')),'No new TypeScript files/types or unsafe type escapes in Phase 5');
-const config=JSON.parse(read('tsconfig.json'));
-check(config.compilerOptions.target==='ES2020'&&config.compilerOptions.module==='none'&&config.compilerOptions.outFile==='dist/app.js','Legacy client build model');
-check(new Set(config.files).size===config.files.length,'No duplicate script files');
-// Parse EVERY ordered input. Immutable order plus full VM startup execution
-// checks preserve the reviewed initialization graph; this is not a proof of
-// arbitrary third-party execution or every branch of dynamically invoked code.
-for(const file of config.files){const sf=ts.createSourceFile(file,read(file),ts.ScriptTarget.ES2020,true);check(sf.parseDiagnostics.length===0,`Ordered input parses: ${file}`);}
-// Full ordered-symbol pass: inspect immediate top-level reads, including IIFEs,
-// while excluding deferred function/method bodies and type-only references.
-const program=ts.createProgram(config.files,{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.None,skipLibCheck:true});
-const symbols=program.getTypeChecker(),definitions=new Map(),forwardReads=[];
-let immediateReads=0;
-config.files.forEach((file,index)=>{
- const source=program.getSourceFile(file);
- for(const statement of source.statements){
-  if(ts.isVariableStatement(statement))for(const declaration of statement.declarationList.declarations)if(ts.isIdentifier(declaration.name))definitions.set(symbols.getSymbolAtLocation(declaration.name),{index,pos:declaration.pos,hoisted:false,name:declaration.name.text,file});
-  if(ts.isFunctionDeclaration(statement)&&statement.name)definitions.set(symbols.getSymbolAtLocation(statement.name),{index,pos:statement.pos,hoisted:true,name:statement.name.text,file});
- }
+const withBrowser = process.argv.includes('--with-browser');
+const results = [];
+const record = (name, status, detail = '') => { results.push({ name, status, detail }); console.log(`${status.padEnd(19)} ${name}${detail ? ' — ' + detail : ''}`); };
+const read = (f) => fs.readFileSync(path.join(root, f), 'utf8');
+const sha = (f) => crypto.createHash('sha256').update(fs.readFileSync(path.join(root, f))).digest('hex');
+function run(command, args, timeout = 900000) { return spawnSync(command, args, { cwd: root, encoding: 'utf8', timeout, maxBuffer: 64 * 1024 * 1024 }); }
+function step(name, fn) { try { const r = fn(); if (r) record(name, r.status, r.detail); } catch (e) { record(name, 'FAIL', String(e.message).split('\n')[0]); } }
+const check = (ok, label) => { if (!ok) throw new Error(label); };
+const staticFailures = [];
+function staticCheck(label, ok) { if (!ok) staticFailures.push(label); }
+
+// ---- 1. Static contract of the ES-module build model -------------------------------------------------------------
+step('BUILD MODEL (es-modules, no legacy)', () => {
+  const raw = read('tsconfig.json'), config = JSON.parse(raw), o = config.compilerOptions;
+  staticCheck('tsconfig: module must not be "none"', String(o.module).toLowerCase() !== 'none');
+  staticCheck('tsconfig: module is ES2020', String(o.module).toUpperCase() === 'ES2020' && o.target === 'ES2020');
+  staticCheck('tsconfig: no outFile (legacy single-file output)', o.outFile === undefined && !/outFile/.test(raw));
+  staticCheck('tsconfig: no manual "files" list', config.files === undefined);
+  staticCheck('tsconfig: type-check only (noEmit)', o.noEmit === true);
+  staticCheck('tsconfig: include is src/**/*.ts', JSON.stringify(config.include) === JSON.stringify(['src/**/*.ts']));
+  const bundler = read('scripts/bundle-app.mjs');
+  staticCheck(`bundler entry is ${ENTRY}`, /entryPoints:\s*\['src\/main\.ts'\]/.test(bundler) && ENTRY === 'src/main.ts');
+  const graph = moduleGraph();
+  staticCheck('main.ts is the graph root', graph.order[graph.order.length - 1] === ENTRY);
+  for (const f of compiledFiles()) { const sf = ts.createSourceFile(f, read(f), ts.ScriptTarget.ES2020, true); staticCheck(`module parses: ${f}`, sf.parseDiagnostics.length === 0); }
+  for (const f of fs.readdirSync(path.join(root, 'src'), { recursive: true }).filter((x) => String(x).endsWith('.ts')).map((x) => 'src/' + String(x).replaceAll(path.sep, '/')).concat(fs.readdirSync(path.join(root, 'server/src')).filter((x) => x.endsWith('.ts')).map((x) => 'server/src/' + x))) staticCheck(`no @ts-ignore/@ts-expect-error: ${f}`, !/@ts-(?:ignore|expect-error)/.test(read(f)));
+  const bootstrap = read('src/bootstrap.ts');
+  staticCheck('one startup composition root', (bootstrap.match(/\(async\(\)=>\{/g) || []).length === 1);
+  staticCheck('startup order DB -> Commercial -> Auth', bootstrap.indexOf('await DB.init()') < bootstrap.indexOf('await Commercial.afterInit()') && bootstrap.indexOf('await Commercial.afterInit()') < bootstrap.lastIndexOf('await Auth.init()'));
+  const order = compiledFiles();
+  for (const [a, b] of [['src/platform/platform-contracts.ts', 'src/platform/browser-platform.ts'], ['src/application/contracts.ts', 'src/application/document-actions.ts'], ['src/ui/ui.ts', 'src/ui/data-table.ts'], ['src/ui/forms.ts', 'src/ui/forms-definitions.ts'], ['src/mobile.ts', 'src/pwa.ts'], ['src/pwa.ts', 'src/bootstrap.ts']]) staticCheck(`ordering ${a} -> ${b}`, order.indexOf(a) >= 0 && order.indexOf(a) < order.indexOf(b));
+  const all = order.map(read).join('\n');
+  for (const name of ['UI', 'Actions', 'Forms', 'Pages', 'CommercialActions', 'Auth', 'DB', 'Transactions', 'Invoices', 'Accounting', 'ManualJournal', 'CRM', 'Party360', 'UnifiedParty', 'Print', 'Reports', 'Statements', 'OutputCenter', 'PWA']) staticCheck(`public facade exists: ${name}`, new RegExp(`\\b(?:const|let|var)\\s+${name}\\b`).test(all));
+  const mobile = read('src/mobile.ts');
+  for (const token of ['ERP_MOBILE', 'NativeShell', 'NativePrint', 'window.fetch', 'checkAppRelease', 'applyPendingRelease']) staticCheck(`native contract: ${token}`, mobile.includes(token));
+  if (staticFailures.length) throw new Error(`${staticFailures.length} failed: ${staticFailures.slice(0, 5).join(' | ')}`);
+  return { status: 'PASS', detail: `${order.length} ordered modules, ${graph.order.length} in graph` };
 });
-config.files.forEach((file,index)=>{
- const source=program.getSourceFile(file);
- function visit(node){
-  if(ts.isTypeNode(node))return;
-  if(ts.isFunctionLike(node)){
-   const parent=node.parent;
-   const invoked=(ts.isParenthesizedExpression(parent)&&ts.isCallExpression(parent.parent)&&parent.parent.expression===parent)||(ts.isCallExpression(parent)&&parent.expression===node);
-   if(!invoked)return;
-  }
-  if(ts.isIdentifier(node)){
-   const definition=definitions.get(symbols.getSymbolAtLocation(node));
-   if(definition&&node.parent.name!==node){
-    immediateReads++;
-    if(!definition.hoisted&&(definition.index>index||definition.index===index&&definition.pos>node.pos))forwardReads.push({file,name:definition.name,definedIn:definition.file});
-   }
-  }
-  ts.forEachChild(node,visit);
- }
- for(const statement of source.statements)visit(statement);
+
+// ---- 2. Immutable inventory and sha256 pins (tests / baselines / gates cannot be weakened silently) -----------------
+step('TEST INVENTORY + PINS', () => {
+  const baseline = JSON.parse(read('docs/refactor/refactor-baseline.json'));
+  check(JSON.stringify(discover()) === JSON.stringify(baseline.tests.map((t) => t.file)), 'Node inventory drifted from the pinned 60 tests');
+  check(baseline.tests.length === 60, 'Exactly 60 pinned Node tests');
+  check(JSON.stringify(discover(root, '-browser-smoke.py')) === JSON.stringify(baseline.browser.map((t) => t.file)), 'Browser inventory drifted');
+  check(baseline.browser.length === 6, 'Exactly six browser tests');
+  const pins = JSON.parse(read('docs/refactor/part2-pins.json')).sha256;
+  const bad = Object.entries(pins).filter(([f, h]) => !fs.existsSync(path.join(root, f)) || sha(f) !== h).map(([f]) => f);
+  check(bad.length === 0, `pinned file changed: ${bad.slice(0, 4).join(', ')}${bad.length > 4 ? ' …' : ''} (intentional changes must update docs/refactor/part2-pins.json in the same review)`);
+  const missing = [...baseline.tests, ...baseline.browser].filter((t) => !(t.file in pins));
+  check(missing.length === 0, `test not pinned: ${missing[0]?.file}`);
+  check(read('.gitignore') === 'node_modules/\n.env\n.env.*\n!.env.example\n*SECRETS*.txt\n*.log\n.DS_Store\n', 'Exact .gitignore');
+  return { status: 'PASS', detail: `60 node + 6 browser tests, ${Object.keys(pins).length} pinned files` };
 });
-check(forwardReads.length===0,`No immediate forward lexical reads: ${JSON.stringify(forwardReads)}`);
-console.log(JSON.stringify({scriptOrder:{files:config.files.length,definitions:definitions.size,immediateReads,forwardReads:forwardReads.length},limit:'Deferred/cross-function paths are covered by pinned VM scenarios, not universal static proof'}));
-for(const [contract,consumer] of [['src/platform/platform-contracts.ts','src/platform/browser-platform.ts'],['src/platform/browser-platform.ts','src/persistence/browser-store.ts'],['src/application/contracts.ts','src/application/document-actions.ts'],['src/application/business-contracts.ts','src/application/voucher-workflows.ts'],['src/ui/presentation-contracts.ts','src/ui/party-presentation.ts'],['src/ui/party-presentation.ts','src/crm/party360.ts'],['src/ui/print-presentation.ts','src/reports/printing.ts'],['src/ui/ui.ts','src/ui/data-table.ts'],['src/ui/forms.ts','src/ui/forms-definitions.ts'],['src/ui/commercial-ux.ts','src/mobile.ts'],['src/mobile.ts','src/pwa.ts'],['src/pwa.ts','src/bootstrap.ts']])check(config.files.indexOf(contract)<config.files.indexOf(consumer),`Runtime ordering: ${contract} -> ${consumer}`);
-const bootstrap=read('src/bootstrap.ts');
-check((bootstrap.match(/\(async\(\)=>\{/g)||[]).length===1,'One startup composition root');
-check(bootstrap.indexOf('await DB.init()')<bootstrap.indexOf('await Commercial.afterInit()')&&bootstrap.indexOf('await Commercial.afterInit()')<bootstrap.lastIndexOf('await Auth.init()'),'Normal startup DB -> Commercial -> Auth');
-const sf=ts.createSourceFile('bootstrap.ts',bootstrap,ts.ScriptTarget.ES2020,true);
-const composers=sf.statements.filter(n=>ts.isFunctionDeclaration(n)&&n.name?.text.startsWith('compose')).map(n=>n.name.text);
-check(new Set(composers).size===composers.length,'No duplicate composition function definitions');
-const allSource=config.files.map(read).join('\n');
-for(const name of composers)check((allSource.match(new RegExp(`\\b${name}\\s*\\(`,'g'))||[]).length>1,`Composition factory has a source caller: ${name}`);
-// Public method names, JavaScript arity, synchronous/Promise timing, inline and
-// delegated routes are also exercised by the immutable presentation checker.
-for(const name of ['UI','Actions','Forms','Pages','CommercialActions','Auth','DB','Transactions','Invoices','Accounting','ManualJournal','CRM','Party360','UnifiedParty','Print','Reports','Statements','OutputCenter','PWA'])check(new RegExp(`\\b(?:const|let|var)\\s+${name}\\b`).test(allSource),`Required public facade: ${name}`);
-const platform=read('src/platform/browser-platform.ts'),pwa=read('src/platform/pwa-registration.ts'),mobile=read('src/mobile.ts');
-check(!/window\.print\s*=/.test(allSource),'No current-view window.print override');
-check(read('src/ui/delegated-actions.ts').includes('BrowserPlatform.printCurrent()'),'Delegated current-view printing');
-check(platform.includes('native.printCurrent(title())')&&platform.includes('window.print.bind(window)')&&platform.includes('fallback();'),'Live title and native error/browser print fallback');
-check(platform.includes("register('./sw.js', { scope: './', updateViaCache: 'none' })")&&platform.includes("addEventListener('load', work, { once: true })"),'PWA registration/scope/cache/load contract');
-check(pwa.includes('5000')&&pwa.includes("'https:'")&&pwa.includes('port.native()')&&pwa.includes('localhost'),'PWA update delay and secure/native guards');
-for(const token of ['ERP_MOBILE','NativeShell','NativePrint','window.fetch','checkAppRelease','applyPendingRelease'])check(mobile.includes(token),`Native compatibility contract: ${token}`);
-// Full five-phase preservation evidence for pinned inputs and native/visual code.
-for(const file of ['index.html','src/styles.css','src/integrated/bridge.ts'])same(file,phaseOne);
-const actual=counts(scan());for(const rule of Object.keys(expected))check(actual[rule]<=expected[rule],`Architecture does not increase: ${rule}`);
-for(const [file,pattern] of [['application-workflow-check.mjs',/PASS 154 /],['business-workflow-check.mjs',/PASS 1172 .*142 scenarios \(46 successful accounting scenarios\)/],['presentation-platform-check.mjs',/PASS 3471 .*61 deterministic scenarios/],['architecture-check.mjs',/PASS architecture ratchet/]]){
- const r=run(process.execPath,[`scripts/${file}`]);process.stdout.write(r.stdout);process.stderr.write(r.stderr);check(r.status===0&&pattern.test(r.stdout),`Required gate: ${file}`);
+
+// ---- 3. Package scripts, pinned toolchain, lockfile sync, CI ----------------------------------------------------------
+step('PACKAGE SCRIPTS', () => {
+  const pkg = JSON.parse(read('package.json'));
+  const want = { typecheck: /tsc -p tsconfig\.json/, build: /bundle-app\.mjs/, 'module:check': /module-order-check\.mjs/, 'architecture:check': /architecture-check\.mjs/, 'release:check': /release-check\.mjs/ };
+  for (const [name, re] of Object.entries(want)) check(re.test(pkg.scripts[name] || ''), `package.json script "${name}" missing or not wired`);
+  for (const dep of ['typescript', 'esbuild']) check(/^\d+\.\d+\.\d+$/.test(pkg.devDependencies[dep] || ''), `${dep} must be pinned to an exact version`);
+  return { status: 'PASS', detail: Object.keys(want).join(', ') };
+});
+step('LOCKFILE SYNC (npm ci)', () => {
+  const pkg = JSON.parse(read('package.json')), lock = JSON.parse(read('package-lock.json')), rootEntry = lock.packages[''];
+  const problems = [];
+  for (const group of ['dependencies', 'devDependencies']) for (const [name, spec] of Object.entries(pkg[group] || {})) {
+    if (rootEntry[group]?.[name] !== spec) problems.push(`${group}.${name}: package.json ${spec} vs lock ${rootEntry[group]?.[name] ?? 'ABSENT'}`);
+    const entry = lock.packages[`node_modules/${name}`];
+    if (!entry) problems.push(`node_modules/${name} missing from lock`);
+    else if (/^\d+\.\d+\.\d+$/.test(spec) && entry.version !== spec) problems.push(`${name}: lock resolves ${entry.version}, pinned ${spec}`);
+  }
+  if (problems.length) return { status: 'FAIL', detail: `${problems.length} mismatch(es): ${problems.slice(0, 3).join('; ')} — regenerate with network: npm install --package-lock-only` };
+  return { status: 'PASS', detail: 'package.json and package-lock.json agree' };
+});
+step('CI WORKFLOW', () => {
+  const ci = read('.github/workflows/ci.yml').split('\n').filter((l) => !l.trim().startsWith('#')).join('\n'); // comments may mention the keyword; only real YAML keys count
+  check(!/continue-on-error/.test(ci), 'ci.yml must not use continue-on-error');
+  for (const cmd of ['npm ci', 'npm run typecheck', 'npm run build', 'npm run module:check', 'npm run architecture:check', 'npm run release:check']) check(ci.includes(cmd), `ci.yml does not run: ${cmd}`);
+  return { status: 'PASS', detail: 'no continue-on-error; all gates wired' };
+});
+
+// ---- 4. Executed gates ---------------------------------------------------------------------------------------------------
+function exec(name, command, args, { ok = [0], blocked = [] } = {}) {
+  step(name, () => {
+    const r = run(command, args);
+    const out = (r.stdout || '') + (r.stderr || '');
+    if (ok.includes(r.status)) return { status: 'PASS', detail: out.trim().split('\n').filter((l) => /^PASS|^\{/.test(l)).slice(-1)[0]?.slice(0, 140) || '' };
+    if (blocked.includes(r.status)) return { status: 'ENVIRONMENT BLOCKED', detail: out.trim().split('\n').find((l) => /BLOCKED/.test(l))?.slice(0, 200) || '' };
+    process.stderr.write(out.slice(-2000));
+    return { status: 'FAIL', detail: `exit ${r.status}` };
+  });
 }
-for(const [label,configFile] of [['CLIENT','tsconfig.json'],['SERVER','server/tsconfig.json']]){
- const r=run(process.execPath,['node_modules/typescript/bin/tsc','-p',configFile]);if(r.status!==0)process.stderr.write(r.stdout+r.stderr);check(r.status===0,`${label} BUILD`);console.log(`PASS ${label} BUILD`);
-}
-console.log(JSON.stringify({releaseCheck:'PASS',staticChecks:checks,architecture:actual,nodeInventory:60,browserInventory:6,publicApi:'PRESERVED',nativeContract:'PASS',realDevice:'NOT EXECUTED',browser:'SEPARATE ACCEPTANCE REQUIRED',generatedOutputs:'TEMPORARY BUILD OUTPUT; RESTORE BEFORE COMMIT'}));
+const tool = toolchainProblems();
+step('CLIENT TYPECHECK', () => { const r = run(process.execPath, ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.json']); if (r.status === 0) return { status: 'PASS', detail: tool.some((p) => p.startsWith('typescript')) ? `NOTE: ${tool.find((p) => p.startsWith('typescript'))}` : '' }; process.stderr.write(r.stdout.slice(-2000)); return { status: 'FAIL', detail: 'tsc errors' }; });
+exec('CLIENT BUILD (esbuild)', process.execPath, ['scripts/bundle-app.mjs']);
+step('SERVER BUILD', () => {
+  if (tool.length) return { status: 'ENVIRONMENT BLOCKED', detail: `toolchain not as pinned: ${tool.join('; ')}` };
+  const r = run(process.execPath, ['node_modules/typescript/bin/tsc', '-p', 'server/tsconfig.json']); if (r.status === 0) return { status: 'PASS', detail: '' }; process.stderr.write(r.stdout.slice(-2000)); return { status: 'FAIL', detail: 'tsc errors' };
+});
+exec('MODULE GRAPH / ORDER', process.execPath, ['scripts/module-order-check.mjs']);
+step('ARCHITECTURE RATCHET', () => {
+  const baseline = JSON.parse(read('docs/refactor/architecture-baseline.json')), expected = {};
+  for (const f of baseline.findings) expected[f.rule] = (expected[f.rule] || 0) + 1;
+  const actual = counts(scan()); const worse = Object.keys(expected).filter((k) => actual[k] > expected[k]);
+  const r = run(process.execPath, ['scripts/architecture-check.mjs']);
+  if (worse.length || r.status !== 0) return { status: 'FAIL', detail: `increased: ${worse.join(',') || 'new signatures'}` };
+  globalThis.__arch = actual;
+  return { status: 'PASS', detail: Object.entries(actual).map(([k, v]) => `${k}=${v}`).join(' ') };
+});
+for (const [label, file] of [['APPLICATION CHECK', 'application-workflow-check'], ['BUSINESS CHECK', 'business-workflow-check'], ['PRESENTATION CHECK', 'presentation-platform-check']]) exec(label, process.execPath, [`scripts/${file}.mjs`], { blocked: [3] });
+step(`NODE TEST BASELINE${withBrowser ? ' + BROWSER' : ''}`, () => {
+  const r = run(process.execPath, ['scripts/refactor-check.mjs', ...(withBrowser ? [] : ['--skip-browser'])]);
+  const out = r.stdout + r.stderr, summary = JSON.parse(out.trim().split('\n').filter((l) => l.startsWith('{"nodeTotal"')).pop() || '{}');
+  const detail = `${summary.nodePass} PASS / ${summary.knownBaselineFailures} KNOWN / ${summary.newRegressions} NEW` + (withBrowser ? '' : '; browser NOT EXECUTED');
+  globalThis.__nodeSummary = summary;
+  if (summary.newRegressions > 0 || r.status === 1) { process.stderr.write(out.split('\n').filter((l) => l.startsWith('NEW REGRESSION')).join('\n') + '\n'); return { status: 'FAIL', detail }; }
+  if (summary.environmentBlockers > 0) return { status: 'ENVIRONMENT BLOCKED', detail: detail + `; ${summary.environmentBlockers} blocker(s) (server build toolchain)` };
+  return { status: 'PASS', detail };
+});
+if (!withBrowser) record('BROWSER ACCEPTANCE', 'NOT EXECUTED', 'run: npm run release:check -- --with-browser');
+record('ANDROID REAL DEVICE', 'NOT EXECUTED', 'no device in this environment');
+
+const failed = results.filter((r) => r.status === 'FAIL'), blocked = results.filter((r) => r.status === 'ENVIRONMENT BLOCKED');
+console.log(JSON.stringify({ releaseCheck: failed.length ? 'FAIL' : blocked.length ? 'INCOMPLETE (ENVIRONMENT BLOCKED)' : 'PASS', fail: failed.map((r) => r.name), blocked: blocked.map((r) => r.name), architecture: globalThis.__arch, node: globalThis.__nodeSummary }));
+process.exit(failed.length ? 1 : blocked.length ? 2 : 0);

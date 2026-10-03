@@ -6,6 +6,10 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import {execFileSync} from 'node:child_process';
 const start='4b188965931d396f40b0b545b486e97da12462b8';
+// Differential checks need the pre-Part-2 git history (the `original()` oracle). Without it they are ENVIRONMENT BLOCKED (exit 3) - never PASS.
+{const have=(sha)=>{try{execFileSync('git',['cat-file','-e',`${sha}^{commit}`],{stdio:'ignore'});return true;}catch{return false;}};
+ if(!have(start)){console.error('ENVIRONMENT BLOCKED: original git history (Phase 1 start) is not available in this checkout; run with a full clone (fetch-depth: 0).');process.exit(3);}}
+
 const read=p=>fs.readFileSync(p,'utf8');
 const original=p=>execFileSync('git',['show',`${start}:${p}`],{encoding:'utf8'});
 const compile=s=>ts.transpileModule(s,{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.None}}).outputText;

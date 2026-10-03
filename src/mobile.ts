@@ -1,3 +1,12 @@
+import { APP, S, byId, toast } from './core/runtime';
+import { BrowserPlatform } from './platform/browser-platform';
+import { ServerStore } from './persistence/server-store';
+import { DB, DataStore } from './persistence/browser-store';
+import { Auth } from './security/auth';
+import { Print } from './reports/printing';
+import { UI } from './ui/ui';
+import { UmrahCore_QuickCreate } from './core/umrah/guided';
+import { CommercialUX } from './ui/commercial-ux';
 /* Native Android shell integration. Kept dependency-free so the web/PWA build still works. */
 (() => {
  const bridge=(window as any).Capacitor;

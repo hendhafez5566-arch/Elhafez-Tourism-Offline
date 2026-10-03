@@ -1,3 +1,11 @@
+import { N, S, byId, deep, esc, iid, now, today } from '../core/runtime';
+import { DB } from '../persistence/browser-store';
+import { Currency } from '../accounting/currency-periods';
+import { UmrahCore_dateAdd, UmrahCore_roomCap, UmrahCore_roomLabel, UmrahCore_vehicleCaps } from '../core/umrah/runtime';
+import { UmrahCore_DB } from '../core/umrah/data';
+import { UmrahCore_Inventory } from '../core/umrah/contracts-inventory';
+import { UmrahCore_ContractCenter } from '../core/umrah/contracts';
+import { __set_TourismServiceInventory } from '../core/late-bindings';
 // Central bridge: tourism service sales consume contracted stock before external purchasing.
 const TourismServiceInventory = {
     kind(type) {
@@ -181,3 +189,5 @@ const TourismServiceInventory = {
         return resolved;
     }
 };
+__set_TourismServiceInventory(TourismServiceInventory);
+export { TourismServiceInventory };

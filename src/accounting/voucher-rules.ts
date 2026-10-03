@@ -1,3 +1,6 @@
+import { EPS } from '../core/runtime';
+import { BusinessValues } from '../core/business-values';
+import type { BusinessAllocation, BusinessJournalLine, BusinessPaymentMeta, BusinessTreasury, BusinessVoucherFields, VoucherLineDeps } from '../application/business-contracts';
 // Payment metadata and voucher invariants have one source of truth, independent of presentation.
 const VoucherRules = {
     paymentMeta(o: BusinessVoucherFields) {
@@ -176,3 +179,4 @@ const VoucherRules = {
         return lines;
     }
 };
+export { VoucherRules };

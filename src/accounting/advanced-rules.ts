@@ -1,3 +1,6 @@
+import { EPS } from '../core/runtime';
+import { BusinessValues } from '../core/business-values';
+import type { BusinessNumber } from '../application/business-contracts';
 // Shared advanced accounting arithmetic. Callers retain original mutation and ID allocation order.
 interface DepreciationRuleRecord {
     cost: number;
@@ -45,3 +48,4 @@ const AdvancedAccountingRules = {
         return net;
     }
 };
+export { AdvancedAccountingRules };

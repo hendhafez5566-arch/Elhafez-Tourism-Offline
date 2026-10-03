@@ -1,3 +1,7 @@
+import { APP, N, S, deep } from '../core/runtime';
+import { StatePatch } from './state-patch';
+import { composeSessionPresentation } from '../composition/early-presentation';
+import { DB } from '../core/late-bindings';
 const ServerStore={
  presentation:composeSessionPresentation(),
  available:null,authenticated:false,setupComplete:false,resetPending:false,existingLoginAvailable:false,revision:0,lastError:'',lastConflict:false,_baseData:null,_drain:null,_pendingJson:null,_pendingData:null,_pendingBaseRevision:0,_pendingBaseData:null,_baseJson:null,_forceMergeBase:false,_lastProbe:0,userId:'',license:null,company:null,vendor:null,emailRecovery:{configured:false,provider:'none'},
@@ -27,3 +31,4 @@ const ServerStore={
  async factoryReset(typed='RESET'){if(!(await this.probe(true))||!this.authenticated)throw new Error('يجب تسجيل الدخول كمدير');const r=await fetch('/api/state/factory-reset',{method:'POST',headers:this.headers(),credentials:'include',body:JSON.stringify({confirm:'RESET_SYSTEM',typed})}),b=await r.json().catch(()=>({}));if(!r.ok)throw new Error(b?.error||'تعذر إعادة تهيئة النظام');this.revision=0;this.setupComplete=false;this.resetPending=true;this.existingLoginAvailable=!!b?.existingLoginAvailable;this.authenticated=false;this.userId='';this._pendingJson=null;this._pendingData=null;this._pendingBaseRevision=0;this._pendingBaseData=null;this._baseJson=null;this._baseData=null;this._forceMergeBase=false;return true},
  async clear(){return this.factoryReset()}
 };
+export { ServerStore };

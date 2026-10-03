@@ -32,7 +32,9 @@ assert(umrahData.includes('DB.atomic(`umrah:${label}`')&&umrahData.includes('DB.
 assert(!umrahSource.includes('localStorage')&&!umrahSource.includes('moduleStore')&&!umrahSource.includes('umrahStore'),'Umrah core still depends on a standalone persistence path');
 assert(!bridge.includes('umrahStore:')&&!authz.includes('integratedModules?.umrah'),'Legacy Umrah compatibility store remains');
 assert(authz.includes("'umrahPrograms'")&&authz.includes("'umrahBookings'")&&authz.includes("'umrahTravelers'"),'Server authorization does not recognize native Umrah collections');
-assert(app.includes('const UmrahCore_DB')&&app.includes('const UmrahCore_ProgramWizard')&&app.includes('const UmrahCore_Actions'),'Umrah core is missing from the main ERP runtime');
+/* Bundled by esbuild: top-level const becomes var and a name shared with a late-binding slot gets a numeric suffix, so match the real object definition. */
+const defined=name=>new RegExp('\\b(?:const|var|let) '+name+'\\d* = \\{').test(app);
+assert(defined('UmrahCore_DB')&&defined('UmrahCore_ProgramWizard')&&defined('UmrahCore_Actions'),'Umrah core is missing from the main ERP runtime');
 assert(!umrahSource.includes('attachShadow(')&&!umrahSource.includes("createElement('iframe')"),'Umrah core contains nested iframe/Shadow DOM runtime');
 const syntax=spawnSync(process.execPath,['--check',fileURLToPath(new URL('../dist/app.js',import.meta.url))],{encoding:'utf8'});
 assert(syntax.status===0,`Main runtime has syntax errors: ${syntax.stderr}`);

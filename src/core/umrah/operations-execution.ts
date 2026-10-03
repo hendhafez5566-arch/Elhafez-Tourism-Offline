@@ -1,3 +1,8 @@
+import { UmrahCore_N, UmrahCore_S, UmrahCore_iid, UmrahCore_localDateTime, UmrahCore_money, UmrahCore_now, UmrahCore_today, UmrahCore_vehicleCaps } from './runtime';
+import { UmrahCore_Bridge, UmrahCore_Cost, UmrahCore_DB } from './data';
+import { UmrahCore_Procurement } from './procurement';
+import { UmrahCore_Ops } from './operations';
+import { UmrahCore_visaStatusLabel } from '../late-bindings';
 // Visa, ticketing, transport execution and incident lifecycle split from operations.ts without behavioral changes.
 const UmrahCore_OperationsExecution: any = {
     createVisaBatch(o) { UmrahCore_Bridge.require('umrah.visas', 'add'); const p = this.program(o.programId); if (!p)
@@ -74,3 +79,4 @@ const UmrahCore_OperationsExecution: any = {
         return; x.status = status; x.closedAt = status === 'closed' ? UmrahCore_now() : ''; UmrahCore_Bridge.audit('status', 'incident', id, status); },
 };
 Object.assign(UmrahCore_Ops, UmrahCore_OperationsExecution);
+export { UmrahCore_OperationsExecution };

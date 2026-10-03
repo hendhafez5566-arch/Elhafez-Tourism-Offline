@@ -1,3 +1,4 @@
+import type { PwaRegistrationPort } from './platform-contracts';
 function registerPresentationPwa(port: PwaRegistrationPort): void {
     if (port.native())
         return;
@@ -10,3 +11,4 @@ function registerPresentationPwa(port: PwaRegistrationPort): void {
         port.register().then(reg => { port.timeout(() => reg.update().catch(() => { }), 5000); }).catch(() => { });
     });
 }
+export { registerPresentationPwa };

@@ -1,3 +1,5 @@
+import { BusinessValues } from './business-values';
+import type { TourismBooking, TourismService } from '../application/business-contracts';
 const TourismRules = {
     complete(record: TourismBooking | TourismService | undefined, kind: 'service' | 'booking') {
         if (!record || record.status !== 'confirmed')
@@ -21,3 +23,4 @@ const TourismRules = {
             throw new Error('الجزء الخارجي من التكلفة يتطلب موردًا');
     }
 };
+export { TourismRules };

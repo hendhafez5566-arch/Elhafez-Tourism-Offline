@@ -1,3 +1,14 @@
+import { live } from '../runtime';
+import { UmrahBusinessRules } from './business-rules';
+import { UmrahLifecycleWorkflows } from '../../application/umrah-lifecycle-workflows';
+import { DB } from '../../persistence/browser-store';
+import { UmrahCore_N, UmrahCore_S, UmrahCore_dateAdd, UmrahCore_daysBetween, UmrahCore_deep, UmrahCore_fmt, UmrahCore_hajjPermitStatusLabel, UmrahCore_iid, UmrahCore_monthsAdd, UmrahCore_now, UmrahCore_roomCap, UmrahCore_roomLabel, UmrahCore_segLabel, UmrahCore_today, UmrahCore_vehicleCaps } from './runtime';
+import { UmrahCore_Bridge, UmrahCore_DB } from './data';
+import { UmrahCore_ContractCenter } from './contracts';
+import { UmrahCore_Procurement } from './procurement';
+import { UmrahCore_BookingRooms } from './booking-rooms';
+import { composeLegacyUmrahLifecycleDeps } from '../late-bindings';
+import { __set_UmrahCore_Ops } from '../late-bindings';
 const UmrahCore_travelerIdentityKey = t => { const passport = UmrahCore_S(t?.passportNo).trim().toUpperCase(); if (passport) return `P:${passport}`; const name = UmrahCore_S(t?.nameAr).trim().replace(/\s+/g, ' ').toLowerCase(), birth = UmrahCore_S(t?.birthDate).trim(), nationality = UmrahCore_S(t?.nationality).trim().toLowerCase(); return name && birth ? `N:${name}|${birth}|${nationality}` : ''; };
 const UmrahCore_duplicateTravelerGroups = (programId = '') => { const rows = UmrahCore_DB.data.travelers.filter(t => t.active !== false && UmrahCore_Bridge.branchMatch(t) && (!programId || t.programId === programId)), map = new Map(); for (const t of rows) { const key = UmrahCore_travelerIdentityKey(t); if (!key) continue; const groupKey = `${t.programId}|${key}`; if (!map.has(groupKey)) map.set(groupKey, []); map.get(groupKey).push(t); } return [...map.values()].filter(g => g.length > 1); };
 const UmrahCore_duplicateTravelerIds = (programId = '') => new Set(UmrahCore_duplicateTravelerGroups(programId).flat().map(t => t.id));
@@ -503,6 +514,8 @@ const UmrahCore_Ops: any = {
         return { score: 0, blockers: b }; const base = Math.round(b.travelers.reduce((z, t) => z + this.travelerReadiness(t).score, 0) / b.travelers.length), taskTotal = UmrahCore_DB.data.operationTasks.filter(x => x.programId === p.id && x.critical).length, taskDone = UmrahCore_DB.data.operationTasks.filter(x => x.programId === p.id && x.critical && x.status === 'done').length, taskPct = taskTotal ? Math.round(taskDone / taskTotal * 100) : 100; return { score: Math.round((base + taskPct) / 2), blockers: b }; },
     eligibleVisaTravelers(programId) { return this.activeTravelers(programId).filter(t => !UmrahCore_DB.data.visaItems.some(v => v.travelerId === t.id && v.active !== false && UmrahCore_DB.data.visaBatches.some(b => b.id === v.batchId && b.status !== 'cancelled'))); },
 };
+__set_UmrahCore_Ops(UmrahCore_Ops);
 const UmrahCore_AdvancedPages = [
     ['seasons', '◫', 'المواسم', 'فترات التشغيل والبيع'], ['contracts', '▥', 'التعاقدات والمخزون', 'فنادق وطيران ونقل وتأشيرات'], ['programs', '▣', 'البرامج والمسار', 'التعديل الفني للبرنامج ومحطات الرحلة'], ['program-workspace', '✓', 'مساحة عمل البرنامج', 'ملخص البرنامج والخطوة التالية بعد الإنشاء'], ['costing', '◈', 'التكلفة والتسعير', 'الميزانية التقديرية ونقطة التعادل'], ['bookings', '▤', 'مركز الحجوزات', 'كل الحجوزات والحالات'], ['travelers', '👥', 'ملفات المسافرين', 'الجوازات والبيانات'], ['hajj-services', '◉', 'خدمات الحج', 'التصاريح / نسك والمخيمات والمشاعر'], ['hotels', '▦', 'الفنادق وتوزيع الغرف', 'التوزيع على الإقامات'], ['visas', '◇', 'التأشيرات', 'دفعات ومراحل التقديم'], ['flights', '✈', 'الطيران والتذاكر', 'PNR وتذاكر ومقاعد'], ['transport', '▰', 'النقل والباصات', 'التوزيع وكشوف التشغيل'], ['procurement', '¤', 'مشتريات الموردين', 'الأوامر والالتزامات والفواتير'], ['control', '◎', 'مركز الجاهزية', 'الموانع قبل السفر'], ['tripops', '⌁', 'تشغيل الرحلة', 'المسار والمهام اليومية'], ['incidents', '!', 'المشاكل والحوادث', 'سجل الحوادث والمشكلات'], ['documents', '▥', 'المستندات والتقارير', 'قوائم وربحية'], ['settings', '⚙', 'إعدادات الحج والعمرة', 'سياسات التشغيل']
 ];
+export { UmrahCore_AdvancedPages, UmrahCore_Ops, UmrahCore_duplicateTravelerGroups, UmrahCore_duplicateTravelerIds, UmrahCore_travelerIdentityKey };

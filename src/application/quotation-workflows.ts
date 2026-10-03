@@ -1,3 +1,6 @@
+import { BusinessValues } from '../core/business-values';
+import { CommercialLifecycleRules } from '../crm/commercial-lifecycle-rules';
+import type { BusinessInvoice, BusinessLine, BusinessQuotation, BusinessQuotationFields, CrmWorkflowDeps } from './business-contracts';
 // Legacy order and return timing preserved; dependencies are supplied by composition.
 const QuotationWorkflows = {
     addQuotation(d: CrmWorkflowDeps, o: BusinessQuotationFields) {
@@ -59,3 +62,4 @@ const QuotationWorkflows = {
         });
     }
 };
+export { QuotationWorkflows };

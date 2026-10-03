@@ -1,3 +1,4 @@
+import type { CrmLead } from '../application/business-contracts';
 const CrmLeadRules = {
     created(lead: CrmLead) {
         if (!lead.name)
@@ -18,3 +19,4 @@ const CrmLeadRules = {
             throw new Error('تم تحويل Lead إلى عميل؛ لا يحذف حتى لا يضيع أثر التحويل');
     }
 };
+export { CrmLeadRules };

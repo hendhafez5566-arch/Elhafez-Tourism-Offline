@@ -1,3 +1,5 @@
+import type { ManualJournalRecord, RecurringJournalRecord } from '../application/business-contracts';
+import { __set_ManualJournalRules } from '../core/late-bindings';
 const ManualJournalRules = {
     created(record: ManualJournalRecord) {
         if (!record.memo)
@@ -26,3 +28,5 @@ const ManualJournalRules = {
             throw new Error('بيانات القيد المتكرر غير مكتملة');
     }
 };
+__set_ManualJournalRules(ManualJournalRules);
+export { ManualJournalRules };

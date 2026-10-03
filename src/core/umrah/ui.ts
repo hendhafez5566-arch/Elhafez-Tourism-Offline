@@ -1,3 +1,12 @@
+import { toast } from '../runtime';
+import { UI } from '../../ui/ui';
+import { UmrahCore_deep, UmrahCore_esc, UmrahCore_fmt, UmrahCore_programDisplay, UmrahCore_today } from './runtime';
+import { UmrahCore_Bridge, UmrahCore_DB } from './data';
+import { UmrahCore_Wizard } from './guided';
+import { UmrahCore_ProgramWizard } from './program-wizard';
+import { UmrahCore_Ops } from './operations';
+import { CoreSuites } from '../late-bindings';
+import { __set_UmrahCore_State, __set_UmrahCore_UI, __set_UmrahCore_currencyOptions, __set_UmrahCore_entityOptions, __set_UmrahCore_fxLabel, __set_UmrahCore_treasuryOptions, __set_UmrahCore_visaStatusLabel } from '../late-bindings';
 const UmrahCore_PageScope = p => ({ dashboard: ['umrah.bookings', 'view'], 'guided-program': ['umrah.programs', 'add'], 'booking-wizard': ['umrah.bookings', 'add'], 'guided-resume': ['umrah.bookings', 'view'], 'guided-trip': ['umrah.control', 'view'], seasons: ['umrah.seasons', 'view'], contracts: ['umrah.contracts', 'view'], programs: ['umrah.programs', 'view'], 'program-workspace': ['umrah.programs', 'view'], costing: ['umrah.costing', 'view'], bookings: ['umrah.bookings', 'view'], travelers: ['umrah.travelers', 'view'], hotels: ['umrah.bookings', 'view'], visas: ['umrah.visas', 'view'], flights: ['umrah.flights', 'view'], transport: ['umrah.transport', 'view'], 'hajj-services': ['umrah.travelers', 'view'], procurement: ['umrah.procurement', 'view'], control: ['umrah.control', 'view'], tripops: ['umrah.tripops', 'view'], incidents: ['umrah.incidents', 'view'], documents: ['umrah.documents', 'view'], settings: ['umrah.settings', 'view'], integration: ['umrah.settings', 'view'] }[p] || ['umrah.bookings', 'view']);
 const UmrahCore_PageAllowed = p => { const [scope, action] = UmrahCore_PageScope(p); return UmrahCore_Bridge.can(scope, action); };
 const UmrahCore_UI = {
@@ -24,7 +33,9 @@ const UmrahCore_UI = {
     expandDocuments() { this._documentsExpanded = true; this.render(); return true; },
     head(title, sub = '', actions = '') { return `<div class="section-head"><div><h2>${title}</h2></div><div class="quick-actions">${actions}</div></div>`; }
 };
+__set_UmrahCore_UI(UmrahCore_UI);
 const UmrahCore_State = { hotelProgram: '', flightProgram: '', flightSegment: '', busProgram: '', busSegment: '', hajjProgram: '', controlProgram: '', tripProgram: '', contractKind: 'all', contractView: 'overview', listMode: { programs: 'active', bookings: 'active', travelers: 'active', visas: 'active' } };
+__set_UmrahCore_State(UmrahCore_State);
 const UmrahCore_isHistoryRow = (kind, x) => {
     if (kind === 'programs') return ['closed', 'cancelled'].includes(x.status) || x.active === false || x.deleted === true;
     if (kind === 'bookings') return ['closed', 'cancelled', 'refunded', 'expired', 'noShow'].includes(x.status) || x.active === false;
@@ -36,11 +47,17 @@ const UmrahCore_filterHistory = (kind, rows) => { const mode = UmrahCore_State.l
 const UmrahCore_historyToolbar = (kind, rows) => { const mode = UmrahCore_State.listMode[kind] || 'active', historical = rows.filter(x => UmrahCore_isHistoryRow(kind, x)).length, current = rows.length - historical, button = (value, label, count, ic, cls) => UI.filterOption(label,count,mode===value,{type:'umrahHistory',kind,value},ic,cls); return `<div class="umrah-history-toolbar compact-filter-toolbar record-scope-toolbar"><div><b>تنظيم السجلات</b><small>الحالي منفصل عن السجل السابق.</small></div><div class="umrah-history-tabs">${button('active', 'الحالي', current,'check','good')}${button('history', 'السجل السابق', historical,'archive','purple')}${button('all', 'الكل', rows.length,'reports','info')}</div></div>`; };
 const UmrahCore_travelerCategory = s => ({ adult: 'بالغ', childBed: 'طفل بسرير', childNoBed: 'طفل بدون سرير', infant: 'رضيع' })[s] || s;
 const UmrahCore_visaStatusLabel = s => ({ not_started: 'لم يبدأ', documents_received: 'استلام مستندات', reviewed: 'تمت المراجعة', ready: 'جاهز للتقديم', submitted: 'تم الإرسال', processing: 'تحت الإجراء', more_info: 'طلب استكمال', issued: 'صادرة', rejected: 'مرفوضة' })[s] || s;
+__set_UmrahCore_visaStatusLabel(UmrahCore_visaStatusLabel);
 const UmrahCore_ticketStatusLabel = s => ({ not_issued: 'لم تصدر', reserved: 'محجوزة', issued: 'صادرة', reissued: 'إعادة إصدار', cancelled: 'ملغاة' })[s] || s;
 const UmrahCore_currencyOptions = val => UmrahCore_Bridge.currencies().map(c => `<option value="${c.code}" ${c.code === val ? 'selected' : ''}>${c.code} — ${UmrahCore_esc(c.name || '')}</option>`).join('');
+__set_UmrahCore_currencyOptions(UmrahCore_currencyOptions);
 const UmrahCore_fxLabel = (currency, date = UmrahCore_today()) => { const base = UmrahCore_Bridge.baseCurrency(), r = UmrahCore_Bridge.rate(currency, date); return currency === base ? `العملة الأساسية ${base}` : r > 0 ? `1 ${currency} = ${UmrahCore_fmt(r, 4)} ${base}` : `لا يوجد سعر صرف لـ ${currency}`; };
+__set_UmrahCore_fxLabel(UmrahCore_fxLabel);
 const UmrahCore_treasuryOptions = (currency, val = '') => UmrahCore_Bridge.treasuries(currency).map(x => `<option value="${x.id}" ${x.id === val ? 'selected' : ''}>${UmrahCore_esc(x.name)} — ${x.currency}</option>`).join('');
+__set_UmrahCore_treasuryOptions(UmrahCore_treasuryOptions);
 const UmrahCore_entityOptions = (arr, val = '') => `<option value="">اختر...</option>${arr.map(x => `<option value="${x.id}" ${x.id === val ? 'selected' : ''}>${UmrahCore_esc((x.no ? x.no + ' — ' : '') + (x.name || x.hotelName || x.provider || x.title || ''))}</option>`).join('')}`;
+__set_UmrahCore_entityOptions(UmrahCore_entityOptions);
 const UmrahCore_selectProgram = (id, val, stateKey, resetKey='') => `<select id="${id}" data-umrah-select-program="${UmrahCore_esc(stateKey)}"${resetKey?` data-umrah-select-reset="${UmrahCore_esc(resetKey)}"`:''} style="padding:8px;border:1px solid var(--line);border-radius:9px;background:#fff">${UmrahCore_Ops.scoped('programs').filter(p => p.status !== 'cancelled').map(p => `<option value="${p.id}" ${p.id === val ? 'selected' : ''}>${UmrahCore_esc(p.no + ' — ' + UmrahCore_programDisplay(p))}</option>`).join('')}</select>`;
 const UmrahCore_procurementSourceLabel = s => ({ hotelContract: 'عقد فندق', flightContract: 'عقد طيران', transportContract: 'عقد نقل', programCost: 'تكلفة برنامج', bookingCost: 'تكلفة مرتبطة بحجز', manual: 'إدخال يدوي' })[s] || 'خدمة تشغيلية';
 const UmrahCore_integrationRows = s => `<div class="stack">${[['النظام المركزي', s.host], ['الفرع الحالي', s.branch], ['العملاء', s.customers], ['المندوبون', s.agents], ['الموردون', s.suppliers], ['العملات', s.currencies], ['مراكز التكلفة', s.costCenters], ['المالية', s.finance], ['الخزنة', s.treasury], ['المرفقات', s.attachments]].map(x => `<div class="info-row"><div><b>${x[0]}</b><small>${x[1] ? 'متصل بالنظام الرئيسي' : 'غير متاح من النظام الرئيسي'}</small></div><span class="badge ${x[1] ? 'green' : 'orange'}">${x[1] ? 'متصل' : 'غير متصل'}</span></div>`).join('')}</div>`;
+export { UmrahCore_PageAllowed, UmrahCore_PageScope, UmrahCore_State, UmrahCore_UI, UmrahCore_currencyOptions, UmrahCore_entityOptions, UmrahCore_filterHistory, UmrahCore_fxLabel, UmrahCore_historyToolbar, UmrahCore_integrationRows, UmrahCore_isHistoryRow, UmrahCore_procurementSourceLabel, UmrahCore_selectProgram, UmrahCore_ticketStatusLabel, UmrahCore_travelerCategory, UmrahCore_treasuryOptions, UmrahCore_visaStatusLabel };

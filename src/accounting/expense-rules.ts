@@ -1,3 +1,6 @@
+import { EPS } from '../core/runtime';
+import { BusinessValues } from '../core/business-values';
+import type { BusinessActor, BusinessTax, ExpenseRecord } from '../application/business-contracts';
 interface ExpenseRuleTaxPort {
     amount(amount: number, id: string): number;
     require(id: string): BusinessTax;
@@ -25,3 +28,4 @@ const ApprovalRules = {
         return !ignore && enabled() && actor() && actor().role !== 'admin' && amount() > BusinessValues.number(actor().approvalLimit);
     }
 };
+export { ApprovalRules, ExpenseRules };

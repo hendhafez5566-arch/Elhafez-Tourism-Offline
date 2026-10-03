@@ -1,3 +1,7 @@
+import { N, S, byId, esc, icon, now, toast } from './runtime';
+import { DB } from '../persistence/browser-store';
+import { MasterData } from '../accounting/invoices';
+import { AttachmentStore, Attachments, UI, UmrahCore_Bridge, UmrahCore_DB } from './late-bindings';
 /* v32.4.68 — Safe delete framework. Hard delete is limited to drafts/master records with no history. */
 const DeleteCenter={
  label(kind){return({customer:'عميل',supplier:'مورد',agent:'مندوب',season:'موسم',umrahProgram:'برنامج حج/عمرة',umrahBooking:'حجز حج/عمرة',visaBatch:'دفعة تأشيرات',busRun:'رحلة نقل',task:'مهمة تشغيل',incident:'واقعة',attachment:'مرفق',umrahTraveler:'ملف مسافر'}[kind]||'السجل')},
@@ -25,3 +29,4 @@ const DeleteCenter={
  },
  enhanceDocument(root=document){if(!root?.querySelectorAll)return;/* explicit UI owns most delete buttons; this hook is intentionally conservative. */}
 };
+export { DeleteCenter };

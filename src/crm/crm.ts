@@ -1,11 +1,22 @@
+import { byId } from '../core/runtime';
+import { CrmLeadWorkflows } from '../application/crm-leads';
+import { QuotationWorkflows } from '../application/quotation-workflows';
+import { PurchaseWorkflows } from '../application/purchase-workflows';
+import { ActionPolicy } from '../core/action-policy';
+import { DB } from '../persistence/browser-store';
+import { PurchaseOrderFulfillment } from './purchase-order-fulfillment';
+import { composeLegacyCrmDeps } from '../core/late-bindings';
+import { __set_CRM } from '../core/late-bindings';
 const CRM={
  addLead(o){return CrmLeadWorkflows.addLead(composeLegacyCrmDeps(),o)},updateLead(id,o){return CrmLeadWorkflows.updateLead(composeLegacyCrmDeps(),id,o)},convertLead(id){return CrmLeadWorkflows.convertLead(composeLegacyCrmDeps(),id)},addFollowup(o){return CrmLeadWorkflows.addFollowup(composeLegacyCrmDeps(),o)},updateFollowup(id,o){return CrmLeadWorkflows.updateFollowup(composeLegacyCrmDeps(),id,o)},removeFollowup(id){return CrmLeadWorkflows.removeFollowup(composeLegacyCrmDeps(),id)},removeLead(id){return CrmLeadWorkflows.removeLead(composeLegacyCrmDeps(),id)},
  addQuotation(o){return QuotationWorkflows.addQuotation(composeLegacyCrmDeps(),o)},updateQuotation(id,o){return QuotationWorkflows.updateQuotation(composeLegacyCrmDeps({requireEditable:(_kind,q)=>ActionPolicy.requireEditable('quotation',q)}),id,o)},removeQuotation(id){return QuotationWorkflows.removeQuotation(composeLegacyCrmDeps(),id)},lineTotal(l){return QuotationWorkflows.lineTotal(composeLegacyCrmDeps(),l)},quotationTotal(q){return QuotationWorkflows.quotationTotal(composeLegacyCrmDeps(),q)},acceptQuotation(id){return QuotationWorkflows.acceptQuotation(composeLegacyCrmDeps(),id)},convertQuotation(id){return QuotationWorkflows.convertQuotation(composeLegacyCrmDeps(),id)},
  addPO(o){return PurchaseWorkflows.addPO(composeLegacyCrmDeps(),o)},updatePO(id,o){return PurchaseWorkflows.updatePO(composeLegacyCrmDeps({requireEditable:(_kind,po)=>ActionPolicy.requireEditable('purchaseOrder',po)}),id,o)},removePO(id){return PurchaseWorkflows.removePO(composeLegacyCrmDeps(),id)},voidPO(id,reason='إلغاء أمر شراء'){return PurchaseWorkflows.voidPO(composeLegacyCrmDeps(),id,reason)},poTotal(po){return PurchaseWorkflows.poTotal(composeLegacyCrmDeps(),po)},approvePO(id){return PurchaseWorkflows.approvePO(composeLegacyCrmDeps(),id)},receivePO(id){return PurchaseWorkflows.receivePO(composeLegacyCrmDeps(),id)},receivePOLines(id,quantities){return PurchaseWorkflows.receivePOLines(composeLegacyCrmDeps(),id,quantities)},convertPO(id){return PurchaseWorkflows.convertPO(composeLegacyCrmDeps(),id)}
 };
+__set_CRM(CRM);
 
 const CRMAddPOLifecycleBase=CRM.addPO.bind(CRM),CRMUpdatePOLifecycleBase=CRM.updatePO.bind(CRM);
 CRM.addPO=o=>{const po=CRMAddPOLifecycleBase(o),program=(DB.data.programs||[]).find(x=>x.id===o.programId)||(DB.data.umrahPrograms||[]).find(x=>x.id===o.programId);if(o.programId){po.programId=o.programId;po.costCenterId=program?.costCenterId||o.costCenterId||po.costCenterId||'';for(const l of po.lines||[])l.costCenterId=l.costCenterId||po.costCenterId||''}return po};
 CRM.updatePO=(id,o)=>{const po=CRMUpdatePOLifecycleBase(id,o),program=(DB.data.programs||[]).find(x=>x.id===o.programId)||(DB.data.umrahPrograms||[]).find(x=>x.id===o.programId);if(o.programId){po.programId=o.programId;po.costCenterId=program?.costCenterId||o.costCenterId||po.costCenterId||'';for(const l of po.lines||[])l.costCenterId=l.costCenterId||po.costCenterId||''}return po};
 const CRMConvertPOLifecycleBase=CRM.convertPO.bind(CRM);
 CRM.convertPO=id=>{const po=byId(DB.data.purchaseOrders,id);if(po?.invoiceId){const linked=byId(DB.data.invoices,po.invoiceId);if(linked&&['void','cancelled'].includes(linked.status))po.invoiceId=''}if(!po)return CRMConvertPOLifecycleBase(id);po.preConversionStatus=['approved','partiallyReceived','received','partiallyInvoiced'].includes(po.status)?po.status:(po.preConversionStatus||'received');const before=po.invoiceId||'',originalRef=po.externalRef;if(po.lastVoidedInvoiceId&&!PurchaseOrderFulfillment.uninvoicedLines(po,{legacyFull:true}).length){const sequence=(po.invoiceHistory||[]).length+1;po.externalRef=`${originalRef||po.no}-R${sequence}`}try{const inv=CRMConvertPOLifecycleBase(id);if(inv?.id&&inv.id!==before)po.invoiceHistory=[...new Set([...(po.invoiceHistory||[]),inv.id])];return inv}finally{po.externalRef=originalRef}};
+export { CRM, CRMAddPOLifecycleBase, CRMConvertPOLifecycleBase, CRMUpdatePOLifecycleBase };

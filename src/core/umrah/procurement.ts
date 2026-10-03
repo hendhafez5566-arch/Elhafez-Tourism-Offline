@@ -1,3 +1,9 @@
+import { UmrahCore_N, UmrahCore_S, UmrahCore_iid, UmrahCore_now, UmrahCore_today } from './runtime';
+import { UmrahCore_Bridge, UmrahCore_DB } from './data';
+import { UmrahCore_Inventory } from './contracts-inventory';
+import { UmrahCore_ContractCenter } from './contracts';
+import { UmrahCore_Ops } from '../late-bindings';
+import { __set_UmrahCore_Procurement } from '../late-bindings';
 // Umrah supplier procurement lifecycle, split from contracts.ts without behavioral changes.
 const UmrahCore_Procurement: any = {
     contractInfo(kind, id) { let x, total = 0, currency = '', supplierId = '', description = '', expectedDate = ''; if (kind === 'hotel') {
@@ -174,3 +180,5 @@ const UmrahCore_Procurement: any = {
     return c; const res = UmrahCore_Bridge.emit('umrah.supplier.invoice.approved', { id: c.id, commitmentId: c.id, commitmentKey: c.key, hostPOId: c.hostPOId, programId: c.programId, supplierId: c.supplierId, currency: c.currency, total: c.total, externalNo: externalNo || '', description: c.description }, `supplier-invoice:${c.key}`); c.status = 'invoiced'; c.hostInvoiceId = res?.invoiceId || ''; c.hostInvoiceNo = res?.invoiceNo || ''; c.invoicedAt = UmrahCore_now(); UmrahCore_Bridge.audit('invoice', 'umrahSupplier', c.id, c.hostInvoiceNo || c.description); return c; },
     status(c) { const s = UmrahCore_Bridge.procurementSnapshot(c.hostPOId || c.hostInvoiceId); return s || { poNo: c.hostPONo, invoiceNo: c.hostInvoiceNo, status: c.status }; }
 };
+__set_UmrahCore_Procurement(UmrahCore_Procurement);
+export { UmrahCore_Procurement };

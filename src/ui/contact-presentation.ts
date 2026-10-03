@@ -1,3 +1,4 @@
+import type { ContactBridgePort, NotificationPresentationPort, PresentationDomPort } from '../platform/platform-contracts';
 interface ContactPresentationDeps {
     dom: PresentationDomPort;
     bridge: ContactBridgePort;
@@ -29,3 +30,5 @@ function pickContactPresentation(deps: ContactPresentationDeps, field: string): 
         deps.notification.notify('تعذر فتح جهات الاتصال', 'error');
     }
 }
+export { bindContactPresentation, pickContactPresentation };
+export type { ContactPresentationDeps };

@@ -1,3 +1,6 @@
+import { S, deep, iid } from '../core/runtime';
+import { DB } from '../persistence/browser-store';
+import { Auth } from '../core/late-bindings';
 /* Central expense-category registry. Keeps expense classification configurable without changing posted history. */
 const ExpenseCategories={
  defaults:[
@@ -23,3 +26,4 @@ const ExpenseCategories={
  toggle(id){Auth.require('expenses','edit');const defs=this.ensure(),x=defs.find(v=>v.id===id);if(!x)throw new Error('تصنيف المصروف غير موجود');x.active=x.active===false;DB.data.settings.expenseCategoryDefs=defs;DB.log('edit','expense-category',x.id,`${x.active?'تشغيل':'إيقاف'} تصنيف مصروف: ${x.name}`);return x},
  items(current=''){const a=this.active(current).map(x=>({value:x.name,label:x.active===false?`${x.name} — موقوف`:x.name}));if(current&&!a.some(x=>x.value===current))a.unshift({value:current,label:`${current} — تصنيف تاريخي`});return a}
 };
+export { ExpenseCategories };

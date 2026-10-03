@@ -1,3 +1,18 @@
+import { APP, N, S, deep, esc, fmt, formatDateTime, icon, toast, today } from '../core/runtime';
+import { CommercialWorkflows } from '../application/commercial-actions';
+import { Seed } from '../core/seed';
+import { ServerStore } from '../persistence/server-store';
+import { DB, DataStore } from '../persistence/browser-store';
+import { BranchScope, CommercialSupport } from './product';
+import { AttachmentStore, Backup } from '../documents/attachments-backup';
+import { Auth } from '../security/auth';
+import { Party360 } from '../crm/party360';
+import { UI } from '../ui/ui';
+import { ArchiveCenter, CommercialPages } from './pages';
+import { Actions } from '../ui/actions';
+import { ArchiveViewer, CommercialActionViews } from '../ui/commercial-action-views';
+import { composeLegacyCommercialDeps } from '../core/late-bindings';
+import { __set_CommercialActions } from '../core/late-bindings';
 const CommercialActions={
  setActivityRange(range){CommercialWorkflows.setActivityRange(composeLegacyCommercialDeps(),range);CommercialActionViews.activityRangeChanged()},
  async clearActivity(range){const labels={day:'آخر 24 ساعة','7d':'آخر 7 أيام','30d':'آخر 30 يومًا','365d':'آخر سنة',all:'كل سجل النشاط'},cut=CommercialWorkflows.activityCut(composeLegacyCommercialDeps(),range);if(!confirm(`مسح ${labels[range]||'السجل'}؟\n\nلن يتم حذف الفواتير أو القيود أو المستندات المالية.`))return;await CommercialWorkflows.clearActivity(composeLegacyCommercialDeps(),range,cut);CommercialActionViews.activityCleaned()},
@@ -11,6 +26,7 @@ const CommercialActions={
  party360(type,id){try{Party360.open(type,id)}catch(e){toast(e.message,'error')}},
  async refreshLicenseStatus(){try{const btn=document.getElementById('refreshLicenseBtn') as HTMLButtonElement|null;if(btn){btn.disabled=true;btn.textContent='جاري التحديث...'}const l=await ServerStore.refreshLicense(true);toast('تم تحديث حالة الترخيص من الخادم','ok');UI.openPage('settings','',{skipHistory:true,keepWorkspace:true});setTimeout(()=>document.getElementById('settings-license')?.scrollIntoView({behavior:'smooth',block:'start'}),60);return l}catch(e){toast(e.message||'تعذر تحديث حالة الترخيص','error');const btn=document.getElementById('refreshLicenseBtn') as HTMLButtonElement|null;if(btn){btn.disabled=false;btn.textContent='تحديث حالة الترخيص'}}}
 };
+__set_CommercialActions(CommercialActions);
 Object.assign(Actions,CommercialActions);
 
 Object.assign(CommercialActions,{
@@ -35,3 +51,4 @@ Object.assign(CommercialActions,{
  confirmFactoryReset(requireTyped=false){const typed=requireTyped?prompt('للمتابعة بدون نسخة احتياطية اكتب RESET بالحروف الإنجليزية:'):'RESET';if(typed!=='RESET')return toast('تم إلغاء إعادة التهيئة','warning');UI.confirmAction('تأكيد نهائي لإعادة التهيئة','ستعود بيانات التشغيل إلى حالة أول استخدام، ثم ستظهر شاشة تختار منها «مستخدم حالي» أو «مستخدم جديد». النسخ والأرشيفات المحفوظة لا تُحذف.',async()=>{try{if(APP.offlineEdition===true){await DB.factoryReset();return}await ServerStore.factoryReset('RESET');await AttachmentStore.clear();await DataStore.localPut(deep(Seed));location.reload()}catch(e){toast(e.message,'error')}})}
 });
 Object.assign(Actions,CommercialActions);
+export { CommercialActions };

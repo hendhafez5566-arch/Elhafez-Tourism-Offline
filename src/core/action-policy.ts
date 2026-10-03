@@ -1,3 +1,4 @@
+import { S } from './runtime';
 /*
  * Central UI action policy.
  * The server remains the final authority; this layer prevents presenting
@@ -33,3 +34,4 @@ const ActionPolicy={
  },
  requireEditable(kind,x){if(!this.canEdit(kind,x))throw new Error(this.reason(kind,x));return true}
 };
+export { ActionPolicy };

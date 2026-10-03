@@ -1,3 +1,6 @@
+import { BusinessValues } from '../core/business-values';
+import { TourismRules } from '../core/tourism-rules';
+import type { BusinessInvoice, TourismWorkflowDeps } from './business-contracts';
 const TourismWorkflows = {
     reopenBooking(d: TourismWorkflowDeps, id: string, reason: string) {
         const b = BusinessValues.find(d.repository.bookings, id);
@@ -58,3 +61,4 @@ const TourismWorkflows = {
         d.persistence.log('reopen', 'service', id, reason);
     }
 };
+export { TourismWorkflows };

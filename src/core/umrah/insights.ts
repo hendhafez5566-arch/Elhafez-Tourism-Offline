@@ -1,3 +1,8 @@
+import { N, S, daysBetween, formatDate, live, today } from '../runtime';
+import { DB } from '../../persistence/browser-store';
+import { UmrahCore_dateAdd, UmrahCore_money } from './runtime';
+import { UmrahCore_Cost, UmrahCore_DB } from './data';
+import { UmrahCore_Ops } from './operations';
 /* Non-blocking operational intelligence for Hajj/Umrah. It never creates data; it only explains risks. */
 const UmrahCore_Insights={
  warnings(programId){const p=UmrahCore_Ops.program(programId);if(!p)return[];const out=[],segs=UmrahCore_Ops.segments(programId),hotels=segs.filter(x=>x.type==='hotel').sort((a,b)=>S(a.start).localeCompare(S(b.start))),flights=segs.filter(x=>x.type==='flight'),travelers=UmrahCore_Ops.activeTravelers(programId),activeBookings=UmrahCore_Ops.scoped('bookings').filter(b=>b.programId===programId&&UmrahCore_Ops.activeBookingStatuses.has(b.status));
@@ -8,3 +13,4 @@ const UmrahCore_Insights={
   return out},
  snapshot(programId){const p=UmrahCore_Ops.program(programId);if(!p)return null;const bookings=UmrahCore_Ops.scoped('bookings').filter(x=>x.programId===programId&&x.active!==false),travelers=UmrahCore_Ops.scoped('travelers').filter(x=>x.programId===programId&&x.active!==false),commitments=UmrahCore_Ops.scoped('supplierCommitments').filter(x=>x.programId===programId&&x.active!==false&&x.status!=='cancelled'),invoices=(DB.data.invoices||[]).filter(x=>live(x)&&x.programId===programId),receipts=(DB.data.receipts||[]).filter(r=>live(r)&&(r.allocations||[]).some(a=>invoices.some(i=>i.id===a.invoiceId&&i.kind!=='supplier'))),payments=(DB.data.payments||[]).filter(r=>live(r)&&(r.allocations||[]).some(a=>invoices.some(i=>i.id===a.invoiceId&&i.kind==='supplier')));return{program:p,bookings,travelers,commitments,invoices,receipts,payments,warnings:this.warnings(programId)}}
 };
+export { UmrahCore_Insights };

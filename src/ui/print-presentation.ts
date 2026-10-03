@@ -1,3 +1,4 @@
+import type { DocumentPrintPresentationDeps } from '../platform/platform-contracts';
 function printDocumentFallback(deps: DocumentPrintPresentationDeps, payload: {
     html: string;
     fileName: string;
@@ -11,3 +12,4 @@ function printDocumentFallback(deps: DocumentPrintPresentationDeps, payload: {
     else
         deps.scheduler.timeout(run, 80);
 }
+export { printDocumentFallback };

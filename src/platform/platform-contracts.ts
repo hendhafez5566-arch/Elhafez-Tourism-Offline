@@ -61,3 +61,4 @@ interface UmrahPresentationCommands {
     openForm(type: string, context: Record<string, unknown>): unknown;
     openPartyActions(type: string, id: string): unknown;
 }
+export type { ContactBridgePort, CurrentPrintPort, DocumentPrintPresentationDeps, NativeDocumentPrintPort, NotificationPresentationPort, PresentationDomPort, PresentationScheduler, PrintFramePort, PwaRegistrationPort, SessionPresentationEffects, StorePresentationEffects, UmrahPresentationCommands };

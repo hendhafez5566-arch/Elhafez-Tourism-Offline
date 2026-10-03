@@ -1,3 +1,5 @@
+import { UmrahBusinessRules } from '../core/umrah/business-rules';
+import type { UmrahLifecycleDeps } from './business-contracts';
 const UmrahLifecycleWorkflows = {
     setProgramStatus(d: UmrahLifecycleDeps, id: string, status: string) {
         return d.transactions.atomic('setProgramStatus', () => {
@@ -60,3 +62,4 @@ const UmrahLifecycleWorkflows = {
         });
     }
 };
+export { UmrahLifecycleWorkflows };

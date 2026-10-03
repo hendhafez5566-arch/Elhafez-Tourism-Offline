@@ -1,3 +1,15 @@
+import { EPS, N, S, activityActionLabel, byId, entityLabel, esc, formatDate, formatDateTime, icon, live, money, toast, today } from '../core/runtime';
+import { DB } from '../persistence/browser-store';
+import { Commercial } from '../commercial/product';
+import { Accounting } from '../accounting/engine';
+import { Invoices, MasterData } from '../accounting/invoices';
+import { CRM } from './crm';
+import { DeleteCenter } from '../core/delete-center';
+import { Attachments } from '../documents/attachments-backup';
+import { Auth } from '../security/auth';
+import { UnifiedParty } from './unified-party';
+import { Actions, CommercialUX, Pages, Print, SearchSelect, UI, UmrahCore_PrintView, UmrahCore_Procurement, composeParty360Presentation } from '../core/late-bindings';
+import { __set_Party360 } from '../core/late-bindings';
 /* Unified party "More" center. Lightweight shell first; heavy data is lazy and bounded. */
 const Party360={
  _loadToken:0,_modelCacheKey:'',_modelCache:null,_chunkSize:500,
@@ -61,3 +73,5 @@ const Party360={
  openMore(type,id){return this.open(type,id)},
  open(type,id){return composeParty360Presentation(this).open(type,id)}
 };
+__set_Party360(Party360);
+export { Party360 };

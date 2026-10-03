@@ -1,3 +1,4 @@
+import type { Party360PresentationDeps, UnifiedPartyPresentationDeps } from './presentation-contracts';
 function createUnifiedPartyPresentation(deps: UnifiedPartyPresentationDeps) {
     return {
         openLinkRole(type: string, id: string, targetType: string) { const candidates = deps.linkCandidates(type, id, targetType); if (!candidates.length)
@@ -31,3 +32,4 @@ function createParty360Presentation(deps: Party360PresentationDeps) {
         open(type: string, id: string) { const d = deps.base(type, id), m = deps.dom.element('modal'), f = deps.dom.form('modalForm'); deps.dom.element('modalTitle').textContent = `المزيد — ${d.x.name}`; deps.dom.element('modalSubtitle').textContent = ''; deps.dom.element('modalIcon').innerHTML = deps.icon(d.cfg.icon); deps.dom.element('modalSubmitText').textContent = 'إغلاق'; deps.dom.element('modalBody').innerHTML = deps.shell(type, id); m.classList.add('show'); f.onsubmit = e => { e.preventDefault(); deps.close(); }; deps.loadTab(type, id, 'overview'); }
     };
 }
+export { createParty360Presentation, createUnifiedPartyPresentation };

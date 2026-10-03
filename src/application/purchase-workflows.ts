@@ -1,3 +1,7 @@
+import { BusinessValues } from '../core/business-values';
+import { CommercialLifecycleRules } from '../crm/commercial-lifecycle-rules';
+import { QuotationWorkflows } from './quotation-workflows';
+import type { BusinessInvoice, BusinessPurchaseFields, BusinessPurchaseOrder, CrmWorkflowDeps } from './business-contracts';
 // Legacy order and return timing preserved; dependencies are supplied by composition.
 const PurchaseWorkflows = {
     addPO(d: CrmWorkflowDeps, o: BusinessPurchaseFields) {
@@ -86,3 +90,4 @@ const PurchaseWorkflows = {
         });
     }
 };
+export { PurchaseWorkflows };

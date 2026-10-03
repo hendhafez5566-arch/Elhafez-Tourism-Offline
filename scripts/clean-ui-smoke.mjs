@@ -1,5 +1,6 @@
 import {readFileSync,existsSync} from 'node:fs';
-const read=p=>readFileSync(p,'utf8'), umrahOps=read('src/core/umrah/operations.ts')+'\n'+read('src/core/umrah/operations-execution.ts'), ui=read('src/ui/ui.ts'), nav=read('src/ui/navigation.ts'), html=read('index.html'), css=read('src/styles.css'), pages=read('src/ui/pages.ts'), actions=read('src/ui/actions.ts'), party=read('src/crm/party360.ts'), umrahForms=read('src/core/umrah/forms.ts'), ts=read('tsconfig.json'), manifest=read('android/app/src/main/AndroidManifest.xml');
+import {compiledFilesText} from './lib/build-model.mjs';
+const read=p=>readFileSync(p,'utf8'), umrahOps=read('src/core/umrah/operations.ts')+'\n'+read('src/core/umrah/operations-execution.ts'), ui=read('src/ui/ui.ts'), nav=read('src/ui/navigation.ts'), html=read('index.html'), css=read('src/styles.css'), pages=read('src/ui/pages.ts'), actions=read('src/ui/actions.ts'), party=read('src/crm/party360.ts'), umrahForms=read('src/core/umrah/forms.ts'), ts=compiledFilesText(), manifest=read('android/app/src/main/AndroidManifest.xml');
 const checks=[];const check=(name,pass)=>checks.push({name,pass:!!pass});
 check('Quick Navigation removed from topbar and sidebar',!html.includes('navigatorPanel')&&!html.includes('nav-switch-btn')&&!ui.includes('toggleNavigator')&&!ui.includes('انتقال سريع'));
 check('Umrah navigation follows the simplified workflow',nav.includes("'ابدأ هنا'")&&nav.includes("'الإدارة اليومية'")&&nav.includes("'التعاقدات'")&&nav.includes("'التشغيل'")&&nav.includes("'المخرجات'")&&nav.includes("'الإعدادات'"));
