@@ -11,6 +11,7 @@
     "strict": false,
     "skipLibCheck": true,
     "noEmit": true,
+    "noEmitOnError": true,
     "types": [],
     "sourceMap": false,
     "removeComments": true
