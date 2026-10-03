@@ -34,7 +34,19 @@ function instrumentRuntimeForVm(source) {
   return out;
 }
 
+function instrumentUmrahIntegrationForVm(source) {
+  const marker = 'onReceipt(_r){return true},';
+  if (!source.includes(marker)) throw new Error('Umrah receipt integration hook was not found');
+  return source.replace(marker, "onReceipt(_r){const __receipt=globalThis.__umrahReceipt;return typeof __receipt==='function'?__receipt(_r):true},");
+}
+
 const browserPrelude = `
+globalThis.__vmFakeToast = typeof globalThis.toast === 'function' ? globalThis.toast : undefined;
+globalThis.__vmFakeIid = typeof globalThis.iid === 'function' ? globalThis.iid : undefined;
+globalThis.__vmFakeNow = typeof globalThis.now === 'function' ? globalThis.now : undefined;
+globalThis.__vmFakeToday = typeof globalThis.today === 'function' ? globalThis.today : undefined;
+const __vmUmrah = globalThis.UmrahCore_ERP;
+globalThis.__vmFakeUmrahReceipt = __vmUmrah && typeof __vmUmrah.onReceipt === 'function' ? __vmUmrah.onReceipt.bind(__vmUmrah) : undefined;
 if (typeof globalThis.location === 'undefined') {
   globalThis.location = { href:'https://vm.invalid/', origin:'https://vm.invalid', hostname:'vm.invalid', protocol:'https:', pathname:'/', search:'', hash:'', reload(){} };
 }
@@ -60,10 +72,11 @@ if (typeof globalThis.URLSearchParams === 'undefined') {
 `;
 
 const browserPostlude = `
-if (typeof globalThis.__notify !== 'function' && typeof globalThis.toast === 'function') globalThis.__notify = (kind,...args) => globalThis.toast(...args);
-if (typeof globalThis.__iid !== 'function' && typeof globalThis.iid === 'function') globalThis.__iid = globalThis.iid;
-if (typeof globalThis.__now !== 'function' && typeof globalThis.now === 'function') globalThis.__now = globalThis.now;
-if (typeof globalThis.__today !== 'function' && typeof globalThis.today === 'function') globalThis.__today = globalThis.today;
+if (typeof globalThis.__vmFakeToast === 'function') globalThis.__notify = (kind,...args) => globalThis.__vmFakeToast(...args);
+if (typeof globalThis.__vmFakeIid === 'function') globalThis.__iid = globalThis.__vmFakeIid;
+if (typeof globalThis.__vmFakeNow === 'function') globalThis.__now = globalThis.__vmFakeNow;
+if (typeof globalThis.__vmFakeToday === 'function') globalThis.__today = globalThis.__vmFakeToday;
+if (typeof globalThis.__vmFakeUmrahReceipt === 'function') globalThis.__umrahReceipt = globalThis.__vmFakeUmrahReceipt;
 `;
 
 export async function bundleForVm(entrySource, { suppressBootstrap = false } = {}) {
@@ -74,6 +87,11 @@ export async function bundleForVm(entrySource, { suppressBootstrap = false } = {
       build.onLoad({ filter: /.*/, namespace: 'differential' }, () => ({ contents: entrySource, loader: 'ts', resolveDir: root }));
       build.onLoad({ filter: /[\\/]src[\\/]core[\\/]runtime\.ts$/ }, (args) => ({
         contents: instrumentRuntimeForVm(fs.readFileSync(args.path, 'utf8')),
+        loader: 'ts',
+        resolveDir: path.dirname(args.path)
+      }));
+      build.onLoad({ filter: /[\\/]src[\\/]core[\\/]umrah[\\/]integration\.ts$/ }, (args) => ({
+        contents: instrumentUmrahIntegrationForVm(fs.readFileSync(args.path, 'utf8')),
         loader: 'ts',
         resolveDir: path.dirname(args.path)
       }));
