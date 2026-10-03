@@ -1,11 +1,26 @@
 // Build current ES-module sources for differential VM execution with the same
 // esbuild settings as the production browser bundle. Historical snapshots keep
 // using their original concatenated-script compiler in the individual checks.
+//
+// Important: this helper never rewrites production function bodies. When a
+// legacy differential test already provides deterministic globals (toast,
+// today, formatDate, etc.), ES-module adapters expose those same fakes to the
+// current module graph at import time. That keeps both sides of the comparison
+// in the same test environment instead of mutating modules after evaluation.
 import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 import { build } from 'esbuild';
 import { root } from './build-model.mjs';
+
+const runtimePath = path.join(root, 'src/core/runtime.ts');
+const umrahIntegrationPath = path.join(root, 'src/core/umrah/integration.ts');
+
+const runtimeGlobalOverrides = [
+  'EPS', 'S', 'N', 'deep', 'byId', 'live', 'today', 'now', 'iid',
+  'formatDate', 'fmt', 'money', 'daysBetween', 'dateAddMonthsClamped',
+  'Money', 'toast'
+];
 
 function withoutBootstrapStartup(source) {
   const file = ts.createSourceFile('src/bootstrap.ts', source, ts.ScriptTarget.ES2020, true);
@@ -15,39 +30,21 @@ function withoutBootstrapStartup(source) {
   return source.slice(0, startup.getFullStart()) + source.slice(startup.end);
 }
 
-function instrumentRuntimeForVm(source) {
-  const toastMarker = "function toast(msg,type='ok'){";
-  if (!source.includes(toastMarker)) throw new Error('Runtime toast function was not found');
-  let out = source.replace(
-    toastMarker,
-    `${toastMarker}const __notify=(globalThis).__notify;if(typeof __notify==='function')return globalThis.__vmPreserveToastArity&&arguments.length<2?__notify('toast',msg):__notify('toast',msg,type);`
-  );
-  const todayMarker = 'const today=()=>{';
-  if (!out.includes(todayMarker)) throw new Error('Runtime today function was not found');
-  out = out.replace(todayMarker, `${todayMarker}const __today=globalThis.__today;if(typeof __today==='function')return __today();`);
-  const nowMarker = 'const now=()=>new Date().toISOString();';
-  if (!out.includes(nowMarker)) throw new Error('Runtime now function was not found');
-  out = out.replace(nowMarker, "const now=()=>{const __now=globalThis.__now;return typeof __now==='function'?__now():new Date().toISOString()};");
-  const iidMarker = "const iid=()=>globalThis.crypto?.randomUUID?.()||('i-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10));";
-  if (!out.includes(iidMarker)) throw new Error('Runtime iid function was not found');
-  out = out.replace(iidMarker, "const iid=()=>{const __iid=globalThis.__iid;return typeof __iid==='function'?__iid():(globalThis.crypto?.randomUUID?.()||('i-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10)))};");
-  return out;
+function resolvesTo(args, targetPath) {
+  if (!args.resolveDir || !args.path.startsWith('.')) return false;
+  const base = path.resolve(args.resolveDir, args.path);
+  return [base, `${base}.ts`, `${base}.tsx`, path.join(base, 'index.ts')]
+    .some((candidate) => path.normalize(candidate) === path.normalize(targetPath));
 }
 
-function instrumentUmrahIntegrationForVm(source) {
-  const marker = 'onReceipt(_r){return true},';
-  if (!source.includes(marker)) throw new Error('Umrah receipt integration hook was not found');
-  return source.replace(marker, "onReceipt(_r){const __receipt=globalThis.__umrahReceipt;return typeof __receipt==='function'?__receipt(_r):true},");
+function globalAdapter(realSpecifier, names) {
+  const explicit = names.map((name) =>
+    `export const ${name}=Object.prototype.hasOwnProperty.call(globalThis,${JSON.stringify(name)})&&globalThis[${JSON.stringify(name)}]!==undefined?globalThis[${JSON.stringify(name)}]:real.${name};`
+  ).join('\n');
+  return `import * as real from ${JSON.stringify(realSpecifier)};\nexport * from ${JSON.stringify(realSpecifier)};\n${explicit}\n`;
 }
 
 const browserPrelude = `
-globalThis.__vmPreserveToastArity = typeof globalThis.toast === 'function';
-globalThis.__vmFakeToast = typeof globalThis.toast === 'function' ? globalThis.toast : undefined;
-globalThis.__vmFakeIid = typeof globalThis.iid === 'function' ? globalThis.iid : undefined;
-globalThis.__vmFakeNow = typeof globalThis.now === 'function' ? globalThis.now : undefined;
-globalThis.__vmFakeToday = typeof globalThis.today === 'function' ? globalThis.today : undefined;
-const __vmUmrah = globalThis.UmrahCore_ERP;
-globalThis.__vmFakeUmrahReceipt = __vmUmrah && typeof __vmUmrah.onReceipt === 'function' ? __vmUmrah.onReceipt.bind(__vmUmrah) : undefined;
 if (typeof globalThis.location === 'undefined') {
   globalThis.location = { href:'https://vm.invalid/', origin:'https://vm.invalid', hostname:'vm.invalid', protocol:'https:', pathname:'/', search:'', hash:'', reload(){} };
 }
@@ -72,32 +69,31 @@ if (typeof globalThis.URLSearchParams === 'undefined') {
 }
 `;
 
-const browserPostlude = `
-if (typeof globalThis.__vmFakeToast === 'function') globalThis.__notify = (kind,...args) => globalThis.__vmFakeToast(...args);
-if (typeof globalThis.__vmFakeIid === 'function') globalThis.__iid = globalThis.__vmFakeIid;
-if (typeof globalThis.__vmFakeNow === 'function') globalThis.__now = globalThis.__vmFakeNow;
-if (typeof globalThis.__vmFakeToday === 'function') globalThis.__today = globalThis.__vmFakeToday;
-if (typeof globalThis.__vmFakeUmrahReceipt === 'function') globalThis.__umrahReceipt = globalThis.__vmFakeUmrahReceipt;
-`;
-
 export async function bundleForVm(entrySource, { suppressBootstrap = false } = {}) {
   // Selected differential entries do not always pull every generated late-binding owner.
-  // The production graph always initialises ManualJournalRules, so initialise that owner in VM bundles too.
+  // Production initialises ManualJournalRules before consumers, so mirror that owner here.
   const vmEntrySource = `import './src/accounting/manual-journal-rules.ts';\n${entrySource}`;
   const plugins = [{
     name: 'differential-vm-entry',
     setup(build) {
       build.onResolve({ filter: /^differential:entry$/ }, () => ({ path: 'entry.ts', namespace: 'differential' }));
+      build.onResolve({ filter: /^differential:real-runtime$/ }, () => ({ path: runtimePath }));
+      build.onResolve({ filter: /^differential:real-umrah-integration$/ }, () => ({ path: umrahIntegrationPath }));
+      build.onResolve({ filter: /.*/ }, (args) => {
+        if (resolvesTo(args, runtimePath)) return { path: runtimePath, namespace: 'differential-runtime-adapter' };
+        if (resolvesTo(args, umrahIntegrationPath)) return { path: umrahIntegrationPath, namespace: 'differential-umrah-adapter' };
+        return null;
+      });
       build.onLoad({ filter: /.*/, namespace: 'differential' }, () => ({ contents: vmEntrySource, loader: 'ts', resolveDir: root }));
-      build.onLoad({ filter: /[\\/]src[\\/]core[\\/]runtime\.ts$/ }, (args) => ({
-        contents: instrumentRuntimeForVm(fs.readFileSync(args.path, 'utf8')),
+      build.onLoad({ filter: /.*/, namespace: 'differential-runtime-adapter' }, () => ({
+        contents: globalAdapter('differential:real-runtime', runtimeGlobalOverrides),
         loader: 'ts',
-        resolveDir: path.dirname(args.path)
+        resolveDir: root
       }));
-      build.onLoad({ filter: /[\\/]src[\\/]core[\\/]umrah[\\/]integration\.ts$/ }, (args) => ({
-        contents: instrumentUmrahIntegrationForVm(fs.readFileSync(args.path, 'utf8')),
+      build.onLoad({ filter: /.*/, namespace: 'differential-umrah-adapter' }, () => ({
+        contents: globalAdapter('differential:real-umrah-integration', ['UmrahCore_ERP']),
         loader: 'ts',
-        resolveDir: path.dirname(args.path)
+        resolveDir: root
       }));
       if (suppressBootstrap) {
         build.onLoad({ filter: /[\\/]src[\\/]bootstrap\.ts$/ }, (args) => ({
@@ -123,5 +119,5 @@ export async function bundleForVm(entrySource, { suppressBootstrap = false } = {
     tsconfig: 'tsconfig.json',
     plugins
   });
-  return browserPrelude + result.outputFiles[0].text + browserPostlude;
+  return browserPrelude + result.outputFiles[0].text;
 }
