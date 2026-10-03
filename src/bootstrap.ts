@@ -1,3 +1,97 @@
+// Phase 3: legacy infrastructure composition. Live getters survive atomic rollback.
+// Phase 3: legacy infrastructure composition. Live getters survive atomic rollback.
+function composeBusinessClock(): BusinessClock {
+    return {
+        today, now, id: iid, next: (kind, date) => Numbering.next(kind, date), clone: value => deep(value), formatDate
+    };
+}
+function composeBusinessMoney(): BusinessMoneyPort {
+    return {
+        round: (value, currency) => Money.round(value, currency), rate: (currency, date) => Currency.rate(currency, date), toBase: (amount, currency, date) => Currency.toBase(amount, currency, date), format: (amount, currency) => money(amount, currency)
+    };
+}
+function composeLegacyCrmDeps(policy?: CrmWorkflowDeps['policy']): CrmWorkflowDeps {
+    return {
+        repository: {
+            get leads() {
+                return DB.data.leads;
+            }, set leads(value) {
+                DB.data.leads = value;
+            }, get followups() {
+                return DB.data.followups;
+            }, set followups(value) {
+                DB.data.followups = value;
+            }, get quotations() {
+                return DB.data.quotations;
+            }, set quotations(value) {
+                DB.data.quotations = value;
+            }, get purchaseOrders() {
+                return DB.data.purchaseOrders;
+            }, set purchaseOrders(value) {
+                DB.data.purchaseOrders = value;
+            }, get invoices() {
+                return DB.data.invoices;
+            }, get programs() {
+                return DB.data.programs;
+            }, baseCurrency: () => DB.data.settings.baseCurrency
+        },
+        clock: composeBusinessClock(), actor: () => Auth.user, transactions: {
+            atomic: (label, work, options) => DB.atomic(label, work, options), atomicAsync: (label, work, options) => DB.atomicAsync(label, work, options), fastAtomic: (label, work, options) => DB.fastAtomic(label, work, options)
+        }, persistence: {
+            log: (action, type, id, detail) => DB.log(action, type, id, detail), save: render => DB.save(render)
+        },
+        invoices: {
+            create: input => Invoices.create(input), post: invoice => Invoices.post(invoice)
+        }, parties: {
+            addCustomer: input => Transactions.addCustomer(input), applyPendingInvoiceAdvances: (invoice, filter) => Transactions.applyPendingInvoiceAdvances(invoice, filter)
+        }, policy: policy || {
+            requireEditable: (kind, record) => ActionPolicy.requireEditable(kind, record)
+        }, fulfillment: {
+            normalizeLines: (lines, previous) => PurchaseOrderFulfillment.normalizeLines(lines, previous), receiveAll: order => PurchaseOrderFulfillment.receiveAll(order), record: (order, quantities) => PurchaseOrderFulfillment.record(order, quantities), uninvoicedLines: (order, options) => PurchaseOrderFulfillment.uninvoicedLines(order, options), markInvoiced: (order, lines) => PurchaseOrderFulfillment.markInvoiced(order, lines)
+        }, tax: {
+            amount: (amount, id) => Tax.amount(amount, id)
+        }
+    };
+}
+function composeLegacyVoucherDeps(): VoucherWorkflowDeps {
+    return {
+        clock: composeBusinessClock(), actor: () => Auth.user, branchId: () => BranchScope.currentId(), transactions: {
+            atomic: (label, work, options) => DB.atomic(label, work, options), atomicAsync: (label, work, options) => DB.atomicAsync(label, work, options), fastAtomic: (label, work, options) => DB.fastAtomic(label, work, options)
+        }, persistence: {
+            log: (action, type, id, detail) => DB.log(action, type, id, detail), save: render => DB.save(render)
+        }, money: composeBusinessMoney(),
+        repository: {
+            baseCurrency: () => DB.data.settings.baseCurrency, approvalPayments: () => DB.data.settings.approvalPayments, get treasuries() {
+                return DB.data.treasuries;
+            }, get invoices() {
+                return DB.data.invoices;
+            }, get receipts() {
+                return DB.data.receipts;
+            }, get payments() {
+                return DB.data.payments;
+            }, get cheques() {
+                return DB.data.cheques;
+            }, get documents() {
+                return DB.data.documents;
+            }, get commissions() {
+                return DB.data.commissions;
+            }
+        },
+        invoices: {
+            allocate: (kind, partyId, currency, amount, date, invoiceId) => Invoices.allocate(kind, partyId, currency, amount, date, invoiceId), refresh: invoice => Invoices.refresh(invoice)
+        }, accounting: {
+            post: input => Accounting.post(input), reverse: (type, id, reason) => Accounting.reverse(type, id, reason), documentStatus: (type, id, status) => Accounting.documentStatus(type, id, status), ensureTreasuryAccount: treasury => Accounting.ensureTreasuryAccount(treasury), validateTreasury: (id, amount) => Accounting.validateTreasury(id, amount), supplierAdvance: id => Accounting.supplierAdvance(id), customerAdvance: (type, id) => Accounting.customerAdvance(type, id)
+        },
+        approval: {
+            create: (type, payload, amount) => Approvals.create(type, payload, amount), requested: approval => {
+                toast(`تم إرسال الطلب للاعتماد ${approval.no}`, 'warning');
+            }
+        }, pendingDraftInvoice: (kind, type, id, currency, invoiceId) => Transactions.pendingDraftInvoice(kind, type, id, currency, invoiceId), onReceipt: receipt => {
+            if (typeof UmrahCore_ERP !== 'undefined')
+                return UmrahCore_ERP.onReceipt?.(receipt);
+        }
+    };
+}
 function composeLegacyCommercialDeps():CommercialWorkflowDeps {
  return {
   authorization:{require:(page,action)=>Auth.require(page,action)},
@@ -154,3 +248,306 @@ function composeLegacyActionDeps():DocumentWorkflowDeps {
   // only after Auth.init has had the opportunity to enter the ERP.
   try{Promise.resolve(VendorOwner.init()).catch(e=>console.error('[bootstrap] VendorOwner.init failed',e))}catch(e){console.error('[bootstrap] VendorOwner.init start failed',e)}
 })();
+
+function composeLegacyJournalRules(accounting: {
+    validateLine(line: BusinessJournalLine): void;
+}): JournalRuleDeps {
+    return {
+        baseCurrency: DB.data.settings.baseCurrency, validateLine: line => accounting.validateLine(line), rate: (currency, date) => Currency.rate(currency, date), round: (value, currency) => Money.round(value, currency), format: value => fmt(value)
+    };
+}
+function composeLegacyInvoiceRules(): InvoiceRuleDeps {
+    return {
+        round: (value, currency) => Money.round(value, currency), tax: {
+            amount: (amount, id, rate, currency) => Tax.amount(amount, id, rate, currency), require: id => Tax.require(id)
+        }
+    };
+}
+function composeLegacyInvoiceDeps(math: InvoiceWorkflowDeps['math']): InvoiceWorkflowDeps {
+    return {
+        repository: {
+            get suppliers() {
+                return DB.data.suppliers;
+            }, get agents() {
+                return DB.data.agents;
+            }, get customers() {
+                return DB.data.customers;
+            }, get invoices() {
+                return DB.data.invoices;
+            }, get invoiceAdjustments() {
+                return DB.data.invoiceAdjustments;
+            }, get documents() {
+                return DB.data.documents;
+            }, baseCurrency: () => DB.data.settings.baseCurrency
+        }, periods: {
+            assertOpen: date => Periods.assertOpen(date)
+        }, money: composeBusinessMoney(), tax: {
+            require: id => Tax.require(id)
+        }, math: {
+            validateLines: invoice => math.validateLines(invoice), lineCalc: (line, currency) => math.lineCalc(line, currency), total: invoice => math.total(invoice), allocations: id => math.allocations(id), refresh: invoice => math.refresh(invoice)
+        }, accounting: {
+            post: input => Accounting.post(input), reverse: (type, id, reason) => Accounting.reverse(type, id, reason), documentStatus: (type, id, status) => Accounting.documentStatus(type, id, status), partyReceivable: (type, id) => Accounting.partyReceivable(type, id)
+        }, balanceBase: (map, positiveOnly) => Insights.balanceBase(map, positiveOnly), persistence: {
+            log: (action, type, id, detail) => DB.log(action, type, id, detail), save: render => DB.save(render)
+        }, applyPending: invoice => {
+            if (typeof Transactions !== 'undefined')
+                return Transactions.applyPendingInvoiceAdvances(invoice);
+        }, syncService: invoice => {
+            if (typeof Transactions !== 'undefined')
+                return Transactions.syncServiceBillingByInvoice(invoice);
+        }, deferred: {
+            available: () => typeof AdvancedAccounting !== 'undefined', revenue: invoice => AdvancedAccounting.deferInvoiceRevenue({
+                invoiceId: invoice.id, date: invoice.date, recognitionDate: invoice.recognitionDate, months: 1
+            }), cost: invoice => AdvancedAccounting.deferSupplierCost({
+                invoiceId: invoice.id, date: invoice.date, recognitionDate: invoice.recognitionDate, months: 1
+            })
+        }
+    };
+}
+function composeLegacyBranchDeps(): BranchWorkflowDeps {
+    return {
+        authorization: {
+            require: (page, action) => Auth.require(page, action)
+        }, repository: {
+            get branches() {
+                return DB.data.branches;
+            }, get users() {
+                return DB.data.users;
+            }
+        }, actor: () => Auth.user, branchLimit: () => License.maxBranches(), selection: {
+            current: () => BranchScope.currentId(), store: id => localStorage.setItem(BranchScope.storageKey(), id)
+        }, clock: composeBusinessClock(), persistence: {
+            log: (action, type, id, detail) => DB.log(action, type, id, detail), save: render => DB.save(render)
+        }
+    };
+}
+function composeLegacyBranchAccess(): string[] {
+    return AdministrationRules.allowedBranchIds(DB.data.branches, typeof Auth !== 'undefined' ? Auth.user : null);
+}
+function composeLegacyCommercialPermissions() {
+    return {
+        get viewCosts() {
+            return AdministrationRules.canViewCosts(Auth.user);
+        }, get maxDiscountPct() {
+            return AdministrationRules.maxDiscountPct(Auth.user);
+        }
+    };
+}
+function composeLegacyApprovalDeps(): ApprovalWorkflowDeps {
+    return {
+        repository: {
+            get approvals() {
+                return DB.data.approvals;
+            }, get expenses() {
+                return DB.data.expenses;
+            }, get commissions() {
+                return DB.data.commissions;
+            }, allowSelfApproval: () => DB.data.settings.allowSelfApproval, baseCurrency: () => DB.data.settings.baseCurrency
+        }, actor: () => Auth.user, clock: composeBusinessClock(), money: composeBusinessMoney(), persistence: {
+            log: (action, type, id, detail) => DB.log(action, type, id, detail), save: render => DB.save(render)
+        }, operations: {
+            addPayment: (payload, options) => Transactions.addPayment(payload, options), postExpense: (expense, options) => Transactions.postExpense(expense, options), approveCommission: id => Transactions.approveCommission(id), rejectCommission: (id, reason) => Transactions.rejectCommission(id, reason)
+        }
+    };
+}
+function composeLegacyTourismDeps(operations: {
+    ensureServiceCommission(service: TourismService): unknown;
+}): TourismWorkflowDeps {
+    return {
+        repository: {
+            get services() {
+                return DB.data.services;
+            }, get bookings() {
+                return DB.data.bookings;
+            }, get customers() {
+                return DB.data.customers;
+            }, get agents() {
+                return DB.data.agents;
+            }, get suppliers() {
+                return DB.data.suppliers;
+            }
+        }, transactions: {
+            atomic: (label, work, options) => DB.atomic(label, work, options), atomicAsync: (label, work, options) => DB.atomicAsync(label, work, options), fastAtomic: (label, work, options) => DB.fastAtomic(label, work, options)
+        }, persistence: {
+            log: (action, type, id, detail) => DB.log(action, type, id, detail), save: render => DB.save(render)
+        }, invoices: {
+            create: input => Invoices.create(input), post: invoice => Invoices.post(invoice)
+        }, ensureServiceCommission: service => operations.ensureServiceCommission(service)
+    };
+}
+function composeLegacyFinancialQueries(): FinancialQueryDeps {
+    return {
+        money: composeBusinessMoney(), today, daysBetween, repository: {
+            get customers() {
+                return DB.data.customers;
+            }, get agents() {
+                return DB.data.agents;
+            }, get suppliers() {
+                return DB.data.suppliers;
+            }, get treasuries() {
+                return DB.data.treasuries;
+            }, get invoices() {
+                return DB.data.invoices;
+            }, get purchaseOrders() {
+                return DB.data.purchaseOrders;
+            }
+        }, ledger: {
+            lines: (from, to) => Accounting.lines(from, to), account: id => Accounting.account(id), partyReceivable: (type, id) => Accounting.partyReceivable(type, id), supplierPayable: id => Accounting.supplierPayable(id), agentPayable: id => Accounting.agentPayable(id), customerAdvance: (type, id, from, to) => Accounting.customerAdvance(type, id, from, to), supplierAdvance: (id, from, to) => Accounting.supplierAdvance(id, from, to), treasuryBalance: (id, to) => Accounting.treasuryBalance(id, to)
+        }, invoices: {
+            listMetrics: invoices => Invoices.listMetrics(invoices)
+        }, lineTotal: line => CRM.lineTotal(line)
+    };
+}
+function composeLegacyManualJournalDeps(): ManualJournalWorkflowDeps {
+    return {
+        clock: composeBusinessClock(), actor: () => Auth.user, repository: {
+            get manualJournalDrafts() {
+                return DB.data.manualJournalDrafts;
+            }, set manualJournalDrafts(value) {
+                DB.data.manualJournalDrafts = value;
+            }, get recurringJournals() {
+                return DB.data.recurringJournals;
+            }, set recurringJournals(value) {
+                DB.data.recurringJournals = value;
+            }
+        }, persistence: {
+            log: (action, type, id, detail) => DB.log(action, type, id, detail), save: render => DB.save(render)
+        }, accounting: {
+            post: input => Accounting.post(input), reverse: (type, id, reason) => Accounting.reverse(type, id, reason)
+        }, dateAddMonthsClamped
+    };
+}
+function composeLegacyTransferDeps(): TransferWorkflowDeps {
+    return {
+        transactions: {
+            atomic: (label, work, options) => DB.atomic(label, work, options), atomicAsync: (label, work, options) => DB.atomicAsync(label, work, options), fastAtomic: (label, work, options) => DB.fastAtomic(label, work, options)
+        }, clock: composeBusinessClock(), repository: {
+            get treasuries() {
+                return DB.data.treasuries;
+            }, get transfers() {
+                return DB.data.transfers;
+            }, get documents() {
+                return DB.data.documents;
+            }, baseCurrency: () => DB.data.settings.baseCurrency
+        }, money: {
+            ...composeBusinessMoney(), convert: (amount, from, to, date) => Currency.convert(amount, from, to, date)
+        }, accounting: {
+            post: input => Accounting.post(input), reverse: (type, id, reason) => Accounting.reverse(type, id, reason), documentStatus: (type, id, status) => Accounting.documentStatus(type, id, status), validateTreasury: (id, amount) => Accounting.validateTreasury(id, amount), ensureTreasuryAccount: treasury => Accounting.ensureTreasuryAccount(treasury)
+        }
+    };
+}
+function composeLegacyIntegrityDeps(accounting: {
+    integrityReport(): IntegrityReportResult;
+    audit(): {
+        fixable?: boolean;
+        code: string;
+        treasuryId?: string;
+    }[];
+    ensureTreasuryAccount(treasury: BusinessTreasury): unknown;
+}): IntegrityWorkflowDeps {
+    return {
+        report: () => accounting.integrityReport(), issues: () => accounting.audit(), treasury: id => byId(DB.data.treasuries, id), ensureTreasury: treasury => accounting.ensureTreasuryAccount(treasury), save: () => DB.save(), completed: report => {
+            UI.renderCurrent();
+            toast(report.ok ? 'اكتمل الفحص: لا توجد أخطاء حرجة' : 'اكتمل الفحص وظهرت نقاط تحتاج مراجعة', report.ok ? 'success' : 'warning');
+        }, repaired: () => {
+            toast('تم تنفيذ الإصلاحات الآمنة فقط');
+        }
+    };
+}
+function composeLegacyUmrahLifecycleDeps(operations: UmrahLifecycleDeps['operations'] & {
+    program(id: string): UmrahLifecycleProgram | undefined;
+    booking(id: string): UmrahLifecycleBooking | undefined;
+}): UmrahLifecycleDeps {
+    return {
+        transactions: {
+            atomic: (label, work, options) => UmrahCore_DB.atomic(label, work, options)
+        }, authorization: {
+            require: (page, action) => UmrahCore_Bridge.require(page, action)
+        }, repository: {
+            program: id => operations.program(id), booking: id => operations.booking(id), bookings: () => UmrahCore_DB.data.bookings
+        }, operations: {
+            assertProgramOpenReady: id => operations.assertProgramOpenReady(id), blockers: id => operations.blockers(id), financialSetupGaps: id => operations.financialSetupGaps(id), get resourceBookingStatuses() {
+                return operations.resourceBookingStatuses;
+            }, bookingReadiness: booking => operations.bookingReadiness(booking)
+        }, procurement: {
+            cancelProgramCommitments: (id, reason) => UmrahCore_Procurement.cancelProgramCommitments(id, reason), onProgramOpen: program => UmrahCore_Procurement.onProgramOpen(program), onProgramTraveling: program => UmrahCore_Procurement.onProgramTraveling(program), onProgramReturned: program => UmrahCore_Procurement.onProgramReturned(program)
+        }, releaseProgram: id => UmrahCore_ContractCenter.releaseProgram(id), clock: {
+            today: UmrahCore_today, now: UmrahCore_now
+        }, programLabel: UmrahCore_programLabel, audit: (action, type, id, detail) => UmrahCore_Bridge.audit(action, type, id, detail)
+    };
+}
+function composeLegacyPurchaseFulfillment() {
+    return createPurchaseFulfillmentRules({
+        id: iid, now
+    }, (action, type, id, detail) => DB.log(action, type, id, detail));
+}
+function composeLegacyNettingDeps(queries: NettingWorkflowDeps['queries'] & {
+    ensureData(): {
+        partyNettings: NettingRecord[];
+    };
+}): NettingWorkflowDeps {
+    return {
+        authorization: {
+            require: (page, action) => Auth.require(page, action)
+        }, actor: () => Auth.user, clock: composeBusinessClock(), money: composeBusinessMoney(), transactions: {
+            atomic: (label, work, options) => DB.atomic(label, work, options), atomicAsync: (label, work, options) => DB.atomicAsync(label, work, options), fastAtomic: (label, work, options) => DB.fastAtomic(label, work, options)
+        }, repository: {
+            nettings: () => queries.ensureData().partyNettings, documents: () => DB.data.documents
+        }, queries: {
+            groupFor: (type, id) => queries.groupFor(type, id), allRoleEntries: group => queries.allRoleEntries(group), componentAvailable: (component, date) => queries.componentAvailable(component, date), allocateInvoices: (component, amount) => queries.allocateInvoices(component, amount), refreshNettingInvoices: record => queries.refreshNettingInvoices(record)
+        }, accounting: {
+            post: input => Accounting.post(input), reverse: (type, id, reason) => Accounting.reverse(type, id, reason), documentStatus: (type, id, status) => Accounting.documentStatus(type, id, status)
+        }, persistence: {
+            log: (action, type, id, detail) => DB.log(action, type, id, detail), save: render => DB.save(render)
+        }
+    };
+}
+function composeLegacyPartyNames(): PartyNameRepository {
+    return {
+        get customers() {
+            return DB.data.customers;
+        }, get suppliers() {
+            return DB.data.suppliers;
+        }, get agents() {
+            return DB.data.agents;
+        }
+    };
+}
+function composeLegacyPhonePolicy(phone: string): string {
+    return PartyBusinessRules.normalizePhone(phone, DB.data.settings.whatsappCountryCode);
+}
+function composeLegacyExpenseDeps(operations: {
+    buildPrepaidSchedule(expense: ExpenseRecord): unknown;
+}): ExpenseWorkflowDeps {
+    return {
+        clock: composeBusinessClock(), actor: () => Auth.user, transactions: {
+            atomic: (label, work, options) => DB.atomic(label, work, options), atomicAsync: (label, work, options) => DB.atomicAsync(label, work, options), fastAtomic: (label, work, options) => DB.fastAtomic(label, work, options)
+        }, money: composeBusinessMoney(), repository: {
+            baseCurrency: () => DB.data.settings.baseCurrency, approvalPayments: () => DB.data.settings.approvalPayments, get expenses() {
+                return DB.data.expenses;
+            }, set expenses(value) {
+                DB.data.expenses = value;
+            }, get approvals() {
+                return DB.data.approvals;
+            }, get invoices() {
+                return DB.data.invoices;
+            }, get prepaidSchedules() {
+                return DB.data.prepaidSchedules;
+            }, get documents() {
+                return DB.data.documents;
+            }
+        }, tax: {
+            amount: (amount, id) => Tax.amount(amount, id), require: id => Tax.require(id)
+        }, approval: {
+            create: (type, payload, amount) => Approvals.create(type, payload, amount)
+        }, vouchers: {
+            addPayment: (fields, options) => Transactions.addPayment(fields, options), voidPayment: (id, reason) => Transactions.voidPayment(id, reason)
+        }, invoices: {
+            create: fields => Invoices.create(fields), post: invoice => Invoices.post(invoice), allocations: id => Invoices.allocations(id), cancel: (id, reason) => Invoices.cancel(id, reason)
+        }, accounting: {
+            post: input => Accounting.post(input), reverse: (type, id, reason) => Accounting.reverse(type, id, reason), documentStatus: (type, id, status) => Accounting.documentStatus(type, id, status)
+        }, persistence: {
+            log: (action, type, id, detail) => DB.log(action, type, id, detail), save: render => DB.save(render)
+        }, buildPrepaidSchedule: expense => operations.buildPrepaidSchedule(expense)
+    };
+}

@@ -130,48 +130,7 @@ const UmrahCore_Ops: any = {
         throw new Error('راجع تاريخ الذهاب والعودة'); const update = (seg, direction, title, date, route, dateTime, flightNo, from, to) => { if (seg?.contractId && (seg.start !== date || seg.route !== route))
             throw new Error('هذه الرحلة مرتبطة ببلوك/تعاقد. عدّلها من مركز التعاقدات أو حرر التخصيص أولًا.'); if (!seg)
             return this.addSegment({ programId, type: 'flight', title, start: date, end: date, supplierId, route, details: dateTime, direction, airline, flightNo, from, to, dateTime, seats }, true); Object.assign(seg, { title, start: date, end: date, supplierId: supplierId || seg.supplierId || '', route, details: dateTime, direction, airline, flightNo, from, to, dateTime, seats, updatedAt: UmrahCore_now() }); return seg; }; const outSeg = update(out, 'outbound', `ذهاب ${airline} ${outFlight}`, outDate, `${outFrom} → ${outTo}`, `${outDate}T${outTime}`, outFlight, outFrom, outTo), retSeg = update(ret, 'return', `عودة ${airline} ${returnFlight}`, returnDate, `${returnFrom} → ${returnTo}`, `${returnDate}T${returnTime}`, returnFlight, returnFrom, returnTo); this.refreshTaskDates(p); UmrahCore_Bridge.audit('update', 'programFlights', p.id, `${p.no} ${outDate} / ${returnDate}`); return { outSeg, retSeg }; },
-    setProgramStatus(id, status) { return UmrahCore_DB.atomic('setProgramStatus', () => {
-        UmrahCore_Bridge.require('umrah.programs', 'approve');
-        const p = this.program(id);
-        if (!p)
-            throw new Error('البرنامج غير موجود');
-        const allowed = { planning: ['contracting', 'pricing', 'open', 'cancelled'], contracting: ['planning', 'pricing', 'open', 'cancelled'], pricing: ['contracting', 'open', 'cancelled'], open: ['salesClosed', 'cancelled'], salesClosed: ['open', 'operating', 'cancelled'], operating: ['traveling', 'cancelled'], traveling: ['returned'], returned: ['closed'], closed: [], cancelled: [] }, current = p.status || 'planning';
-        if (status !== current && !((allowed[current] || []).includes(status)))
-            throw new Error(`الانتقال من ${UmrahCore_programLabel(current)} إلى ${UmrahCore_programLabel(status)} غير مسموح مباشرة`);
-        if (status === 'open') {
-            if (p.salesCloseDate && UmrahCore_today() > p.salesCloseDate)
-                throw new Error(`لا يمكن فتح البيع لأن تاريخ إغلاق البيع ${p.salesCloseDate} انتهى؛ حدّث تاريخ إغلاق البيع أولًا`);
-            this.assertProgramOpenReady(id);
-        }
-        if (status === 'traveling') {
-            const b = this.blockers(id);
-            if (!b.travelers.length)
-                throw new Error('لا يمكن تسجيل مغادرة فوج بدون مسافرين مؤكدين');
-            if (b.total)
-                throw new Error(`لا يمكن تسجيل مغادرة الفوج قبل معالجة ${b.total} مانع/تنبيه`);
-        }
-        if (status === 'returned') {
-            const gaps = this.financialSetupGaps(id);
-            if (gaps.length)
-                throw new Error(`لا يمكن تسجيل العودة قبل استكمال الربط المالي: ${gaps.map(g => g.title).join('، ')}`);
-        }
-        if (status === 'cancelled' && UmrahCore_DB.data.bookings.some(b => b.programId === id && this.resourceBookingStatuses.has(b.status)))
-            throw new Error('يوجد حجوزات نشطة؛ عالجها أولًا');
-        if (status === 'cancelled')
-            UmrahCore_Procurement.cancelProgramCommitments(p.id, 'إلغاء برنامج حج/عمرة');
-        p.status = status;
-        p.statusAt = UmrahCore_now();
-        if (status === 'cancelled')
-            UmrahCore_ContractCenter.releaseProgram(p.id);
-        if (status === 'open')
-            UmrahCore_Procurement.onProgramOpen(p);
-        if (status === 'traveling')
-            UmrahCore_Procurement.onProgramTraveling(p);
-        if (status === 'returned')
-            UmrahCore_Procurement.onProgramReturned(p);
-        UmrahCore_Bridge.audit('status', 'umrahProgram', id, `${p.no} -> ${status}`);
-        return p;
-    }, { rollback: true }); },
+    setProgramStatus(id,status){return UmrahLifecycleWorkflows.setProgramStatus(composeLegacyUmrahLifecycleDeps(this),id,status);},
     programCancellationBlockers(id) {
         const p = this.program(id);
         if (!p)
@@ -341,19 +300,12 @@ const UmrahCore_Ops: any = {
         return 0; const total = UmrahCore_N(s.inventory?.[type]); const used = UmrahCore_DB.data.bookings.filter(b => b.programId === programId && b.id !== exclude && this.resourceBookingStatuses.has(b.status)).reduce((sum, b) => sum + (b.roomPlan || []).filter(r => r.segmentId === segmentId && r.roomType === type).reduce((z, r) => z + UmrahCore_N(r.rooms), 0), 0); return Math.max(0, total - used); },
     flightSeatsAvailable(programId, segmentId, exclude = '') { const s = this.segment(segmentId); if (!s)
         return 0; const used = UmrahCore_DB.data.bookings.filter(b => b.programId === programId && b.id !== exclude && this.resourceBookingStatuses.has(b.status)).reduce((sum, b) => sum + Math.max(0, UmrahCore_N(b.persons) - UmrahCore_N(b.infants)), 0); return Math.max(0, UmrahCore_N(s.seats) - used); },
-    bookingGross(program, b) { const p = program.pricing || {}, c = b.counts || {}; return Math.max(0, UmrahCore_N(c.adults) * UmrahCore_N(p[b.primaryRoomType] || p.quad) + UmrahCore_N(c.childBed) * UmrahCore_N(p.childBed) + UmrahCore_N(c.childNoBed) * UmrahCore_N(p.childNoBed) + UmrahCore_N(c.infants) * UmrahCore_N(p.infant)); },
+    bookingGross(program,b){return UmrahBusinessRules.bookingGross(program,b);},
     bookingPrice(program, b) { return Math.max(0, this.bookingGross(program, b) - Math.max(0, UmrahCore_N(b.discount))); },
     bookingDiscountLimit() { const u = UmrahCore_Bridge.currentUser() || {}; if (u.role === 'admin' || u.permissions?.all)
         return 100; return Math.max(0, Math.min(100, UmrahCore_N(u.maxDiscountPct))); },
-    validateBookingDiscount(p, b) { const gross = this.bookingGross(p, b), discount = Math.max(0, UmrahCore_N(b.discount)); if (discount > gross + 0.0001)
-        throw new Error('الخصم لا يمكن أن يتجاوز قيمة الحجز'); if (discount > 0 && !UmrahCore_S(b.discountReason).trim())
-        throw new Error('سبب الخصم مطلوب'); const pct = gross > 0 ? discount / gross * 100 : 0, max = this.bookingDiscountLimit(); if (pct > max + 0.0001)
-        throw new Error(`صلاحيتك تسمح بخصم حتى ${UmrahCore_fmt(max, 1)}% فقط`); return true; },
-    assertNewBookingSaleAllowed(p, status) { if (['inquiry', 'quotation', 'waitlist'].includes(status))
-        return true; if (p.active === false)
-        throw new Error('البرنامج موقوف'); if (p.status !== 'open')
-        throw new Error('لا يمكن إنشاء حجز مؤقت/مؤكد إلا والبرنامج مفتوح للبيع'); if (p.salesCloseDate && UmrahCore_today() > p.salesCloseDate)
-        throw new Error(`تم إغلاق البيع للبرنامج بتاريخ ${p.salesCloseDate}`); return true; },
+    validateBookingDiscount(p,b){return UmrahBusinessRules.discount(this.bookingGross(p,b),b.discount,b.discountReason,()=>this.bookingDiscountLimit(),UmrahCore_fmt);},
+    assertNewBookingSaleAllowed(p,status){return UmrahBusinessRules.saleAllowed(p,status,UmrahCore_today);},
     validateBooking(p, b, exclude = '') { if (!p)
         throw new Error('البرنامج غير موجود'); if (!['open', 'salesClosed', 'operating'].includes(p.status) && !['inquiry', 'quotation', 'waitlist'].includes(b.status))
         throw new Error('البرنامج غير مفتوح للحجز'); if (UmrahCore_N(b.persons) <= 0)
@@ -399,10 +351,7 @@ const UmrahCore_Ops: any = {
         b.hostInvoiceId = ev.invoiceId;
         b.hostInvoiceNo = ev.invoiceNo || '';
     } UmrahCore_Procurement.onBookingConfirmed(b); this.syncVisaBatchTravelers(p.id); UmrahCore_Bridge.audit('confirm', 'umrahBooking', id, b.no); return b; }); },
-    setBookingStatus(id, status) { UmrahCore_Bridge.require('umrah.bookings', 'edit'); return UmrahCore_DB.atomic('setBookingStatus', () => { const b = this.booking(id); if (!b)
-        throw new Error('الحجز غير موجود'); if (status === 'ready' && this.bookingReadiness(b).score < 100)
-        throw new Error('الحجز غير جاهز بالكامل'); const allowed = { ready: ['confirmed', 'partiallyPaid', 'fullyPaid', 'docsPending'], checkedIn: ['ready'], traveling: ['checkedIn'], returned: ['traveling'], closed: ['returned'] }; if (!(allowed[status] || []).includes(b.status))
-        throw new Error('تسلسل حالة الحجز غير صحيح'); b.status = status; b.statusAt = UmrahCore_now(); UmrahCore_Bridge.audit('status', 'umrahBooking', id, `${b.no} -> ${status}`); return b; }); },
+    setBookingStatus(id,status){return UmrahLifecycleWorkflows.setBookingStatus(composeLegacyUmrahLifecycleDeps(this),id,status);},
     requestCancel(id, reason) { UmrahCore_Bridge.require('umrah.bookings', 'void'); return UmrahCore_DB.atomic('requestCancel', () => { const b = this.booking(id); if (!b || ['cancelled', 'closed', 'refunded', 'expired', 'noShow'].includes(b.status))
         throw new Error('الحجز غير متاح للإلغاء في حالته الحالية'); if (['traveling', 'returned'].includes(b.status))
         throw new Error('لا يُلغى الحجز بعد بدء السفر/العودة من شاشة الإلغاء العادي؛ استخدم التسوية المالية وسجل الواقعة التشغيلية.'); if (!UmrahCore_S(reason).trim())
@@ -536,10 +485,7 @@ const UmrahCore_Ops: any = {
     transportAssigned(travelerId) { const p = this.traveler(travelerId)?.programId; if (!p)
         return false; const required = this.segments(p, 'transport'); if (!required.length)
         return true; return required.every(seg => UmrahCore_DB.data.busRuns.some(x => x.programId === p && x.segmentId === seg.id && (x.travelerIds || []).includes(travelerId))); },
-    syncPaymentStatus(b, f = null) { f = f || UmrahCore_Bridge.financeSnapshot(b); const paid = UmrahCore_N(f?.paid), rem = f?.remaining == null ? null : UmrahCore_N(f.remaining); if (f?.invoiceId) {
-        b.hostInvoiceId = f.invoiceId;
-        b.hostInvoiceNo = f.invoiceNo || b.hostInvoiceNo || '';
-    } b.paymentStatus = !f?.invoiceId ? 'unbilled' : rem != null && rem <= 0.01 ? 'fullyPaid' : paid > 0 ? 'partiallyPaid' : 'unpaid'; b.paymentRemaining = rem; b.paymentUpdatedAt = UmrahCore_now(); return b.paymentStatus; },
+    syncPaymentStatus(b,f=null){f=f||UmrahCore_Bridge.financeSnapshot(b);return UmrahBusinessRules.syncPaymentStatus(b,f,UmrahCore_now);},
     bookingReadiness(b) { const f: any = UmrahCore_Bridge.financeSnapshot(b), paymentStatus = this.syncPaymentStatus(b, f); let finance = 'ok'; const needsInvoice = ['confirmed', 'partiallyPaid', 'fullyPaid', 'docsPending', 'ready', 'checkedIn', 'traveling', 'returned', 'closed'].includes(b.status); if (needsInvoice && (!f || !f.invoiceId || f.remaining == null))
         finance = 'unknown';
     else if (UmrahCore_DB.data.settings.financialClearanceRequired && UmrahCore_N(f?.remaining) > UmrahCore_N(UmrahCore_DB.data.settings.financialClearanceMaxDue))
