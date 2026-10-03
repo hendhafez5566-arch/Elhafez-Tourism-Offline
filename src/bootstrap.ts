@@ -1,5 +1,4 @@
 // Phase 3: legacy infrastructure composition. Live getters survive atomic rollback.
-// Phase 3: legacy infrastructure composition. Live getters survive atomic rollback.
 function composeBusinessClock(): BusinessClock {
     return {
         today, now, id: iid, next: (kind, date) => Numbering.next(kind, date), clone: value => deep(value), formatDate
@@ -193,9 +192,9 @@ function composeLegacyActionDeps():DocumentWorkflowDeps {
   };
 
   const remoteRequired=ServerStore.remoteRequired?.()===true;
-  if(remoteRequired&&typeof navigator!=='undefined'&&navigator.onLine===false){
+  if(remoteRequired&&BrowserPlatform.online()===false){
     showOfflineBoot();
-    window.addEventListener('online',()=>location.reload(),{once:true});
+    BrowserPlatform.reloadOnOnline();
     return;
   }
 
@@ -241,7 +240,7 @@ function composeLegacyActionDeps():DocumentWorkflowDeps {
   // page pay the full journal-index construction cost.
   try{
     const warm=()=>{try{Accounting.partyBalanceIndex?.()}catch(e){console.debug('[perf] balance warmup skipped',e)}};
-    if(typeof requestIdleCallback==='function')requestIdleCallback(warm,{timeout:1800});else setTimeout(warm,900);
+    BrowserPlatform.scheduler.idle(warm,1800,900);
   }catch(e){console.debug('[perf] idle warmup unavailable',e)}
 
   // Vendor center discovery is optional and must never block login. Run it
@@ -550,4 +549,61 @@ function composeLegacyExpenseDeps(operations: {
             log: (action, type, id, detail) => DB.log(action, type, id, detail), save: render => DB.save(render)
         }, buildPrepaidSchedule: expense => operations.buildPrepaidSchedule(expense)
     };
+}
+
+function composeAuthEntryPresentation(): AuthEntryPresentationDeps {
+    return {
+        dom: BrowserPlatform.dom, initialize: () => UI.init(), escape: value => esc(value),
+        failed: error => console.error('[auth] UI.init failed after successful authentication', error),
+        before: () => { if (CommercialUX.dirtyForm) CommercialUX.dirtyForm.dataset.clean = '1'; CommercialUX.dirtyForm = null; },
+        after: () => { CommercialUX.ensureSaveIndicator(); CommercialUX.enhance(document); CommercialUX.maybeOnboard(); }
+    };
+}
+function composeContactPresentation(): ContactPresentationDeps {
+    return { dom: BrowserPlatform.dom, bridge: BrowserPlatform.contacts, notification: { notify: (message, kind) => toast(message, kind) } };
+}
+
+function composeStorePresentation(): StorePresentationEffects {
+    return {
+        canRender: () => typeof UI !== 'undefined' && !!UI?.renderCurrent,
+        render: () => UI.renderCurrent(), notify: (message, kind) => toast(message, kind),
+        schedule: work => BrowserPlatform.renderFrame(work)
+    };
+}
+function composeSessionPresentation(): SessionPresentationEffects {
+    return {
+        clear: key => BrowserPlatform.clearSession(key),
+        expired: message => { if (typeof Auth !== 'undefined') Auth.expirePresentation(); if (typeof toast === 'function') toast(message, 'error'); }
+    };
+}
+function composeParty360Presentation(queries: Pick<typeof Party360, 'base' | 'shell' | 'loadTab'>) {
+    return createParty360Presentation({
+        dom: BrowserPlatform.dom, icon: name => icon(name), close: () => UI.closeModal(true),
+        base: (type, id) => queries.base(type, id), shell: (type, id) => queries.shell(type, id),
+        loadTab: (type, id, tab) => queries.loadTab(type, id, tab)
+    });
+}
+function composeUnifiedPartyPresentation(operations: Pick<typeof UnifiedParty, 'linkCandidates' | 'roleLabel' | 'nettingPairs' | 'linkRole' | 'postNetting' | 'reverseNetting' | 'ensureData' | 'roleConfig'>) {
+    return createUnifiedPartyPresentation({
+        dom: BrowserPlatform.dom, scheduler: BrowserPlatform.scheduler,
+        close: () => UI.closeModal(true), icon: name => icon(name), notify: (message, kind) => toast(message, kind),
+        reopen: (type, id) => Party360.open(type, id), child: work => Party360.child(work),
+        confirm: (title, message, work, options) => UI.confirmAction(title, message, work, options),
+        escape: value => esc(value), money: (value, currency) => money(value, currency), today,
+        roleIcon: type => operations.roleConfig[type]?.label === 'مورد' ? 'suppliers' : type === 'agent' ? 'agents' : 'customers',
+        roleLabel: type => operations.roleLabel(type), linkCandidates: (type, id, target) => operations.linkCandidates(type, id, target),
+        linkRole: (type, id, target, targetId) => operations.linkRole(type, id, target, targetId),
+        nettingPairs: (type, id) => operations.nettingPairs(type, id),
+        postNetting: (type, id, fields) => operations.postNetting(type, id, fields),
+        reverseNetting: (id, reason) => operations.reverseNetting(id, reason),
+        netting: id => byId(operations.ensureData().partyNettings, id)
+    });
+}
+
+function composePrintPresentation(): DocumentPrintPresentationDeps {
+    return { frame: BrowserPlatform.documents.frame, scheduler: BrowserPlatform.scheduler };
+}
+
+function composeUmrahPresentationCommands(): UmrahPresentationCommands {
+    return { openPage: page => UI.openPage(page), openForm: (type, context) => Forms.open(type, context), openPartyActions: (type, id) => Actions.openPartyActions(type, id) };
 }

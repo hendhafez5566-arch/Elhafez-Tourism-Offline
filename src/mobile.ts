@@ -56,8 +56,7 @@
 
  const nativePrint=(window as any).NativePrint;
  if(nativePrint?.printCurrent){
-  const fallbackPrint=window.print.bind(window);
-  window.print=(()=>{try{nativePrint.printCurrent(`${APP.name} — ${APP.product}`)}catch(e){console.error('[print] native current-view print failed',e);fallbackPrint()}}) as typeof window.print;
+  BrowserPlatform.configureCurrentPrint(nativePrint,()=>`${APP.name} — ${APP.product}`);
  }
 
  const plugins=bridge?.Plugins||{};

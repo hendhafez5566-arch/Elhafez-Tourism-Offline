@@ -129,7 +129,7 @@ const UIDelegatedActions:any={
   if((el=hit('[data-print-share-pdf]'))){e.preventDefault();Print.sharePdf();return true}
   if((el=hit('[data-print-save-description]'))){e.preventDefault();Print.saveDescriptionEdits();return true}
   if((el=hit('[data-delete-kind][data-delete-id]'))){const kind=el.dataset.deleteKind,id=el.dataset.deleteId;if(kind&&id){e.preventDefault();DeleteCenter.request(kind,id);return true}}
-  if((el=hit('[data-window-print]'))){e.preventDefault();window.print();return true}
+  if((el=hit('[data-window-print]'))){e.preventDefault();BrowserPlatform.printCurrent();return true}
   if((el=hit('[data-quick-create-type]'))){const type=el.dataset.quickCreateType,targetName=el.dataset.quickCreateTarget||'',currencyField=el.dataset.quickCurrencyField;let currency=el.dataset.quickCurrency||'';if(currencyField)currency=(document.querySelector(`#modalForm [name="${CSS.escape(currencyField)}"]`) as HTMLInputElement|HTMLSelectElement|null)?.value||UmrahCore_DB.data.settings.defaultCurrency;e.preventDefault();UmrahCore_QuickCreate.open(type,targetName,currency);return true}
   if((el=hit('[data-remove-closest]'))){const selector=el.dataset.removeClosest;if(selector){e.preventDefault();el.closest(selector)?.remove();return true}}
   return false

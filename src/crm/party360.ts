@@ -59,5 +59,5 @@ const Party360={
  content(type,id){return this.shell(type,id,{active:'overview'})},
  page(type,id){const d=this.base(type,id);setTimeout(()=>this.loadTab(type,id,'overview'),0);return Pages.head(`المزيد — ${d.x.name}`,'',`<button type="button" class="btn ghost" data-ui-go-back="1">رجوع</button>`)+this.content(type,id)},
  openMore(type,id){return this.open(type,id)},
- open(type,id){const d=this.base(type,id),m=document.getElementById('modal'),f=document.getElementById('modalForm');document.getElementById('modalTitle').textContent=`المزيد — ${d.x.name}`;document.getElementById('modalSubtitle').textContent='';document.getElementById('modalIcon').innerHTML=icon(d.cfg.icon);document.getElementById('modalSubmitText').textContent='إغلاق';document.getElementById('modalBody').innerHTML=this.shell(type,id);m.classList.add('show');f.onsubmit=e=>{e.preventDefault();UI.closeModal(true)};this.loadTab(type,id,'overview')}
+ open(type,id){return composeParty360Presentation(this).open(type,id)}
 };
