@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
 import {execFileSync} from 'node:child_process';
+import {bundleForVm} from './lib/vm-module-bundle.mjs';
 const start='4b188965931d396f40b0b545b486e97da12462b8';
 // Differential checks need the pre-Part-2 git history (the `original()` oracle). Without it they are ENVIRONMENT BLOCKED (exit 3) - never PASS.
 {const have=(sha)=>{try{execFileSync('git',['cat-file','-e',`${sha}^{commit}`],{stdio:'ignore'});return true;}catch{return false;}};
@@ -13,6 +14,18 @@ const start='4b188965931d396f40b0b545b486e97da12462b8';
 const read=p=>fs.readFileSync(p,'utf8');
 const original=p=>execFileSync('git',['show',`${start}:${p}`],{encoding:'utf8'});
 const compile=s=>ts.transpileModule(s,{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.None}}).outputText;
+const currentBundle=await bundleForVm(`
+ import {Actions} from './src/ui/actions.ts';
+ import {CommercialActions} from './src/commercial/actions.ts';
+ import {DocumentWorkflows} from './src/application/document-actions.ts';
+ import {CommercialWorkflows} from './src/application/commercial-actions.ts';
+ import {composeLegacyActionDeps,composeLegacyCommercialDeps} from './src/bootstrap.ts';
+ import {DB} from './src/persistence/browser-store.ts'; import {Auth} from './src/security/auth.ts'; import {UI} from './src/ui/ui.ts';
+ import {Transactions} from './src/accounting/transactions.ts'; import {CRM} from './src/crm/crm.ts'; import {Invoices,MasterData} from './src/accounting/invoices.ts';
+ import {ManualJournal} from './src/accounting/engine.ts'; import {Approvals} from './src/accounting/transactions.ts'; import {Currency} from './src/accounting/currency-periods.ts';
+ import {Commercial,CommercialSupport} from './src/commercial/product.ts'; import {UmrahCore_DB} from './src/core/umrah/data.ts';
+ globalThis.__current={Actions,CommercialActions,DocumentWorkflows,CommercialWorkflows,composeLegacyActionDeps,composeLegacyCommercialDeps,DB,Auth,UI,Transactions,CRM,Invoices,MasterData,ManualJournal,Approvals,Currency,Commercial,CommercialSupport,UmrahCore_DB};
+`,{suppressBootstrap:true});
 function setup(current){
  const trace=[],pending=[];let denied=false;
  const data={invoices:[{id:'I',kind:'customer',partyId:'C',status:'draft',no:'I'}],quotations:[{id:'Q',no:'Q-1',status:'draft',validUntil:'2099-01-01'}],purchaseOrders:[{id:'P',lines:[]}],auditLog:[{date:'2020-01-01'},{date:'2099-01-01'}],branches:[{id:'B',active:true,name:'Branch'}],users:[{id:'U',name:'User',role:'staff',branchId:'B',allowedBranchIds:['B']}],settings:{}};
@@ -20,15 +33,15 @@ function setup(current){
  const DB={data,save:(...a)=>{trace.push(['save',...a]);return Promise.resolve();},log:(...a)=>trace.push(['log',...a]),atomic:(label,work,options)=>{trace.push(['atomic',label,options]);return work();},atomicAsync:async(label,work,options)=>{trace.push(['atomicAsync',label,options]);return await work();},fastAtomic:(label,work,options)=>{trace.push(['fastAtomic',label,options]);return work();}};
  const Auth={require:(...args)=>{trace.push(['authorization',...args]);if(denied)throw Error('denied');},user:{role:'admin',permissions:{all:true}}};
  const UI={confirmAction:(...a)=>{trace.push(['confirm',a[0],a[1],a[3]]);pending.push(a[2]);},reasonAction:(...a)=>{trace.push(['reason',a[0],a[1]]);pending.push(a[2]);},openPage:(...a)=>trace.push(['openPage',...a])};
- const sandbox={console,Date,DB,Auth,UI,document:{},Transactions:operation('Transactions'),CRM:operation('CRM'),Invoices:operation('Invoices'),ManualJournal:operation('ManualJournal'),MasterData:operation('MasterData'),Approvals:operation('Approvals'),Currency:operation('Currency'),Commercial:operation('Commercial'),CommercialSupport:{clearAudit:async range=>trace.push(['clearRemote',range])},UmrahCore_DB:{data:{activity:[]}},byId:(arr,id)=>arr.find(x=>x.id===id),S:x=>String(x??''),N:x=>Number(x)||0,today:()=> '2026-10-02',now:()=> '2026-10-02T00:00:00Z',formatDate:x=>'date:'+x,live:x=>x.active!==false&&x.status!=='void',toast:(...a)=>trace.push(['toast',...a]),confirm:()=>true};
+	 const toastNode={set textContent(v){this._text=v;trace.push(['toast',v])},set className(v){this._class=v}};
+	 const document={documentElement:{classList:{toggle(){}}},getElementById:id=>id==='toast'?toastNode:null};
+	 const sandbox={console,Date,DB,Auth,UI,document,matchMedia:()=>({matches:false}),navigator:{maxTouchPoints:0,userAgent:''},screen:{width:1200,height:800},setTimeout:()=>0,clearTimeout:()=>{},window:{addEventListener(){}},Transactions:operation('Transactions'),CRM:operation('CRM'),Invoices:operation('Invoices'),ManualJournal:operation('ManualJournal'),MasterData:operation('MasterData'),Approvals:operation('Approvals'),Currency:operation('Currency'),Commercial:operation('Commercial'),CommercialSupport:{clearAudit:async range=>trace.push(['clearRemote',range])},UmrahCore_DB:{data:{activity:[]}},byId:(arr,id)=>arr.find(x=>x.id===id),S:x=>String(x??''),N:x=>Number(x)||0,today:()=> '2026-10-02',now:()=> '2026-10-02T00:00:00Z',formatDate:x=>'date:'+x,live:x=>x.active!==false&&x.status!=='void',toast:(...a)=>trace.push(['toast',...a]),confirm:()=>true};
  const ctx=vm.createContext(sandbox);
- if(current){
-  vm.runInContext(compile(read('src/application/contracts.ts')+read('src/application/document-actions.ts')+read('src/application/commercial-actions.ts')),ctx);
-  const bootstrap=read('src/bootstrap.ts');vm.runInContext(compile(bootstrap.slice(0,bootstrap.indexOf('(async()=>'))),ctx);
-  vm.runInContext('const CommercialActionViews={activityRangeChanged(){UI.openPage("activity","",{skipHistory:true,keepWorkspace:true})},activityCleaned(){toast("تم تنظيف سجل النشاط");this.activityRangeChanged()}};',ctx);
- }
- vm.runInContext(compile(current?read('src/ui/actions.ts'):original('src/ui/actions.ts')),ctx);
- vm.runInContext(compile(current?read('src/commercial/actions.ts'):original('src/commercial/actions.ts')),ctx);
+	 if(current){
+	  vm.runInContext(currentBundle,ctx);const x=sandbox.__current;Object.assign(x.DB,DB);Object.assign(x.Auth,Auth);Object.assign(x.UI,UI);for(const name of ['Transactions','CRM','Invoices','ManualJournal','MasterData','Approvals','Currency','Commercial'])for(const method of Object.keys(x[name]))if(typeof x[name][method]==='function')x[name][method]=(...args)=>sandbox[name][method](...args);Object.assign(x.CommercialSupport,sandbox.CommercialSupport);x.UmrahCore_DB.data=sandbox.UmrahCore_DB.data;Object.assign(sandbox,x);
+	  vm.runInContext('const CommercialActionViews={activityRangeChanged(){UI.openPage("activity","",{skipHistory:true,keepWorkspace:true})},activityCleaned(){toast("تم تنظيف سجل النشاط");this.activityRangeChanged()}};',ctx);
+	 }
+	 if(!current){vm.runInContext(compile(original('src/ui/actions.ts')),ctx);vm.runInContext(compile(original('src/commercial/actions.ts')),ctx);}
  const api=vm.runInContext('({Actions,CommercialActions'+(current?',DocumentWorkflows,CommercialWorkflows,composeLegacyActionDeps,composeLegacyCommercialDeps':'')+'})',ctx);
  return {api,trace,pending,data,DB,setDenied:v=>{denied=v;}};
 }

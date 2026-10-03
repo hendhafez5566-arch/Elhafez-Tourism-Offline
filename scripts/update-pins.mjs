@@ -8,7 +8,7 @@ const baseline = JSON.parse(fs.readFileSync(path.join(root, 'docs/refactor/refac
 const files = [
   ...baseline.tests.map((t) => t.file), ...baseline.browser.map((t) => t.file),
   'docs/refactor/refactor-baseline.json', 'docs/refactor/architecture-baseline.json', 'docs/refactor/part2-module-order.json',
-  'scripts/architecture-check.mjs', 'scripts/refactor-check.mjs', 'scripts/module-order-check.mjs', 'scripts/lib/build-model.mjs',
+  'scripts/architecture-check.mjs', 'scripts/refactor-check.mjs', 'scripts/module-order-check.mjs', 'scripts/lib/build-model.mjs', 'scripts/lib/vm-module-bundle.mjs',
   'scripts/application-workflow-check.mjs', 'scripts/business-workflow-check.mjs', 'scripts/presentation-platform-check.mjs'
 ].sort();
 const sha256 = Object.fromEntries(files.map((f) => [f, crypto.createHash('sha256').update(fs.readFileSync(path.join(root, f))).digest('hex')]));

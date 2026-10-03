@@ -9,6 +9,7 @@ import path from 'node:path';
 import {scan,counts,layer} from './architecture-check.mjs';
 import {createHash} from 'node:crypto';
 import {compiledFiles} from './lib/build-model.mjs';
+import {bundleForVm} from './lib/vm-module-bundle.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');process.chdir(root);
 const START='4701fc6fd50ee5b69df6d7f18eb36bdfdfe71b5e';
 // Differential checks need the pre-Part-2 git history (the `original()` oracle). Without it they are ENVIRONMENT BLOCKED (exit 3) - never PASS.
@@ -21,7 +22,8 @@ const config={...JSON.parse(read('tsconfig.json')),files:compiledFiles()},oldCon
 const plain=x=>JSON.parse(JSON.stringify(x??null));let checks=0,scenarios=0;
 const equal=(a,b,label)=>{assert.deepEqual(plain(a),plain(b),label);checks++;};
 const objectNames=[];for(const file of oldConfig.files){const sf=ts.createSourceFile(file,original(file),99,true);for(const st of sf.statements)if(ts.isVariableStatement(st))for(const d of st.declarationList.declarations)if(ts.isIdentifier(d.name)&&d.initializer&&ts.isObjectLiteralExpression(d.initializer))objectNames.push(d.name.text);}
-const compiled=new Map();function app(current){if(compiled.has(current))return compiled.get(current);const files=current?config.files:oldConfig.files;let source='';for(const file of files){let s=current?read(file):original(file);if(file==='src/bootstrap.ts'){const sf=ts.createSourceFile(file,s,99,true);s=sf.statements.filter(ts.isFunctionDeclaration).map(n=>n.getText(sf)).join('\n');}source+=s+'\n';}const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.None}}).outputText;compiled.set(current,js);return js;}
+const currentApp=await bundleForVm("import './src/main.ts';",{suppressBootstrap:true});
+const compiled=new Map();function app(current){if(current)return currentApp;if(compiled.has(current))return compiled.get(current);let source='';for(const file of oldConfig.files){let s=original(file);if(file==='src/bootstrap.ts'){const sf=ts.createSourceFile(file,s,99,true);s=sf.statements.filter(ts.isFunctionDeclaration).map(n=>n.getText(sf)).join('\n');}source+=s+'\n';}const js=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.None}}).outputText;compiled.set(current,js);return js;}
 function setup(current,options={}){
  const trace=[],pending=[],frames=[],timers=[],elements=new Map(),winListeners=new Map(),docListeners=new Map(),storage=new Map();
  const log=(...args)=>trace.push(args);
