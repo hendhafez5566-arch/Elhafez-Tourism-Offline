@@ -11,9 +11,9 @@ async function upsert(c:any,t:string,name:string,items:any[]){if(!items.length)r
 
 export function stripMirroredPayload(payload:any){const out=structuredClone(payload||{});for(const name of MIRRORED_COLLECTIONS)delete out[name];return out}
 export async function entityBackedWritePlan(c:any,t:string,payload:any){
- const summary=mirrorPayloadSummary(payload);if(!summary.safe)return{storageMode:'legacy-full',payload,rowCount:0,presentKeys:[] as string[]};
+ const summary=mirrorPayloadSummary(payload);if(!summary.safe)throw Object.assign(new Error('entity_storage_invalid'),{statusCode:409});
  const count=await c.query('select count(*)::bigint as count from erp_entity_records where tenant_key=$1',[t]),actual=Number(count.rows[0]?.count||0);
- if(actual!==summary.rowCount)return{storageMode:'legacy-full',payload,rowCount:0,presentKeys:[] as string[]};
+ if(actual!==summary.rowCount)throw Object.assign(new Error('entity_storage_incomplete'),{statusCode:503});
  return{storageMode:'entity-backed',payload:stripMirroredPayload(payload),rowCount:summary.rowCount,presentKeys:summary.presentKeys};
 }
 
@@ -59,4 +59,3 @@ export async function entityMirrorStatus(t:string){
  const row=r.rows[0],stateRevision=Number(row.state_revision||0),mirrorRevision=Number(row.mirror_revision||0),actualRows=Number(row.actual_rows||0),mode=String(row.storage_mode||'legacy-full'),stateExpected=Number(row.entity_row_count||0),expectedRows=mode==='entity-backed'?stateExpected:Number(row.expected_rows||0),manifestReady=mode!=='entity-backed'||stateExpected===actualRows;
  return{ready:manifestReady&&stateRevision===mirrorRevision&&expectedRows===actualRows,mode,stateRevision,mirrorRevision,expectedRows,actualRows,presentKeys:row.entity_present_keys||[],updatedAt:row.updated_at||null};
 }
-
