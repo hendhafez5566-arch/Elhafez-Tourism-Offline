@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {compiledFilesText} from './lib/build-model.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
-const ts=read('tsconfig.json'), delegated=read('src/ui/delegated-actions.ts');
+const ts=compiledFilesText(), delegated=read('src/ui/delegated-actions.ts');
 const srcFiles=[];
 function walk(dir){for(const e of fs.readdirSync(dir,{withFileTypes:true})){const p=path.join(dir,e.name);if(e.isDirectory())walk(p);else if(e.isFile()&&p.endsWith('.ts'))srcFiles.push(p)}}
 walk(path.join(root,'src'));

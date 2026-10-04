@@ -1,0 +1,6 @@
+import { UmrahCore_S } from './runtime';
+import { UmrahCore_Bridge, UmrahCore_DB } from './data';
+const UmrahCore_travelerIdentityKey = t => { const passport = UmrahCore_S(t?.passportNo).trim().toUpperCase(); if (passport) return `P:${passport}`; const name = UmrahCore_S(t?.nameAr).trim().replace(/\s+/g, ' ').toLowerCase(), birth = UmrahCore_S(t?.birthDate).trim(), nationality = UmrahCore_S(t?.nationality).trim().toLowerCase(); return name && birth ? `N:${name}|${birth}|${nationality}` : ''; };
+const UmrahCore_duplicateTravelerGroups = (programId = '') => { const rows = UmrahCore_DB.data.travelers.filter(t => t.active !== false && UmrahCore_Bridge.branchMatch(t) && (!programId || t.programId === programId)), map = new Map(); for (const t of rows) { const key = UmrahCore_travelerIdentityKey(t); if (!key) continue; const groupKey = `${t.programId}|${key}`; if (!map.has(groupKey)) map.set(groupKey, []); map.get(groupKey).push(t); } return [...map.values()].filter(g => g.length > 1); };
+const UmrahCore_duplicateTravelerIds = (programId = '') => new Set(UmrahCore_duplicateTravelerGroups(programId).flat().map(t => t.id));
+export { UmrahCore_travelerIdentityKey, UmrahCore_duplicateTravelerGroups, UmrahCore_duplicateTravelerIds };

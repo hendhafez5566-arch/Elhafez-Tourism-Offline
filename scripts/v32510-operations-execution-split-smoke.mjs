@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {compiledFilesText} from './lib/build-model.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const read=f=>fs.readFileSync(path.join(root,f),'utf8');
-const ops=read('src/core/umrah/operations.ts'),exec=read('src/core/umrah/operations-execution.ts'),tc=read('tsconfig.json'),pkg=JSON.parse(read('package.json')),serverPkg=JSON.parse(read('server/package.json')),runtime=read('src/core/runtime.ts'),mobile=read('src/mobile.ts'),gradle=read('android/app/build.gradle');
+const ops=read('src/core/umrah/operations.ts'),exec=read('src/core/umrah/operations-execution.ts'),tc=compiledFilesText(),pkg=JSON.parse(read('package.json')),serverPkg=JSON.parse(read('server/package.json')),runtime=read('src/core/runtime.ts'),mobile=read('src/mobile.ts'),gradle=read('android/app/build.gradle');
 const methods=['createVisaBatch','updateVisaItem','upsertTicket','createBusRun','autoAssignBuses','addIncident','setIncidentStatus'];
 const server=read('server/src/server.ts');const [maj,min,patch]=pkg.version.split('.').map(Number),atLeast32510=maj>32||maj===32&&(min>5||min===5&&patch>=10),expectedAndroidCode=Number(pkg.version.replace(/\./g,''));
 const checks=[

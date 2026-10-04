@@ -1,8 +1,9 @@
 import { readFile, stat } from 'node:fs/promises';
+import { umrahPagesText, uiText, pagesText } from './lib/split-sources.mjs';
 const read=p=>readFile(new URL(`../${p}`,import.meta.url),'utf8');
 const checks=[];const check=(name,pass,detail='')=>{checks.push({name,pass:!!pass,detail});if(!pass)process.exitCode=1};
 const [pages,cleanPages,ui,delegated,party,actions,umrahData,umrahUi,umrahContracts,umrahPrint,styles,printing,tsconfig,copyStatic,manifest,gradle,pkg]=await Promise.all([
- read('src/ui/pages.ts'),read('src/ui/clean-pages.ts'),read('src/ui/ui.ts'),read('src/ui/delegated-actions.ts'),read('src/crm/party360.ts'),read('src/ui/actions.ts'),read('src/core/umrah/data.ts'),(read('src/core/umrah/ui.ts')+read('src/core/umrah/ui-pages.ts')),read('src/core/umrah/contracts.ts'),read('src/core/umrah/actions-print.ts'),read('src/styles.css'),read('src/reports/printing.ts'),read('tsconfig.json'),read('scripts/copy-static.mjs'),read('pwa/manifest.webmanifest'),read('android/app/build.gradle'),read('package.json')
+ pagesText(),read('src/ui/clean-pages.ts'),uiText(),read('src/ui/delegated-actions.ts'),read('src/ui/party360.ts'),Promise.all(['actions','actions-handlers-master','actions-handlers-documents','actions-handlers-finance','actions-handlers-crm','actions-handlers-reports-settings','actions-handlers-advanced'].map(n=>read(`src/ui/${n}.ts`))).then(a=>a.join('\n')),read('src/core/umrah/data.ts'),(read('src/core/umrah/ui.ts')+umrahPagesText()),read('src/core/umrah/contracts.ts'),read('src/core/umrah/actions-print.ts'),read('src/styles.css'),read('src/reports/printing.ts'),read('tsconfig.json'),read('scripts/copy-static.mjs'),read('pwa/manifest.webmanifest'),read('android/app/build.gradle'),read('package.json')
 ]);
 const cleanPartyControl=t=>new RegExp(`(?:UI|\\(UI as any\\))\\.partyControls\\('${t}',x\\.id`).test(cleanPages);
 for(const t of ['customer','supplier','agent']) check(`master ${t} uses unified إجراءات + المزيد controls`,cleanPartyControl(t));

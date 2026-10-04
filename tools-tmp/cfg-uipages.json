@@ -1,0 +1,6 @@
+{"file":"src/core/umrah/ui-pages.ts","obj":"UmrahCore_Pages","selfViaThis":true,"groups":[
+{"file":"ui-pages-overview","name":"UmrahPages_Overview","from":"dashboard","to":"seasons"},
+{"file":"ui-pages-contracts-programs","name":"UmrahPages_ContractsPrograms","from":"contracts","to":"procurement"},
+{"file":"ui-pages-bookings-travelers","name":"UmrahPages_BookingsTravelers","from":"bookings","to":"hajj-services"},
+{"file":"ui-pages-resources","name":"UmrahPages_Resources","from":"hotels","to":"transport"},
+{"file":"ui-pages-control","name":"UmrahPages_Control","from":"control","to":"settings"}]}

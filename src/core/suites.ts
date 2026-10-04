@@ -1,3 +1,11 @@
+import { esc } from './runtime';
+import { UmrahCore_deep, UmrahCore_today } from './umrah/runtime';
+import { UmrahCore_DB } from './umrah/data';
+import { UmrahCore_Wizard } from './umrah/guided';
+import { UmrahCore_ProgramWizard } from './umrah/program-wizard';
+import { UmrahCore_UI } from './umrah/ui';
+import { UmrahCore_Pages } from './umrah/ui-pages';
+import { __set_CoreSuites } from './late-bindings';
 const CoreSuites={
  ready:{umrah:false},
  maps:{
@@ -18,3 +26,5 @@ const CoreSuites={
  startProgram(){this.init('umrah');UmrahCore_ProgramWizard.start();return true},
  startBooking(programId=''){this.init('umrah');UmrahCore_Wizard.start(programId);return true}
 };
+__set_CoreSuites(CoreSuites);
+export { CoreSuites };

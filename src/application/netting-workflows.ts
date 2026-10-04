@@ -1,3 +1,6 @@
+import { BusinessValues } from '../core/business-values';
+import { PartyNettingRules } from '../crm/party-business-rules';
+import type { NettingComponent, NettingFields, NettingRecord, NettingWorkflowDeps } from './business-contracts';
 const NettingWorkflows = {
     async postNetting(d: NettingWorkflowDeps, type: string, id: string, o: NettingFields) {
         d.authorization.require('journal', 'add');
@@ -59,3 +62,4 @@ const NettingWorkflows = {
         });
     }
 };
+export { NettingWorkflows };

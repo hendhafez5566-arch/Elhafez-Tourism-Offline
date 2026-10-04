@@ -1,3 +1,9 @@
+import { UmrahCore_N, UmrahCore_dateAdd, UmrahCore_esc, UmrahCore_programDisplay, UmrahCore_roomCap, UmrahCore_roomLabel, UmrahCore_vehicleCaps } from './runtime';
+import { UmrahCore_Inventory } from './contracts-inventory';
+import { UmrahCore_ContractCenter } from './contracts';
+import { UmrahCore_Ops } from './operations';
+import { UmrahCore_UI, UmrahCore_entityOptions } from './ui';
+import { UmrahCore_Forms } from './forms';
 const UmrahCore_ContractForms: any = {
     contractAllocation(kind, id) { const c = UmrahCore_ContractCenter.get(kind, id); if (!c)
         return UmrahCore_UI.toast('التعاقد غير موجود'); const ps = UmrahCore_ContractCenter.compatiblePrograms(kind, c), programOptions = UmrahCore_entityOptions(ps); let fields = ''; if (kind === 'hotel')
@@ -49,3 +55,4 @@ const UmrahCore_ContractForms: any = {
 
 };
 Object.assign(UmrahCore_Forms, UmrahCore_ContractForms);
+export { UmrahCore_ContractForms };

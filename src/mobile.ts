@@ -1,3 +1,13 @@
+import { APP, S, byId, toast } from './core/runtime';
+import { BrowserPlatform } from './platform/browser-platform';
+import { ServerStore } from './persistence/server-store';
+import { DB, DataStore } from './persistence/browser-store';
+import { Auth } from './security/auth';
+import { Print } from './reports/printing';
+import { UI } from './ui/ui';
+import { UmrahCore_QuickCreate } from './core/umrah/guided';
+import { CommercialUX } from './ui/commercial-ux';
+import { AccessControl } from './security/access-control';
 /* Native Android shell integration. Kept dependency-free so the web/PWA build still works. */
 (() => {
  const bridge=(window as any).Capacitor;
@@ -79,15 +89,15 @@
  const NAV_STATE_KEY='erp_native_nav_state_v1';
  const saveNativeUiState=()=>{
   try{
-   if(typeof UI==='undefined'||typeof Auth==='undefined'||!Auth.user)return;
-   localStorage.setItem(NAV_STATE_KEY,JSON.stringify({userId:Auth.user.id||'',location:UI.captureNavLocation?.()||null,history:(UI.navHistory||[]).slice(-30),scrollY:Math.max(0,Math.round(window.scrollY||0))}));
+   if(typeof UI==='undefined'||typeof Auth==='undefined'||!AccessControl.currentUser())return;
+   localStorage.setItem(NAV_STATE_KEY,JSON.stringify({userId:AccessControl.currentUser().id||'',location:UI.captureNavLocation?.()||null,history:(UI.navHistory||[]).slice(-30),scrollY:Math.max(0,Math.round(window.scrollY||0))}));
   }catch(_){}
  };
  const restoreNativeUiState=()=>{
   try{
-   if(typeof UI==='undefined'||typeof Auth==='undefined'||!Auth.user)return;
+   if(typeof UI==='undefined'||typeof Auth==='undefined'||!AccessControl.currentUser())return;
    const raw=localStorage.getItem(NAV_STATE_KEY);if(!raw)return;
-   const state=JSON.parse(raw);if(!state||state.userId!==Auth.user.id||!state.location)return;
+   const state=JSON.parse(raw);if(!state||state.userId!==AccessControl.currentUser().id||!state.location)return;
    UI.navHistory=Array.isArray(state.history)?state.history.slice(-30):[];
    UI.restoreNavLocation?.(state.location);
    requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,Math.max(0,Number(state.scrollY)||0))));
@@ -166,7 +176,7 @@
   // show the persistent native-offline badge. Any successful request clears it.
   if(connected)setOnline(true);
   else if(confirmedOffline)setOnline(false);
-  if(typeof CommercialUX==='undefined'||typeof Auth==='undefined'||!Auth.user)return;
+  if(typeof CommercialUX==='undefined'||typeof Auth==='undefined'||!AccessControl.currentUser())return;
   if(!connected)CommercialUX.saveState('warning',message||'تعذر الوصول للخادم — سيعيد الاتصال تلقائيًا');
   else if(!ServerStore.lastConflict&&!DB.lastSaveError)CommercialUX.saveState('saved','متصل');
  };
@@ -179,7 +189,7 @@
    const ok=await ServerStore.probe(true);
    if(!ok){markConnection(false,ServerStore.lastError||'تعذر الوصول للخادم — سيعيد الاتصال تلقائيًا',deviceNetworkHint===false);return false}
    markConnection(true);
-   if(!ServerStore.authenticated){if(typeof Auth!=='undefined'&&Auth.user)ServerStore._requireLogin();return false}
+   if(!ServerStore.authenticated){if(typeof Auth!=='undefined'&&AccessControl.currentUser())ServerStore._requireLogin();return false}
    if((ServerStore._pendingData||ServerStore._drain)&&!ServerStore.lastConflict){
     const synced=await ServerStore.flushPending();
     if(synced){DB.syncBlocked=false;DB.lastSaveError='';markConnection(true);if(source!=='heartbeat'&&typeof toast==='function')toast('عاد الاتصال وتمت مزامنة التعديلات','ok')}
@@ -200,7 +210,7 @@
    const remote=await ServerStore.get();
    if(remote?.authRequired){ServerStore._requireLogin();return false}
    if(!remote?.available||!remote?.data){markConnection(false,ServerStore.lastError||'تعذر جلب أحدث البيانات');if(typeof toast==='function')toast('تعذر جلب أحدث البيانات من الخادم','warning');return false}
-   const loc=typeof UI!=='undefined'?UI.captureNavLocation?.():null,uid=typeof Auth!=='undefined'?(Auth.user?.id||ServerStore.userId):ServerStore.userId;
+   const loc=typeof UI!=='undefined'?UI.captureNavLocation?.():null,uid=typeof Auth!=='undefined'?(AccessControl.currentUser()?.id||ServerStore.userId):ServerStore.userId;
    DB.data=remote.data;DB.ensure();DB.syncBlocked=false;DB.lastSaveError='';
    if(typeof Auth!=='undefined'&&uid)Auth.user=byId(DB.data.users||[],uid)||Auth.user;
    await DataStore.localPut(DB.data).catch(()=>false);

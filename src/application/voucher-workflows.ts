@@ -1,3 +1,7 @@
+import { BusinessValues } from '../core/business-values';
+import { ApprovalRules } from '../accounting/expense-rules';
+import { VoucherRules } from '../accounting/voucher-rules';
+import type { BusinessJournalLine, BusinessTreasury, BusinessVoucherFields, VoucherWorkflowDeps } from './business-contracts';
 const VoucherWorkflows = {
     addReceipt(d: VoucherWorkflowDeps, o: BusinessVoucherFields) {
         return d.transactions.atomic('addReceipt', () => {
@@ -99,3 +103,4 @@ const VoucherWorkflows = {
         });
     }
 };
+export { VoucherWorkflows };

@@ -1,0 +1,4 @@
+{"file":"src/core/umrah/program-wizard.ts","obj":"UmrahCore_ProgramWizard","partType":"","groups":[
+{"file":"program-wizard-core","from":"step","to":"hotelAmount","inline":true},
+{"file":"program-wizard-validation","name":"ProgramWizard_Validation","from":"plan","to":"preflight"},
+{"file":"program-wizard-finish","name":"ProgramWizard_Finish","from":"next","to":"finish"}]}

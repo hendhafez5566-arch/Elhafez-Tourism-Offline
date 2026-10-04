@@ -1,3 +1,4 @@
+import type { ActionAuthorizationPort, ActionPersistencePort, ActionTransactionPort, CommercialBranch } from './contracts';
 // Small shared values and ports used by the extracted legacy workflows.
 type BusinessNumber = number | string | null | undefined;
 interface BusinessActor {
@@ -1067,3 +1068,4 @@ interface BusinessPaymentMeta {
     bankName: string;
     valueDate: string;
 }
+export type { ApprovalWorkflowDeps, BranchWorkflowDeps, BusinessActor, BusinessAllocation, BusinessApproval, BusinessApprovalPayload, BusinessBranch, BusinessBranchFields, BusinessClock, BusinessInvoice, BusinessJournalLine, BusinessLine, BusinessMoneyPort, BusinessNumber, BusinessPaymentMeta, BusinessPurchaseFields, BusinessPurchaseOrder, BusinessQuotation, BusinessQuotationFields, BusinessTax, BusinessTreasury, BusinessVoucherFields, CrmFollowupFields, CrmLead, CrmLeadFields, CrmWorkflowDeps, ExpenseApprovalOptions, ExpenseFields, ExpenseRecord, ExpenseWorkflowDeps, FinancialQueryDeps, IntegrityReportResult, IntegrityWorkflowDeps, InvoicePostingRuleDeps, InvoiceRuleDeps, InvoiceWorkflowDeps, JournalRuleDeps, ManualJournalFields, ManualJournalRecord, ManualJournalWorkflowDeps, NettingComponent, NettingFields, NettingRecord, NettingWorkflowDeps, RecurringJournalRecord, TourismBooking, TourismService, TourismWorkflowDeps, TransferFields, TransferWorkflowDeps, UmrahBookingRuleRecord, UmrahFinanceSnapshot, UmrahLifecycleBooking, UmrahLifecycleDeps, UmrahLifecycleProgram, UmrahProgramRuleRecord, VoucherLineDeps, VoucherWorkflowDeps };

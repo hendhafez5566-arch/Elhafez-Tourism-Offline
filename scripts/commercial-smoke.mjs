@@ -6,7 +6,7 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const must=[
  ['server/src/license.ts','verifyLicenseToken'],['server/src/migrations.ts','erp_schema_migrations'],['src/documents/attachments-backup.ts','erp-professional-suite-portable'],
  ['server/src/session.ts','last_seen_at'],['server/src/authz.ts','assertStateChangeAllowed'],['src/commercial/product.ts','BranchScope'],
- ['src/commercial/data-exchange.ts',"name.endsWith('.xlsx')"],['src/crm/party360.ts','Party360'],['src/commercial/pages.ts','programProfitability'],
+ ['src/commercial/data-exchange.ts',"name.endsWith('.xlsx')"],['src/ui/party360.ts','Party360'],['src/commercial/pages.ts','programProfitability'],
  ['scripts/init-env.ps1','ERP_COMPANY_ID'],['src/commercial/pages.ts','حماية البيانات'],['server/src/server.ts','/api/integrations/whatsapp/send'],['src/persistence/server-store.ts','_requireLogin'],['src/persistence/server-store.ts','setupPassword'],['src/security/auth.ts','ServerStore.setup(DB.data,password)'],['src/security/auth.ts','data-setup-key="email"'],['src/security/auth.ts','showRecovery()'],['server/src/auth-recovery.ts','resetPasswordWithToken'],['server/src/server.ts','verifyPassword(adminUser,setupPassword)'],['src/persistence/browser-store.ts','d.meta.setupComplete===true&&!d.treasuries.length'],['src/commercial/product.ts','if(ServerStore.available!==true){if(!(await ServerStore.probe()))'],
  ['VERIFY_BACKUP_WINDOWS.bat','docker compose --env-file ".env" exec -T db pg_restore -l'],['VERIFY_BACKUP_WINDOWS.bat','backups\\*.dump'],['BACKUP_ERP_WINDOWS.bat','Backup completed and verified.'],['BUILD_ANDROID_APK_WINDOWS.bat','Elhafez_Tourism_Customer_v%ERP_VERSION%_DEBUG.apk'],['scripts/install-update.ps1','build --pull --no-cache app']
 ];

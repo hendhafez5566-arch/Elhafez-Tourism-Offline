@@ -4,7 +4,7 @@ const auth=read('src/security/auth.ts');
 const store=read('src/persistence/server-store.ts');
 const server=read('server/src/server.ts');
 const context=read('server/src/context.ts');
-const actions=read('src/commercial/actions.ts');
+const actions=read('src/ui/commercial-actions.ts');
 const css=read('src/styles.css');
 const checks=[
  ['boot routes reset state to choice gate',auth.includes('ServerStore.resetPending?this.showResetChoice():this.showSetup()')],

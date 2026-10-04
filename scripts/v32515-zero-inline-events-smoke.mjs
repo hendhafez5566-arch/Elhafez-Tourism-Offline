@@ -1,14 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { umrahPagesText, uiText } from './lib/split-sources.mjs';
 const read=p=>fs.readFileSync(p,'utf8');
 const files=[];
 const walk=d=>{for(const e of fs.readdirSync(d,{withFileTypes:true})){const p=path.join(d,e.name);if(e.isDirectory())walk(p);else if(e.name.endsWith('.ts'))files.push(p)}};
 walk('src');
 const source=files.map(read).join('\n');
-const ui=read('src/ui/ui.ts');
+const ui=uiText();
 const delegated=read('src/ui/delegated-actions.ts');
 const guided=read('src/core/umrah/guided.ts');
-const umrahUi=read('src/core/umrah/ui.ts')+'\n'+read('src/core/umrah/ui-pages.ts');
+const umrahUi=read('src/core/umrah/ui.ts')+'\n'+umrahPagesText();
 const output=read('src/documents/output-center.ts');
 const pkg=JSON.parse(read('package.json'));
 const count=re=>(source.match(re)||[]).length;

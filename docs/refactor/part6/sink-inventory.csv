@@ -1,0 +1,187 @@
+﻿file,line,sink,interpolations_not_wrapped_in_esc,note
+src/commercial/data-exchange.ts,20,innerHTML,,all interpolations escaped or static
+src/commercial/data-exchange.ts,20,innerHTML,"UI.table(heads.map(esc),mapped.slice(0,10).map((x,i)=>`<tr>${heads.map(h=>`<td>${esc(x[h])",review
+src/commercial/pages.ts,20,innerHTML,"UI.table(['المستخدم','عنوان الشبكة','الجهاز','بدأت','آخر نشاط','إجراء'],rows,'لا توجد جلسا",review
+src/commercial/pages.ts,20,innerHTML,,all interpolations escaped or static
+src/commercial/pages.ts,23,innerHTML,"UI.kpi('الخادم',d.ok?'متصل':'خطأ',`v${esc(d.version)}`,d.ok?'good':'bad','check') ;; UI.kpi('قاعدة التشغيل',CommercialActions.bytes(d.databaseBytes),'قاعدة بيانات مركزية','inf ;; UI.kpi('المرفقات',CommercialActions.bytes(N(d.files?.bytes)),`${d.files?.count||0} ملف`,'p ;; UI.kpi('الجلسات',d.activeSe",review
+src/commercial/pages.ts,23,innerHTML,,all interpolations escaped or static
+src/commercial/pages.ts,76,innerHTML,formatDateTime(x.created_at) ;; CommercialActions.bytes(x.size_bytes||0) ;; safety(x) ;; state(x) ;; actions(x) ;; state(x) ;; formatDateTime(x.created_at) ;; CommercialActions.bytes(x.size_bytes||0) ;; safety(x) ;; actions(x),review
+src/commercial/pages.ts,76,innerHTML,,all interpolations escaped or static
+src/commercial/pages.ts,77,innerHTML,formatDateTime(x.created_at) ;; records(x) ;; size(x) ;; safety(x) ;; actions(x) ;; safety(x) ;; formatDateTime(x.created_at) ;; records(x) ;; size(x) ;; actions(x),review
+src/commercial/pages.ts,77,innerHTML,,all interpolations escaped or static
+src/core/umrah/contracts-inventory.ts,159,innerHTML,,all interpolations escaped or static
+src/core/umrah/contracts-inventory.ts,164,innerHTML,t ;; UmrahCore_roomLabel(t),review
+src/core/umrah/contracts.ts,72,innerHTML,,all interpolations escaped or static
+src/core/umrah/forms.ts,12,innerHTML,body,review
+src/core/umrah/forms.ts,13,innerHTML,body,review
+src/core/umrah/forms.ts,24,innerHTML,,all interpolations escaped or static
+src/core/umrah/forms.ts,25,innerHTML,,all interpolations escaped or static
+src/core/umrah/guided.ts,9,innerHTML,,all interpolations escaped or static
+src/core/umrah/guided.ts,14,innerHTML,UmrahCore_currencyOptions(currency || UmrahCore_DB.data.settings.defaultCurrency),review
+src/core/umrah/guided.ts,19,innerHTML,,all interpolations escaped or static
+src/core/umrah/guided.ts,24,innerHTML,UmrahCore_Bridge.baseCurrency(),review
+src/core/umrah/guided.ts,29,innerHTML,"UmrahCore_monthsAdd(UmrahCore_today(), 8)",review
+src/core/umrah/guided.ts,81,insertAdjacentHTML,,all interpolations escaped or static
+src/core/umrah/program-wizard.ts,61,innerHTML,"UmrahCore_SmartGuide.programWizard(this.step, this.data)",review
+src/core/umrah/program-wizard.ts,64,innerHTML,,all interpolations escaped or static
+src/crm/unified-party.ts,60,innerHTML,,all interpolations escaped or static
+src/crm/unified-party.ts,60,innerHTML,,all interpolations escaped or static
+src/documents/output-center.ts,10,innerHTML,,all interpolations escaped or static
+src/documents/output-center.ts,10,innerHTML,,all interpolations escaped or static
+src/mobile.ts,129,innerHTML,,all interpolations escaped or static
+src/mobile.ts,169,innerHTML,,all interpolations escaped or static
+src/mobile.ts,171,innerHTML,,all interpolations escaped or static
+src/reports/printing.ts,26,innerHTML,html,review
+src/reports/printing.ts,27,innerHTML,,all interpolations escaped or static
+src/reports/printing.ts,27,innerHTML,title ;; fields,review
+src/security/auth.ts,40,innerHTML,,all interpolations escaped or static
+src/security/auth.ts,42,innerHTML,,all interpolations escaped or static
+src/security/auth.ts,44,innerHTML,encodeURIComponent(APP.version),review
+src/security/auth.ts,45,innerHTML,encodeURIComponent(APP.version) ;; noProfile ;; noProfile ;; noProfile ;; noProfile ;; noProfile ;; noProfile ;; noProfile,review
+src/security/auth.ts,56,innerHTML,,all interpolations escaped or static
+src/security/auth.ts,62,innerHTML,this.loginMarkup(),review
+src/security/auth.ts,63,innerHTML,,all interpolations escaped or static
+src/security/auth.ts,63,innerHTML,,all interpolations escaped or static
+src/security/auth.ts,64,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-advanced.ts,11,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-advanced.ts,11,innerHTML,body,review
+src/ui/actions-handlers-advanced.ts,13,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-advanced.ts,13,innerHTML,"formatDate(x.recognitionDate) ;; UI.table(['التاريخ','القيمة','الحالة','إجراء'],(x.parts||[]).map(p=>`<tr><td>${formatDate(",review
+src/ui/actions-handlers-advanced.ts,17,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-advanced.ts,17,innerHTML,"UI.table(['التاريخ','القيمة','الحالة','إجراء'],(x.parts||[]).map(p=>`<tr><td>${formatDate(",review
+src/ui/actions-handlers-crm.ts,15,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-crm.ts,15,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-crm.ts,15,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-crm.ts,15,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-crm.ts,16,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-crm.ts,16,innerHTML,labels[a],review
+src/ui/actions-handlers-crm.ts,16,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-crm.ts,16,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-documents.ts,15,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-documents.ts,15,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-documents.ts,22,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-documents.ts,22,innerHTML,"UI.table(['التصنيف','حساب المصروف','الضريبة','مركز التكلفة','الحالة','إجراء'],defs.map(x=>",review
+src/ui/actions-handlers-documents.ts,23,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-documents.ts,23,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-finance.ts,14,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-finance.ts,14,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-finance.ts,15,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-finance.ts,15,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-finance.ts,16,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-finance.ts,16,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-finance.ts,19,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-finance.ts,19,innerHTML,html,review
+src/ui/actions-handlers-master.ts,15,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-master.ts,15,innerHTML,(w.pages||[]).length,review
+src/ui/actions-handlers-master.ts,21,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-master.ts,21,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-master.ts,21,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-master.ts,21,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-master.ts,23,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-master.ts,23,innerHTML,buttons,review
+src/ui/actions-handlers-reports-settings.ts,16,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-reports-settings.ts,16,innerHTML,partyOptions,review
+src/ui/actions-handlers-reports-settings.ts,16,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-reports-settings.ts,16,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-reports-settings.ts,16,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-reports-settings.ts,16,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-reports-settings.ts,16,innerHTML,,all interpolations escaped or static
+src/ui/actions-handlers-reports-settings.ts,16,innerHTML,,all interpolations escaped or static
+src/ui/auth-entry-presentation.ts,25,innerHTML,deps.escape(message),review
+src/ui/commercial-action-views.ts,5,innerHTML,,all interpolations escaped or static
+src/ui/commercial-action-views.ts,5,innerHTML,cards,review
+src/ui/commercial-action-views.ts,10,innerHTML,,all interpolations escaped or static
+src/ui/commercial-action-views.ts,10,innerHTML,"UI.table(['التاريخ','المستخدم','الإجراء','عنوان الشبكة','الجهاز','التغييرات'],rows,'لا توج",review
+src/ui/commercial-actions.ts,22,innerHTML,,all interpolations escaped or static
+src/ui/commercial-actions.ts,22,innerHTML,,all interpolations escaped or static
+src/ui/commercial-actions.ts,24,innerHTML,,all interpolations escaped or static
+src/ui/commercial-actions.ts,24,innerHTML,,all interpolations escaped or static
+src/ui/commercial-actions.ts,38,innerHTML,,all interpolations escaped or static
+src/ui/commercial-actions.ts,38,innerHTML,formatDateTime(pkg.exportedAt) ;; (pkg.attachments||[]).length ;; (pkg.blobs||[]).length,review
+src/ui/commercial-actions.ts,45,innerHTML,,all interpolations escaped or static
+src/ui/commercial-actions.ts,45,innerHTML,p.archivedRecords ;; CommercialActions.bytes(p.reductionBytes||0) ;; p.opening?.lines,review
+src/ui/commercial-actions.ts,50,innerHTML,,all interpolations escaped or static
+src/ui/commercial-actions.ts,50,innerHTML,formatDateTime(a.created_at) ;; s.customers ;; s.suppliers ;; s.invoices ;; s.bookings ;; s.journals ;; a.attachment_manifest?.length ;; this.bytes(a.size_bytes||0),review
+src/ui/commercial-actions.ts,52,innerHTML,,all interpolations escaped or static
+src/ui/commercial-actions.ts,52,innerHTML,,all interpolations escaped or static
+src/ui/commercial-ux.ts,15,innerHTML,,all interpolations escaped or static
+src/ui/commercial-ux.ts,16,innerHTML,,all interpolations escaped or static
+src/ui/commercial-ux.ts,20,innerHTML,,all interpolations escaped or static
+src/ui/commercial-ux.ts,21,innerHTML,,all interpolations escaped or static
+src/ui/commercial-ux.ts,21,innerHTML,,all interpolations escaped or static
+src/ui/commercial-ux.ts,23,insertAdjacentHTML,,all interpolations escaped or static
+src/ui/commercial-ux.ts,23,insertAdjacentHTML,,all interpolations escaped or static
+src/ui/commercial-ux.ts,25,innerHTML,,all interpolations escaped or static
+src/ui/commercial-ux.ts,25,innerHTML,,all interpolations escaped or static
+src/ui/commercial-ux.ts,28,innerHTML,,all interpolations escaped or static
+src/ui/commercial-ux.ts,34,innerHTML,,all interpolations escaped or static
+src/ui/commercial-ux.ts,34,innerHTML,,all interpolations escaped or static
+src/ui/commercial-ux.ts,52,innerHTML,unread ;; c ;; c ;; a.level,review
+src/ui/commercial-ux.ts,54,innerHTML,,all interpolations escaped or static
+src/ui/commercial-ux.ts,54,innerHTML,,all interpolations escaped or static
+src/ui/data-table.ts,45,innerHTML,rows.join('') ;; rec.headers.length ;; rec.empty,review
+src/ui/data-table.ts,47,outerHTML,html,review
+src/ui/data-table.ts,47,insertAdjacentHTML,html,review
+src/ui/forms.ts,28,innerHTML,,all interpolations escaped or static
+src/ui/forms.ts,28,innerHTML,d.note ;; this.renderFields(d),review
+src/ui/forms.ts,35,innerHTML,,all interpolations escaped or static
+src/ui/forms.ts,36,innerHTML,,all interpolations escaped or static
+src/ui/forms.ts,42,innerHTML,,all interpolations escaped or static
+src/ui/forms.ts,43,innerHTML,,all interpolations escaped or static
+src/ui/forms.ts,43,innerHTML,"b?.date ;; this.picker('customerId','العميل','customer',b?.customerId||'',{required:true,disabled:fin ;; this.picker('programId','البرنامج','program',b?.programId||'',{required:true,disabled:fina ;; b?.persons ;; b?.total",review
+src/ui/forms.ts,44,insertAdjacentHTML,r.rooms ;; r.persons,review
+src/ui/forms.ts,45,innerHTML,,all interpolations escaped or static
+src/ui/forms.ts,45,innerHTML,"s?.date ;; TourismServiceInventory.optionsHtml(s?.type||typeItems[0]?.value||'',s?.inventorySource?.c ;; this.picker('customerId','العميل','customer',customerValue,{placeholder:'اكتب اسم العميل أ ;; this.picker('supplierId','المورد','supplier',supplierValue,{placeholder:'ابحث عن المورد... ;; this.pi",review
+src/ui/forms.ts,46,innerHTML,"TourismServiceInventory.optionsHtml(type,s?.inventorySource?.contractId||'')",review
+src/ui/forms.ts,46,innerHTML,html,review
+src/ui/forms.ts,47,innerHTML,,all interpolations escaped or static
+src/ui/forms.ts,47,innerHTML,"edit?.date ;; this.picker('party',kind==='supplier'?'المورد':'العميل / المندوب',partyKind,partyValue,{pl ;; edit?.dueDate ;; edit?.recognitionDate ;; kind",review
+src/ui/forms.ts,48,insertAdjacentHTML,line.qty ;; line.price ;; line.discount,review
+src/ui/forms.ts,49,innerHTML,,all interpolations escaped or static
+src/ui/forms.ts,49,innerHTML,draft?.date,review
+src/ui/forms.ts,49,insertAdjacentHTML,line.debit ;; line.credit,review
+src/ui/forms.ts,50,innerHTML,,all interpolations escaped or static
+src/ui/forms.ts,50,innerHTML,"doc?.date ;; this.picker('partyId',isPO?'المورد':'العميل',isPO?'supplier':'customer',doc?.[isPO?'suppli ;; doc?.[isPO?'expectedDate':'validUntil'] ;; this.picker('programId','برنامج العمرة (اختياري)','program',doc?.programId||c.programId||'",review
+src/ui/forms.ts,50,insertAdjacentHTML,line.qty ;; line.price ;; tax,review
+src/ui/navigation.ts,66,innerHTML,,all interpolations escaped or static
+src/ui/navigation.ts,83,innerHTML,,all interpolations escaped or static
+src/ui/party-presentation.ts,5,innerHTML,deps.icon(deps.roleIcon(targetType)),review
+src/ui/party-presentation.ts,5,innerHTML,deps.roleLabel(targetType) ;; deps.escape(x.id) ;; deps.escape(x.no || '') ;; deps.escape(x.name || '') ;; deps.escape(x.phone),review
+src/ui/party-presentation.ts,15,innerHTML,deps.icon('journal'),review
+src/ui/party-presentation.ts,15,innerHTML,"deps.escape(p.key) ;; p.max ;; p.currency ;; deps.escape(p.payable.label) ;; deps.money(p.payable.available, p.currency) ;; deps.escape(p.receivable.label) ;; deps.money(p.receivable.available, p.currency) ;; deps.money(p.max, p.currency) ;; first.max ;; first.currency ;; deps.today()",review
+src/ui/party-presentation.ts,32,innerHTML,deps.icon(d.cfg.icon),review
+src/ui/party-presentation.ts,32,innerHTML,"deps.shell(type, id)",review
+src/ui/party360.ts,56,innerHTML,,all interpolations escaped or static
+src/ui/party360.ts,56,innerHTML,g.count,review
+src/ui/party360.ts,57,innerHTML,,all interpolations escaped or static
+src/ui/party360.ts,57,innerHTML,,all interpolations escaped or static
+src/ui/party360.ts,73,innerHTML,,all interpolations escaped or static
+src/ui/party360.ts,73,innerHTML,"this.renderTab(type,id,tab,model)",review
+src/ui/party360.ts,73,innerHTML,,all interpolations escaped or static
+src/ui/ui-base-methods.ts,14,innerHTML,Pages[this.current]() ;; Pages.notFound(),review
+src/ui/ui-base-methods.ts,17,innerHTML,,all interpolations escaped or static
+src/ui/ui-menus-search.ts,11,innerHTML,n.length ;; a.level,review
+src/ui/ui-menus-search.ts,12,innerHTML,,all interpolations escaped or static
+src/ui/ui-menus-search.ts,13,innerHTML,,all interpolations escaped or static
+src/ui/ui-menus-search.ts,17,innerHTML,,all interpolations escaped or static
+src/ui/ui-menus-search.ts,17,innerHTML,,all interpolations escaped or static
+src/ui/ui-menus-search.ts,18,innerHTML,,all interpolations escaped or static
+src/ui/ui-menus-search.ts,20,innerHTML,x.page,review
+src/ui/ui-modal-stack.ts,11,innerHTML,s.icon,review
+src/ui/ui-modal-stack.ts,11,innerHTML,s.foot,review
+src/ui/ui-modal-stack.ts,11,innerHTML,s.body,review
+src/ui/ui-modal-stack.ts,13,innerHTML,,all interpolations escaped or static
+src/ui/ui-shell.ts,30,innerHTML,,all interpolations escaped or static
+src/ui/ui-shell.ts,31,innerHTML,,all interpolations escaped or static
+src/ui/ui-shell.ts,32,innerHTML,,all interpolations escaped or static
+src/ui/ui-shell.ts,32,innerHTML,,all interpolations escaped or static
+src/ui/ui-tables.ts,7,innerHTML,,all interpolations escaped or static
+src/ui/ui-tables.ts,7,innerHTML,,all interpolations escaped or static
+src/ui/ui-tables.ts,8,innerHTML,,all interpolations escaped or static
+src/ui/ui-tables.ts,8,innerHTML,,all interpolations escaped or static
+src/ui/ui-tables.ts,9,innerHTML,S(html),review
+src/ui/ui-tables.ts,10,innerHTML,S(html),review
+src/ui/ui-tables.ts,18,innerHTML,rows.join('') ;; rec.headers.length ;; rec.empty,review
+src/ui/ui-tables.ts,18,outerHTML,html,review
+src/ui/ui-tables.ts,18,insertAdjacentHTML,html,review
+src/ui/ui-workspace-nav.ts,39,innerHTML,body ;; mobile,review

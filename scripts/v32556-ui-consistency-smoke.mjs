@@ -1,12 +1,13 @@
 import fs from 'node:fs';
+import { umrahPagesText } from './lib/split-sources.mjs';
 const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const pkg=JSON.parse(read('package.json'));
 const runtime=read('src/core/runtime.ts');
-const umrah=read('src/core/umrah/runtime.ts')+read('src/core/umrah/actions-print.ts')+read('src/core/umrah/ui-pages.ts');
+const umrah=read('src/core/umrah/runtime.ts')+read('src/core/umrah/actions-print.ts')+umrahPagesText();
 const output=read('src/documents/output-center.ts');
 const backup=read('src/documents/attachments-backup.ts');
 const printing=read('src/reports/printing.ts');
-const party=read('src/crm/party360.ts');
+const party=read('src/ui/party360.ts');
 const java=read('android/app/src/main/java/com/elhafez/tourism/erp/customer/MainActivity.java');
 const css=read('src/styles.css');
 const checks=[];const ok=(n,p)=>{checks.push([n,!!p]);console.log(`${p?'PASS':'FAIL'} ${n}`)};

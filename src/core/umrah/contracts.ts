@@ -1,3 +1,8 @@
+import { UmrahCore_N, UmrahCore_S, UmrahCore_dateAdd, UmrahCore_daysBetween, UmrahCore_deep, UmrahCore_esc, UmrahCore_iid, UmrahCore_now, UmrahCore_roomCap, UmrahCore_roomLabel, UmrahCore_today, UmrahCore_vehicleCaps } from './runtime';
+import { UmrahCore_Bridge, UmrahCore_Cost, UmrahCore_DB } from './data';
+import { UmrahCore_Inventory } from './contracts-inventory';
+import { UmrahCore_Ops, UmrahCore_Procurement, UmrahCore_ProgramWizard, UmrahCore_UI } from '../late-bindings';
+import { __set_UmrahCore_ContractCenter } from '../late-bindings';
 const UmrahCore_ContractCenter: any = {
     rawArr(kind) { return kind === 'hotel' ? UmrahCore_DB.data.hotelContracts : kind === 'flight' ? UmrahCore_DB.data.flightBlocks : kind === 'visa' ? UmrahCore_DB.data.visaContracts : kind === 'service' ? UmrahCore_DB.data.serviceContracts : UmrahCore_DB.data.transportContracts; },
     arr(kind) { return (this.rawArr(kind) || []).filter(x => UmrahCore_Bridge.branchMatch(x)); },
@@ -364,3 +369,5 @@ const UmrahCore_ContractCenter: any = {
     UmrahCore_ProgramWizard.applyTransportContract(id); },
 
 };
+__set_UmrahCore_ContractCenter(UmrahCore_ContractCenter);
+export { UmrahCore_ContractCenter };

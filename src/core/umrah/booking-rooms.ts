@@ -1,3 +1,5 @@
+import { UmrahCore_N, UmrahCore_S, UmrahCore_deep, UmrahCore_iid, UmrahCore_now, UmrahCore_roomCap } from './runtime';
+import { UmrahCore_Bridge, UmrahCore_DB } from './data';
 const UmrahCore_BookingRooms = {
     defaultPlan(ops, p, type, counts) {
         const bedPeople = UmrahCore_N(counts.adults) + UmrahCore_N(counts.childBed);
@@ -70,3 +72,4 @@ const UmrahCore_BookingRooms = {
         ops.autoAssignRooms(b.id);
     }
 };
+export { UmrahCore_BookingRooms };

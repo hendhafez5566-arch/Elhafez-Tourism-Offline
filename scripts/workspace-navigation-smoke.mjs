@@ -1,13 +1,13 @@
 import fs from 'node:fs';
 import ts from 'typescript';
 
-const file='src/ui/ui.ts';
+const file='src/ui/ui-workspace-nav.ts';/* UI is assembled from responsibility modules; openWorkspaceModule lives in UI_WorkspaceNav */
 const source=fs.readFileSync(file,'utf8');
 const delegated=fs.readFileSync('src/ui/delegated-actions.ts','utf8');
 const tree=ts.createSourceFile(file,source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);
 let method;
 function visit(node){
-  if(ts.isVariableDeclaration(node)&&node.name.getText(tree)==='UI'&&ts.isObjectLiteralExpression(node.initializer))method=node.initializer.properties.find(p=>p.name?.getText(tree)==='openWorkspaceModule');
+  if(ts.isVariableDeclaration(node)&&node.name.getText(tree)==='UI_WorkspaceNav'&&ts.isObjectLiteralExpression(node.initializer))method=node.initializer.properties.find(p=>p.name?.getText(tree)==='openWorkspaceModule');
   ts.forEachChild(node,visit);
 }
 visit(tree);

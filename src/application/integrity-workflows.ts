@@ -1,3 +1,4 @@
+import type { IntegrityWorkflowDeps } from './business-contracts';
 const IntegrityWorkflows = {
     rerun(d: IntegrityWorkflowDeps) {
         const report = d.report();
@@ -16,3 +17,4 @@ const IntegrityWorkflows = {
         d.repaired();
     }
 };
+export { IntegrityWorkflows };

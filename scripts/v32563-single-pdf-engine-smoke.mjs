@@ -1,3 +1,4 @@
+import { uiText } from './lib/split-sources.mjs';
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const printing=read('src/reports/printing.ts');
@@ -7,9 +8,9 @@ const html=read('index.html');
 const delegated=read('src/ui/delegated-actions.ts');
 const manifest=read('android/app/src/main/AndroidManifest.xml');
 const forms=read('src/ui/forms.ts');
-const ui=read('src/ui/ui.ts');
+const ui=uiText();
 const defs=read('src/ui/forms-definitions.ts');
-const party=read('src/crm/party360.ts');
+const party=read('src/ui/party360.ts');
 const pkg=JSON.parse(read('package.json'));
 const checks=[];
 const ok=(name,pass)=>{checks.push([name,!!pass]);console.log(`${pass?'PASS':'FAIL'} ${name}`)};

@@ -1,11 +1,12 @@
 import fs from 'node:fs';
+import { umrahPagesText, uiText, pagesText } from './lib/split-sources.mjs';
 const read=p=>fs.readFileSync(p,'utf8');
 const css=read('src/styles.css');
-const ui=read('src/ui/ui.ts');
+const ui=uiText();
 const mobile=read('src/mobile.ts');
-const umrah=(read('src/core/umrah/ui.ts')+read('src/core/umrah/ui-pages.ts'));
+const umrah=(read('src/core/umrah/ui.ts')+umrahPagesText());
 const store=read('src/persistence/browser-store.ts');
-const pages=read('src/ui/pages.ts');
+const pages=pagesText();
 const delegated=read('src/ui/delegated-actions.ts');
 const runtime=read('src/core/runtime.ts');
 const rootPkg=JSON.parse(read('package.json'));

@@ -1,0 +1,6 @@
+{"file":"src/core/umrah/forms.ts","obj":"UmrahCore_Forms","lateBindingsRel":"../late-bindings","groups":[
+{"file":"forms-picker","name":"UmrahForms_Picker","from":"open","to":"pickerChoose"},
+{"file":"forms-contract-setup","name":"UmrahForms_ContractSetup","from":"season","to":"serviceContract"},
+{"file":"forms-program-setup","name":"UmrahForms_ProgramSetup","from":"program","to":"cost"},
+{"file":"forms-booking-operations","name":"UmrahForms_BookingOperations","from":"booking","to":"busRun"},
+{"file":"forms-trip-operations","name":"UmrahForms_TripOperations","from":"flightSchedule","to":"supplierInvoiceApproval"}]}

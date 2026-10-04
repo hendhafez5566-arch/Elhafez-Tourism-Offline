@@ -1,0 +1,9 @@
+{"file":"src/ui/ui.ts","obj":"UI","partType":"",
+"localConsts":{"UIDocument":"const UIDocument: any = document;"},
+"extraImports":[{"name":"UI","from":"../core/late-bindings"},{"name":"UiBaseMethods","from":"../core/late-bindings"},{"name":"SystemFontCatalog","from":"./ui-fonts"},{"name":"ensureSystemFontAsset","from":"./ui-fonts"},{"name":"systemFontEntry","from":"./ui-fonts"}],
+"groups":[
+{"file":"ui-shell","name":"UI_Shell","from":"current","to":"applySidebarMode"},
+{"file":"ui-workspace-nav","name":"UI_WorkspaceNav","from":"workspaces","to":"goUp"},
+{"file":"ui-menus-search","name":"UI_MenusSearch","from":"closeModal","to":"enhanceResponsiveTables"},
+{"file":"ui-tables","name":"UI_Tables","from":"confirmAction","to":"badge"},
+{"file":"ui-modal-settings","name":"UI_ModalSettings","from":"ensureModalFooter","to":"partyControls"}]}

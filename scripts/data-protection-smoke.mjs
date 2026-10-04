@@ -7,7 +7,7 @@ const archives=read('server/src/archives.ts');
 const server=read('server/src/server.ts');
 const portable=read('src/documents/attachments-backup.ts');
 const pages=read('src/commercial/pages.ts');
-const actions=read('src/commercial/actions.ts');
+const actions=read('src/ui/commercial-actions.ts');
 const store=read('src/persistence/server-store.ts');
 
 assert(migration.includes('erp_file_blobs'),'shared blob table missing');

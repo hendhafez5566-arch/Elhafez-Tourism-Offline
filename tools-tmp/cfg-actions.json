@@ -1,0 +1,7 @@
+{"file":"src/ui/actions.ts","obj":"Actions","lateBindingsRel":"../core/late-bindings","groups":[
+{"file":"actions-workspace-parties","name":"Actions_WorkspaceParties","from":"manageWorkspaces","to":"showTravelers"},
+{"file":"actions-document-lifecycle","name":"Actions_DocumentLifecycle","from":"removeProgram","to":"toggleExpenseCategory"},
+{"file":"actions-finance-controls","name":"Actions_FinanceControls","from":"approveCommission","to":"reopenYear"},
+{"file":"actions-crm-purchasing-users","name":"Actions_CrmPurchasingUsers","from":"approveRequest","to":"resetPassword"},
+{"file":"actions-attachments-settings","name":"Actions_AttachmentsSettings","from":"resolveEntityId","to":"importBackup"},
+{"file":"actions-advanced-accounting","name":"Actions_AdvancedAccounting","from":"advancedForm","to":"reconcileImportedBank"}]}

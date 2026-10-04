@@ -1,14 +1,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {compiledFilesText} from './lib/build-model.mjs';
+import { umrahPagesText, umrahFormsText } from './lib/split-sources.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const bytes=p=>fs.statSync(path.join(root,p)).size;
-const ts=read('tsconfig.json');
+const ts=compiledFilesText();
 const wizard=read('src/core/umrah/program-wizard.ts'),wizardView=read('src/core/umrah/program-wizard-view.ts');
 const forms=read('src/ui/forms.ts'),defs=read('src/ui/forms-definitions.ts');
-const uforms=read('src/core/umrah/forms.ts'),contractForms=read('src/core/umrah/forms-contracts.ts');
-const uui=read('src/core/umrah/ui.ts'),upages=read('src/core/umrah/ui-pages.ts');
+const uforms=umrahFormsText(),contractForms=read('src/core/umrah/forms-contracts.ts');
+const uui=read('src/core/umrah/ui.ts'),upages=umrahPagesText();
 const contracts=read('src/core/umrah/contracts.ts'),management=read('src/core/umrah/contracts-management.ts');
 const order=(a,b)=>ts.indexOf(a)>=0&&ts.indexOf(a)<ts.indexOf(b);
 const checks=[

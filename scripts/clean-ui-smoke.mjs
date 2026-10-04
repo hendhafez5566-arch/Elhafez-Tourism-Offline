@@ -1,5 +1,7 @@
 import {readFileSync,existsSync} from 'node:fs';
-const read=p=>readFileSync(p,'utf8'), umrahOps=read('src/core/umrah/operations.ts')+'\n'+read('src/core/umrah/operations-execution.ts'), ui=read('src/ui/ui.ts'), nav=read('src/ui/navigation.ts'), html=read('index.html'), css=read('src/styles.css'), pages=read('src/ui/pages.ts'), actions=read('src/ui/actions.ts'), party=read('src/crm/party360.ts'), umrahForms=read('src/core/umrah/forms.ts'), ts=read('tsconfig.json'), manifest=read('android/app/src/main/AndroidManifest.xml');
+import {compiledFilesText} from './lib/build-model.mjs';
+import { umrahPagesText, umrahFormsText, uiText, pagesText } from './lib/split-sources.mjs';
+const read=p=>readFileSync(p,'utf8'), umrahOps=read('src/core/umrah/operations.ts')+'\n'+read('src/core/umrah/operations-execution.ts'), ui=uiText(), nav=read('src/ui/navigation.ts'), html=read('index.html'), css=read('src/styles.css'), pages=pagesText(), actions=read('src/ui/actions.ts'), party=read('src/ui/party360.ts'), umrahForms=umrahFormsText(), ts=compiledFilesText(), manifest=read('android/app/src/main/AndroidManifest.xml');
 const checks=[];const check=(name,pass)=>checks.push({name,pass:!!pass});
 check('Quick Navigation removed from topbar and sidebar',!html.includes('navigatorPanel')&&!html.includes('nav-switch-btn')&&!ui.includes('toggleNavigator')&&!ui.includes('انتقال سريع'));
 check('Umrah navigation follows the simplified workflow',nav.includes("'ابدأ هنا'")&&nav.includes("'الإدارة اليومية'")&&nav.includes("'التعاقدات'")&&nav.includes("'التشغيل'")&&nav.includes("'المخرجات'")&&nav.includes("'الإعدادات'"));
@@ -17,14 +19,14 @@ for(const px of[13,14,15,16,17,18])check(`Font ${px}px preview exists`,pages.inc
 
 check('Umrah navigation has no disabled legacy group headers',!css.includes('umrah-nav-group-title{color:#91a4bf;font-size:10.5px;font-weight:850;padding:7px 9px 5px;pointer-events:none}'));
 check('Active Umrah route reopens its sidebar group',ui.includes("closest('details.workspace-nav-section,details.umrah-nav-group,details.shortcut-nav-details')"));
-check('Umrah programs expose central safe delete',(read('src/core/umrah/ui.ts')+read('src/core/umrah/ui-pages.ts')).includes("DeleteCenter.button('umrahProgram',")&&read('src/core/delete-center.ts').includes("if(!['planning','contracting','pricing','cancelled'].includes(p.status))")&&read('src/core/delete-center.ts').includes("if(p.status==='closed')"));
+check('Umrah programs expose central safe delete',(read('src/core/umrah/ui.ts')+umrahPagesText()).includes("DeleteCenter.button('umrahProgram',")&&read('src/core/delete-center.ts').includes("if(!['planning','contracting','pricing','cancelled'].includes(p.status))")&&read('src/core/delete-center.ts').includes("if(p.status==='closed')"));
 check('Program delete blocks financial/operational references',read('src/core/delete-center.ts').includes('programFinancialRefs')&&read('src/core/delete-center.ts').includes('programOperationalRefs'));
-check('High-volume Umrah lists separate current and historical records',(read('src/core/umrah/ui.ts')+read('src/core/umrah/ui-pages.ts')).includes('UmrahCore_historyToolbar')&&(read('src/core/umrah/ui.ts')+read('src/core/umrah/ui-pages.ts')).includes("programs: 'active'")&&(read('src/core/umrah/ui.ts')+read('src/core/umrah/ui-pages.ts')).includes("'السجل السابق'"));
+check('High-volume Umrah lists separate current and historical records',(read('src/core/umrah/ui.ts')+umrahPagesText()).includes('UmrahCore_historyToolbar')&&(read('src/core/umrah/ui.ts')+umrahPagesText()).includes("programs: 'active'")&&(read('src/core/umrah/ui.ts')+umrahPagesText()).includes("'السجل السابق'"));
 check('Visa batch creation preflights duplicate travelers',umrahOps.includes('eligibleVisaTravelers')&&umrahOps.includes('لا يمكن إنشاء دفعة مكررة'));
 check('Party attachments expose open and delete',party.includes('removeAttachment(type,id,attachmentId)')&&party.includes('data-party-action="removeAttachment"')&&party.includes("data-attachment-preview")&&read('src/ui/delegated-actions.ts').includes("Attachments.preview(id)")&&read('src/ui/delegated-actions.ts').includes("Party360.removeAttachment(type,id,ref)")&&party.includes("['الملف','النوع','التاريخ','الانتهاء','إجراء']"));
 check('Party recent activity is limited to five and removable',party.includes('if(audit.length>=5)break')&&party.includes('removeActivity(type,id,auditId)')&&party.includes('data-party-action="removeActivity"')&&read('src/ui/delegated-actions.ts').includes('Party360.removeActivity(type,id,ref)')&&party.includes('${audit.length}/5'));
 check('Redundant company instruction removed',!read('src/commercial/vendor-owner.ts').includes('كل الإجراءات موجودة داخله'));
-check('Generic page descriptions removed from page headers',!pages.includes('<p>${desc}</p>')&&!(read('src/core/umrah/ui.ts')+read('src/core/umrah/ui-pages.ts')).includes('<p>${sub}</p>'));
+check('Generic page descriptions removed from page headers',!pages.includes('<p>${desc}</p>')&&!(read('src/core/umrah/ui.ts')+umrahPagesText()).includes('<p>${sub}</p>'));
 
 check('Production source maps disabled',read('tsconfig.json').includes('"sourceMap": false'));
 const failed=checks.filter(x=>!x.pass);console.log(JSON.stringify({ok:!failed.length,checks},null,2));if(failed.length)process.exit(1);

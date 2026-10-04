@@ -1,3 +1,5 @@
+import { BusinessValues } from '../core/business-values';
+import type { BusinessClock, BusinessPurchaseFields, BusinessPurchaseOrder, BusinessQuotation, BusinessQuotationFields } from '../application/business-contracts';
 // Record transitions and restrictions; persistence and authorization belong to use cases.
 const CommercialLifecycleRules = {
     acceptQuotation(q: BusinessQuotation | undefined, clock: BusinessClock) {
@@ -61,3 +63,4 @@ const CommercialLifecycleRules = {
             throw new Error('أمر الشراء غير معتمد');
     }
 };
+export { CommercialLifecycleRules };

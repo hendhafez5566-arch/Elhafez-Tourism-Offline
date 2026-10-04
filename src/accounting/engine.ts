@@ -1,9 +1,22 @@
+import { EPS, N, S, byId, fmt, iid, live, money, now, sl, today } from '../core/runtime';
+import { JournalRules } from './journal-rules';
+import { ManualJournalWorkflows } from '../application/manual-journal-workflows';
+import { IntegrityWorkflows } from '../application/integrity-workflows';
+import { Numbering } from '../core/numbering';
+import { AdvancedAccounting } from './advanced';
+import { DB } from '../persistence/browser-store';
+import { BranchScope } from '../commercial/product';
+import { Currency, Periods } from './currency-periods';
+import { Auth, Invoices, Tax, UI, composeLegacyIntegrityDeps, composeLegacyJournalRules, composeLegacyManualJournalDeps } from '../core/late-bindings';
+import { __set_Accounting } from '../core/late-bindings';
+import { AccessControl } from '../security/access-control';
+import { UiPort } from '../core/ui-port';
 const Accounting={
  account(id){return byId(DB.data.accounts,id)},descendants(id){const out=[],seen=new Set();const walk=p=>{if(seen.has(p))return;seen.add(p);for(const a of DB.data.accounts.filter(x=>x.parentId===p)){out.push(a.id);walk(a.id)}};walk(id);return out},
  treasuryAccountId(tid){const t=byId(DB.data.treasuries,tid);return t?.glAccountId||(t?.no?`11T${S(t.no).split('-').pop()}`:`11T${S(tid).slice(-5)}`)},ensureTreasuryAccount(t){const id=this.treasuryAccountId(t.id);t.glAccountId=id;const e=this.account(id);if(e){e.name=`${t.name} (${t.currency})`;e.currency=t.currency;e.active=t.active!==false;return id}DB.data.accounts.push({id,name:`${t.name} (${t.currency})`,type:'asset',nature:'debit',parentId:'1100',posting:true,system:true,active:true,treasuryId:t.id,currency:t.currency});return id},
  documentStatus(type,refId,status){const d=DB.data.documents.find(x=>x.type===type&&x.refId===refId);if(d)d.status=status;return d},accountLocked(id){return DB.data.journals.some(j=>j.lines?.some(l=>l.accountId===id))},treasuryHasHistory(tid){const aid=this.treasuryAccountId(tid);return DB.data.journals.some(j=>j.lines?.some(l=>l.accountId===aid))},
  validateLine(l){const a=this.account(l.accountId);if(!a)throw new Error('حساب غير موجود: '+l.accountId);if(a.active===false)throw new Error(`الحساب ${a.name} موقوف`);if(a.posting===false||a.type==='group')throw new Error(`الحساب ${a.name} تجميعي وغير قابل للترحيل`);const controls={1200:'customer',1210:'agent',2100:'supplier',2200:'agent',1400:'supplier',2400:'customer',2410:'agent'};if(controls[a.id]&&(!l.partyId||l.partyType!==controls[a.id]))throw new Error(`الحساب ${a.name} يتطلب تحديد الطرف المرتبط`);if(a.treasuryId&&l.treasuryId!==a.treasuryId)throw new Error(`حركة ${a.name} تتطلب الخزنة المرتبطة`)},
- post({date=today(),memo='',refType='',refId='',costCenterId='',branchId='',lines=[],skipPeriod=false}){if(!skipPeriod)Periods.assertOpen(date);const norm=JournalRules.normalize(composeLegacyJournalRules(this),lines,date);const j={id:iid(),no:Numbering.next('journal',date),date,memo,refType,refId,costCenterId,branchId:branchId||(typeof BranchScope!=='undefined'?BranchScope.currentId():''),status:'posted',createdAt:now(),createdBy:Auth?.user?.id||'',lines:norm};DB.data.journals.unshift(j);DB.data.documents.unshift({id:iid(),no:j.no,date,type:'journal',refId:j.id,refNo:j.no,title:`قيد ${j.no}`,status:'posted'});this.invalidateLineCache();return j},
+ post({date=today(),memo='',refType='',refId='',costCenterId='',branchId='',lines=[],skipPeriod=false}){if(!skipPeriod)Periods.assertOpen(date);const norm=JournalRules.normalize(composeLegacyJournalRules(this),lines,date);const j={id:iid(),no:Numbering.next('journal',date),date,memo,refType,refId,costCenterId,branchId:branchId||(typeof BranchScope!=='undefined'?BranchScope.currentId():''),status:'posted',createdAt:now(),createdBy:AccessControl.currentUser()?.id||'',lines:norm};DB.data.journals.unshift(j);DB.data.documents.unshift({id:iid(),no:j.no,date,type:'journal',refId:j.id,refNo:j.no,title:`قيد ${j.no}`,status:'posted'});this.invalidateLineCache();return j},
  reversalLines(lines=[]){return JournalRules.reversalLines(lines)},
  reverseJournal(j,reason,{date=today(),skipPeriod=false}={}){if(!j||j.status!=='posted')return;j.status='reversed';j.voidReason=reason;this.documentStatus('journal',j.id,'reversed');return this.post({date,memo:`عكس ${j.no}: ${j.memo} — ${reason}`,refType:'reversal',refId:j.id,costCenterId:j.costCenterId,skipPeriod,lines:this.reversalLines(j.lines)})},
  reverse(refType,refId,reason='إلغاء',opts={}){for(const j of DB.data.journals.filter(j=>j.status==='posted'&&j.refType===refType&&j.refId===refId))this.reverseJournal(j,reason,opts)},
@@ -124,8 +137,10 @@ const Accounting={
  integrityReport(){const started=performance.now(),issues=this.audit(),critical=issues.filter(x=>x.level==='critical'),warnings=issues.filter(x=>x.level!=='critical'),categories={};for(const i of issues){const key=i.category||(/TAX/.test(i.code)?'tax':/FX|CURRENCY/.test(i.code)?'currency':/UMRAH|PROGRAM|BOOKING/.test(i.code)?'umrah':/PO|SUPPLIER|PAYMENT/.test(i.code)?'purchases':/INVOICE|RECEIPT|ALLOC/.test(i.code)?'invoices':/ACCOUNT|JOURNAL|SUBLEDGER|CONTROL/.test(i.code)?'ledger':'other');categories[key]=(categories[key]||0)+1}const report={checkedAt:now(),durationMs:Math.round(performance.now()-started),issues,critical,warnings,categories,counts:{journals:(DB.data.journals||[]).filter(live).length,invoices:(DB.data.invoices||[]).filter(live).length,purchaseOrders:(DB.data.purchaseOrders||[]).filter(x=>x.status!=='void').length,parties:(DB.data.customers||[]).length+(DB.data.suppliers||[]).length+(DB.data.agents||[]).length},ok:critical.length===0};this._lastIntegrityReport=report;return report},
  lastIntegrityReport(){return this._lastIntegrityReport||this.integrityReport()},
  rerunIntegrity(){return IntegrityWorkflows.rerun(composeLegacyIntegrityDeps(this));},
- openIssue(page,refId=''){if(page)UI.openPage(page,refId);},
+ openIssue(page,refId=''){if(page)UiPort.openPage(page,refId);},
  autoFix(){return IntegrityWorkflows.repair(composeLegacyIntegrityDeps(this));}
 };
+__set_Accounting(Accounting);
 
 const ManualJournal={createDraft(o){return ManualJournalWorkflows.createDraft(composeLegacyManualJournalDeps(),o)},updateDraft(id,o){return ManualJournalWorkflows.updateDraft(composeLegacyManualJournalDeps(),id,o)},postDraft(id){return ManualJournalWorkflows.postDraft(composeLegacyManualJournalDeps(),id)},removeDraft(id){return ManualJournalWorkflows.removeDraft(composeLegacyManualJournalDeps(),id)},reverse(id,reason){return ManualJournalWorkflows.reverse(composeLegacyManualJournalDeps(),id,reason)},addRecurring(o){return ManualJournalWorkflows.addRecurring(composeLegacyManualJournalDeps(),o)},toggleRecurring(id){return ManualJournalWorkflows.toggleRecurring(composeLegacyManualJournalDeps(),id)},removeRecurring(id){return ManualJournalWorkflows.removeRecurring(composeLegacyManualJournalDeps(),id)},runRecurring(id){return ManualJournalWorkflows.runRecurring(composeLegacyManualJournalDeps(),id)}};
+export { Accounting, ManualJournal };

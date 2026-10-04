@@ -1,3 +1,54 @@
+import { EPS, Money, N, S, byId, dateAddMonthsClamped, daysBetween, deep, esc, fmt, formatDate, icon, iid, live, money, now, toast, today } from './core/runtime';
+import { BrowserPlatform } from './platform/browser-platform';
+import { AdministrationRules } from './commercial/administration-rules';
+import { PartyBusinessRules } from './crm/party-business-rules';
+import { ActionPolicy } from './core/action-policy';
+import { Numbering } from './core/numbering';
+import { AdvancedAccounting } from './accounting/advanced';
+import { ServerStore } from './persistence/server-store';
+import { DB } from './persistence/browser-store';
+import { Seed } from './core/seed';
+import { BranchScope, Commercial, CommercialSupport } from './commercial/product';
+import { Currency, Periods } from './accounting/currency-periods';
+import { Accounting, ManualJournal } from './accounting/engine';
+import { Invoices, MasterData, Tax } from './accounting/invoices';
+import { Approvals, Transactions } from './accounting/transactions';
+import { PurchaseOrderFulfillment } from './crm/purchase-order-fulfillment';
+import { CRM } from './crm/crm';
+import { Auth, License, RolePermissions, Security } from './security/auth';
+import { AccessControl } from './security/access-control';
+import type { FormDefinitionDeps } from './application/form-definition-workflows';
+import type { CleanPageDeps } from './application/clean-page-queries';
+import type { AdvancedActionsDeps } from './application/advanced-actions-workflows';
+import type { AccountingPageDeps } from './application/accounting-page-queries';
+import type { OperationsPageDeps } from './application/operations-page-queries';
+import type { AdvancedPageDeps } from './application/advanced-page-queries';
+import type { CommercialPageDeps } from './application/commercial-page-queries';
+import type { MasterActionsDeps } from './application/master-actions-workflows';
+import type { Party360Deps } from './application/party360-workflows';
+import type { ReportSettingsDeps } from './application/report-settings-workflows';
+import { createParty360Presentation, createUnifiedPartyPresentation } from './ui/party-presentation';
+import { Party360 } from './ui/party360';
+import { Insights } from './finance/insights';
+import { UI } from './ui/ui';
+import { Forms } from './ui/forms';
+import { UmrahCore_now, UmrahCore_programLabel, UmrahCore_today } from './core/umrah/runtime';
+import { UmrahCore_ERP } from './core/umrah/integration';
+import { UmrahCore_Bridge, UmrahCore_DB } from './core/umrah/data';
+import { UmrahCore_ContractCenter } from './core/umrah/contracts';
+import { UmrahCore_Procurement } from './core/umrah/procurement';
+import { VendorOwner } from './commercial/vendor-owner';
+import { Actions } from './ui/actions';
+import { CommercialUX } from './ui/commercial-ux';
+import type { DocumentPrintPresentationDeps, UmrahPresentationCommands } from './platform/platform-contracts';
+import type { AuthEntryPresentationDeps } from './ui/auth-entry-presentation';
+import type { ContactPresentationDeps } from './ui/contact-presentation';
+import type { CommercialWorkflowDeps, DocumentWorkflowDeps } from './application/contracts';
+import type { ApprovalWorkflowDeps, BranchWorkflowDeps, BusinessClock, BusinessJournalLine, BusinessMoneyPort, BusinessTreasury, CrmWorkflowDeps, ExpenseRecord, ExpenseWorkflowDeps, FinancialQueryDeps, IntegrityReportResult, IntegrityWorkflowDeps, InvoiceRuleDeps, InvoiceWorkflowDeps, JournalRuleDeps, ManualJournalWorkflowDeps, NettingRecord, NettingWorkflowDeps, TourismService, TourismWorkflowDeps, TransferWorkflowDeps, UmrahLifecycleBooking, UmrahLifecycleDeps, UmrahLifecycleProgram, VoucherWorkflowDeps } from './application/business-contracts';
+import type { PartyNameRepository } from './crm/party-business-rules';
+import type { UnifiedParty } from './crm/unified-party';
+import { __set_composeAccountingPageDeps, __set_composeCommercialPageDeps, __set_composeAdvancedPageDeps, __set_composeAdvancedActionsDeps, __set_composeAuthEntryPresentation, __set_composeCleanPageDeps, __set_composeContactPresentation, __set_composeFormDefinitionDeps, __set_composeLegacyActionDeps, __set_composeLegacyApprovalDeps, __set_composeLegacyBranchAccess, __set_composeLegacyBranchDeps, __set_composeLegacyCommercialDeps, __set_composeLegacyCommercialPermissions, __set_composeLegacyCrmDeps, __set_composeLegacyExpenseDeps, __set_composeLegacyFinancialQueries, __set_composeLegacyIntegrityDeps, __set_composeLegacyInvoiceDeps, __set_composeLegacyInvoiceRules, __set_composeLegacyJournalRules, __set_composeLegacyManualJournalDeps, __set_composeLegacyNettingDeps, __set_composeLegacyPartyNames, __set_composeLegacyPhonePolicy, __set_composeLegacyTourismDeps, __set_composeLegacyTransferDeps, __set_composeLegacyUmrahLifecycleDeps, __set_composeLegacyVoucherDeps, __set_composeMasterActionsDeps, __set_composeOperationsPageDeps, __set_composeParty360Deps, __set_composeParty360Presentation, __set_composePrintPresentation, __set_composeReportSettingsDeps, __set_composeUmrahPresentationCommands, __set_composeUnifiedPartyPresentation } from './core/late-bindings';
+__set_composeAccountingPageDeps(composeAccountingPageDeps); __set_composeCommercialPageDeps(composeCommercialPageDeps); __set_composeAdvancedPageDeps(composeAdvancedPageDeps); __set_composeAdvancedActionsDeps(composeAdvancedActionsDeps); __set_composeAuthEntryPresentation(composeAuthEntryPresentation); __set_composeCleanPageDeps(composeCleanPageDeps); __set_composeContactPresentation(composeContactPresentation); __set_composeFormDefinitionDeps(composeFormDefinitionDeps); __set_composeLegacyActionDeps(composeLegacyActionDeps); __set_composeLegacyApprovalDeps(composeLegacyApprovalDeps); __set_composeLegacyBranchAccess(composeLegacyBranchAccess); __set_composeLegacyBranchDeps(composeLegacyBranchDeps); __set_composeLegacyCommercialDeps(composeLegacyCommercialDeps); __set_composeLegacyCommercialPermissions(composeLegacyCommercialPermissions); __set_composeLegacyCrmDeps(composeLegacyCrmDeps); __set_composeLegacyExpenseDeps(composeLegacyExpenseDeps); __set_composeLegacyFinancialQueries(composeLegacyFinancialQueries); __set_composeLegacyIntegrityDeps(composeLegacyIntegrityDeps); __set_composeLegacyInvoiceDeps(composeLegacyInvoiceDeps); __set_composeLegacyInvoiceRules(composeLegacyInvoiceRules); __set_composeLegacyJournalRules(composeLegacyJournalRules); __set_composeLegacyManualJournalDeps(composeLegacyManualJournalDeps); __set_composeLegacyNettingDeps(composeLegacyNettingDeps); __set_composeLegacyPartyNames(composeLegacyPartyNames); __set_composeLegacyPhonePolicy(composeLegacyPhonePolicy); __set_composeLegacyTourismDeps(composeLegacyTourismDeps); __set_composeLegacyTransferDeps(composeLegacyTransferDeps); __set_composeLegacyUmrahLifecycleDeps(composeLegacyUmrahLifecycleDeps); __set_composeLegacyVoucherDeps(composeLegacyVoucherDeps); __set_composeMasterActionsDeps(composeMasterActionsDeps); __set_composeOperationsPageDeps(composeOperationsPageDeps); __set_composeParty360Deps(composeParty360Deps); __set_composeParty360Presentation(composeParty360Presentation); __set_composePrintPresentation(composePrintPresentation); __set_composeReportSettingsDeps(composeReportSettingsDeps); __set_composeUmrahPresentationCommands(composeUmrahPresentationCommands); __set_composeUnifiedPartyPresentation(composeUnifiedPartyPresentation);
 // Phase 3: legacy infrastructure composition. Live getters survive atomic rollback.
 function composeBusinessClock(): BusinessClock {
     return {
@@ -475,11 +526,6 @@ function composeLegacyUmrahLifecycleDeps(operations: UmrahLifecycleDeps['operati
         }, programLabel: UmrahCore_programLabel, audit: (action, type, id, detail) => UmrahCore_Bridge.audit(action, type, id, detail)
     };
 }
-function composeLegacyPurchaseFulfillment() {
-    return createPurchaseFulfillmentRules({
-        id: iid, now
-    }, (action, type, id, detail) => DB.log(action, type, id, detail));
-}
 function composeLegacyNettingDeps(queries: NettingWorkflowDeps['queries'] & {
     ensureData(): {
         partyNettings: NettingRecord[];
@@ -512,6 +558,96 @@ function composeLegacyPartyNames(): PartyNameRepository {
         }
     };
 }
+// Live ports for the master-data form definitions (read and write); nothing is cached.
+function composeFormDefinitionDeps():FormDefinitionDeps {
+ return {
+  repository:{treasuries:()=>DB.data.treasuries,customers:()=>DB.data.customers,suppliers:()=>DB.data.suppliers,agents:()=>DB.data.agents,programs:()=>DB.data.programs,umrahPrograms:()=>DB.data.umrahPrograms,costCenters:()=>DB.data.costCenters,accounts:()=>DB.data.accounts,users:()=>DB.data.users,branches:()=>DB.data.branches,leads:()=>DB.data.leads,followups:()=>DB.data.followups,invoices:()=>DB.data.invoices,travelers:()=>DB.data.travelers,expenses:()=>DB.data.expenses,taxCodes:()=>DB.data.taxCodes,serviceTypes:()=>DB.data.serviceTypes,bookings:()=>DB.data.bookings,services:()=>DB.data.services,commissions:()=>DB.data.commissions,manualJournalDrafts:()=>DB.data.manualJournalDrafts,roomAllocations:()=>DB.data.roomAllocations,purchaseOrders:()=>DB.data.purchaseOrders,quotations:()=>DB.data.quotations},
+  settings:{baseCurrency:()=>DB.data.settings.baseCurrency,passwordMin:()=>DB.data.settings.passwordMin},
+  persistence:{log:(action,type,id,detail)=>DB.log(action,type,id,detail),save:()=>DB.save()},
+  transactions:{atomic:(label,work,options)=>DB.atomic(label,work,options)},
+  authorization:{require:(page,action)=>AccessControl.require(page,action)},
+  domain:{addBooking:o=>Transactions.addBooking(o),updateBooking:(id,o)=>Transactions.updateBooking(id,o),addService:o=>Transactions.addService(o),updateService:(id,o,options)=>Transactions.updateService(id,o,options),createJournalDraft:o=>ManualJournal.createDraft(o),updateJournalDraft:(id,o)=>ManualJournal.updateDraft(id,o),addRecurringJournal:o=>ManualJournal.addRecurring(o),postJournalDraft:id=>ManualJournal.postDraft(id)},
+  clock:{id:()=>iid(),nextCostCenterNo:()=>Numbering.next('costCenter')},
+  branch:{currentId:()=>BranchScope.currentId()},
+  security:{validateUserAdd:()=>License.validateUserAdd(),permissionsFor:role=>deep(RolePermissions[role]||{}),setPassword:(user,password)=>Security.setPassword(user,password)},
+  actor:{user:()=>AccessControl.currentUser()}
+ };
+}
+
+function composeReportSettingsDeps():ReportSettingsDeps {
+ return {
+  repository:{customers:()=>DB.data.customers,suppliers:()=>DB.data.suppliers,agents:()=>DB.data.agents,accounts:()=>DB.data.accounts,documents:()=>DB.data.documents,journals:()=>DB.data.journals,periods:()=>DB.data.periods,currencies:()=>DB.data.currencies,company:()=>DB.data.company,settings:()=>DB.data.settings,ensureNotificationPrefs:()=>DB.data.notificationPrefs||(DB.data.notificationPrefs={})},
+  calendar:{reset:()=>{DB.data.fiscalYears=[];DB.data.periods=[]},ensureDate:date=>Periods.ensureDate(date)},
+  clock:{today:()=>today()},
+  numbers:{N:value=>N(value)},
+  persistence:{save:()=>DB.save(),importBackup:file=>DB.import(file)},
+  authorization:{require:(page,action)=>AccessControl.require(page,action)}
+ };
+}
+
+function composeMasterActionsDeps():MasterActionsDeps {
+ return {
+  repository:{customers:()=>DB.data.customers,suppliers:()=>DB.data.suppliers,agents:()=>DB.data.agents,services:()=>DB.data.services,commissions:()=>DB.data.commissions,serviceTypes:()=>DB.data.serviceTypes,settings:()=>DB.data.settings,setServiceTypes:value=>{DB.data.serviceTypes=value}},
+  defaults:{workspaces:()=>deep(Seed.settings.workspaces)},
+  masterData:{toggle:(list,id)=>MasterData.toggle(list,id),remove:(method,id)=>(MasterData as any)[method](id)},
+  persistence:{log:(action,type,id,detail)=>DB.log(action,type,id,detail),save:()=>DB.save()},
+  transactions:{atomic:(label,work,options)=>DB.atomic(label,work,options)},
+  authorization:{require:(page,action)=>AccessControl.require(page,action)},
+  clock:{id:()=>iid()},
+  numbers:{N:value=>N(value),EPS}
+ };
+}
+
+function composeCleanPageDeps():CleanPageDeps {
+ return {
+  repository:{leads:()=>DB.data.leads,followups:()=>DB.data.followups,quotations:()=>DB.data.quotations,customers:()=>DB.data.customers,suppliers:()=>DB.data.suppliers,agents:()=>DB.data.agents,commissions:()=>DB.data.commissions,invoices:()=>DB.data.invoices,purchaseOrders:()=>DB.data.purchaseOrders,expenses:()=>DB.data.expenses,treasuries:()=>DB.data.treasuries,transfers:()=>DB.data.transfers,bankReconciliations:()=>DB.data.bankReconciliations,vouchers:page=>DB.data[page]},
+  settings:{baseCurrency:()=>DB.data.settings.baseCurrency}
+ };
+}
+
+function composeParty360Deps():Party360Deps {
+ return {
+  repository:{root:()=>DB.data,collection:name=>DB.data[name],updatedAt:()=>DB.data?.meta?.updatedAt,baseCurrency:()=>DB.data.settings.baseCurrency,auditLog:()=>DB.data.auditLog,setAuditLog:value=>{DB.data.auditLog=value}},
+  persistence:{save:force=>DB.save(force)},
+  transactions:{atomicAsync:(label,work,options)=>DB.atomicAsync(label,work,options)}
+ };
+}
+
+function composeAdvancedActionsDeps():AdvancedActionsDeps {
+ return {
+  repository:{collection:name=>DB.data[name]},
+  ledger:{reverseSettlement:(kind,id,reason)=>AdvancedAccounting.reverseSettlement(kind,id,reason),recognizeDeferredPart:(id,partId)=>AdvancedAccounting.recognizeDeferredPart(id,partId),reverseDeferredPart:(id,partId,reason)=>AdvancedAccounting.reverseDeferredPart(id,partId,reason),recognizeDeferredCostPart:(id,partId)=>AdvancedAccounting.recognizeDeferredCostPart(id,partId),reverseDeferredCostPart:(id,partId,reason)=>AdvancedAccounting.reverseDeferredCostPart(id,partId,reason),reconcileBankLines:treasuryId=>AdvancedAccounting.reconcileBankLines(treasuryId)},
+  transactions:{atomic:(label,work,options)=>DB.atomic(label,work,options),atomicAsync:(label,work,options)=>DB.atomicAsync(label,work,options)}
+ };
+}
+
+function composeAccountingPageDeps():AccountingPageDeps {
+ return {
+  repository:{collection:name=>DB.data[name]},
+  settings:{baseCurrency:()=>DB.data.settings.baseCurrency}
+ };
+}
+
+function composeOperationsPageDeps():OperationsPageDeps {
+ return {
+  repository:{collection:name=>DB.data[name]},
+  settings:{baseCurrency:()=>DB.data.settings.baseCurrency}
+ };
+}
+
+function composeAdvancedPageDeps():AdvancedPageDeps {
+ return {
+  repository:{collection:name=>DB.data[name]}
+ };
+}
+
+function composeCommercialPageDeps():CommercialPageDeps {
+ return {
+  repository:{root:()=>DB.data,collection:name=>DB.data[name]},
+  settings:{baseCurrency:()=>DB.data.settings.baseCurrency}
+ };
+}
+
 function composeLegacyPhonePolicy(phone: string): string {
     return PartyBusinessRules.normalizePhone(phone, DB.data.settings.whatsappCountryCode);
 }
@@ -562,20 +698,6 @@ function composeAuthEntryPresentation(): AuthEntryPresentationDeps {
 function composeContactPresentation(): ContactPresentationDeps {
     return { dom: BrowserPlatform.dom, bridge: BrowserPlatform.contacts, notification: { notify: (message, kind) => toast(message, kind) } };
 }
-
-function composeStorePresentation(): StorePresentationEffects {
-    return {
-        canRender: () => typeof UI !== 'undefined' && !!UI?.renderCurrent,
-        render: () => UI.renderCurrent(), notify: (message, kind) => toast(message, kind),
-        schedule: work => BrowserPlatform.renderFrame(work)
-    };
-}
-function composeSessionPresentation(): SessionPresentationEffects {
-    return {
-        clear: key => BrowserPlatform.clearSession(key),
-        expired: message => { if (typeof Auth !== 'undefined') Auth.expirePresentation(); if (typeof toast === 'function') toast(message, 'error'); }
-    };
-}
 function composeParty360Presentation(queries: Pick<typeof Party360, 'base' | 'shell' | 'loadTab'>) {
     return createParty360Presentation({
         dom: BrowserPlatform.dom, icon: name => icon(name), close: () => UI.closeModal(true),
@@ -607,3 +729,4 @@ function composePrintPresentation(): DocumentPrintPresentationDeps {
 function composeUmrahPresentationCommands(): UmrahPresentationCommands {
     return { openPage: page => UI.openPage(page), openForm: (type, context) => Forms.open(type, context), openPartyActions: (type, id) => Actions.openPartyActions(type, id) };
 }
+export { composeAccountingPageDeps, composeCommercialPageDeps, composeAdvancedPageDeps, composeAdvancedActionsDeps, composeAuthEntryPresentation, composeBusinessClock, composeBusinessMoney, composeCleanPageDeps, composeContactPresentation, composeFormDefinitionDeps, composeLegacyActionDeps, composeLegacyApprovalDeps, composeLegacyBranchAccess, composeLegacyBranchDeps, composeLegacyCommercialDeps, composeLegacyCommercialPermissions, composeLegacyCrmDeps, composeLegacyExpenseDeps, composeLegacyFinancialQueries, composeLegacyIntegrityDeps, composeLegacyInvoiceDeps, composeLegacyInvoiceRules, composeLegacyJournalRules, composeLegacyManualJournalDeps, composeLegacyNettingDeps, composeLegacyPartyNames, composeLegacyPhonePolicy, composeLegacyTourismDeps, composeLegacyTransferDeps, composeLegacyUmrahLifecycleDeps, composeLegacyVoucherDeps, composeMasterActionsDeps, composeOperationsPageDeps, composeParty360Deps, composeParty360Presentation, composePrintPresentation, composeReportSettingsDeps, composeUmrahPresentationCommands, composeUnifiedPartyPresentation };

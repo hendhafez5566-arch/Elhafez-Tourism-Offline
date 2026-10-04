@@ -1,3 +1,5 @@
+import { N, S, byId, today } from '../core/runtime';
+import { DB } from '../persistence/browser-store';
 /* One source for commercial credit terms. Keeps due-date logic out of forms. */
 const paymentTermsAddDays=(date:string,days:number)=>{
   const value=S(date);
@@ -13,3 +15,4 @@ const PaymentTerms={
  dueDate(type,id,date=today()){const d=this.days(type,id);return d>0?paymentTermsAddDays(date,d):date},
  label(type,id){const d=this.days(type,id);return d?`${d} يوم ائتمان`:'استحقاق فوري'}
 };
+export { PaymentTerms, paymentTermsAddDays };

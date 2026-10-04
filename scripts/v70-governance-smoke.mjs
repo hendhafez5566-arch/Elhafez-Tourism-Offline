@@ -1,6 +1,7 @@
+import { uiText, pagesText } from './lib/split-sources.mjs';
 import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(p,'utf8');
-const store=read('src/persistence/server-store.ts'), party=read('src/crm/party360.ts'), master=read('src/accounting/invoices.ts'), pages=read('src/ui/pages.ts'), actions=read('src/commercial/actions.ts'), product=read('src/commercial/product.ts'), server=read('server/src/server.ts'), session=read('server/src/session.ts'), vendor=read('server/src/vendor.ts'), owner=read('src/commercial/vendor-owner.ts'), ui=read('src/ui/ui.ts'), del=read('src/core/delete-center.ts'), css=read('src/styles.css'), browser=read('src/persistence/browser-store.ts'), umrahData=read('src/core/umrah/data.ts');
+const store=read('src/persistence/server-store.ts'), party=read('src/ui/party360.ts'), master=read('src/accounting/invoices.ts'), pages=pagesText(), actions=read('src/ui/commercial-actions.ts'), product=read('src/commercial/product.ts'), server=read('server/src/server.ts'), session=read('server/src/session.ts'), vendor=read('server/src/vendor.ts'), owner=read('src/commercial/vendor-owner.ts'), ui=uiText(), del=read('src/core/delete-center.ts'), css=read('src/styles.css'), browser=read('src/persistence/browser-store.ts'), umrahData=read('src/core/umrah/data.ts');
 const C=[]; const ck=(n,p)=>C.push({name:n,pass:!!p});
 ck('Same-device save conflict retries with base data',store.includes('_baseData')&&store.includes('baseData')&&store.includes('attempt>0'));
 ck('Party More has suspend and delete is locked while active',party.includes('تعليق')&&party.includes('يجب تعليق السجل أولًا')&&party.includes('toggleSuspended'));

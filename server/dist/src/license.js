@@ -1,0 +1,148 @@
+import { createPublicKey, verify as cryptoVerify, randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { pool, trialDays, erpCompanyId, vendorLicenseUrl, vendorAgentKey, vendorLicenseCheckMinutes, licenseGraceHours, vendorMode } from './context.js';
+const EDITIONS = {
+    starter: { modules: ['accounting', 'tourism', 'crm', 'branches', 'reports'], maxUsers: 3, maxBranches: 1 },
+    professional: { modules: ['accounting', 'tourism', 'umrah', 'crm', 'branches', 'reports', 'whatsapp', 'imports'], maxUsers: 20, maxBranches: 5 },
+    enterprise: { modules: ['accounting', 'tourism', 'umrah', 'crm', 'branches', 'reports', 'whatsapp', 'imports', 'api', 'advanced-approvals'], maxUsers: 999, maxBranches: 999 }
+};
+let publicKeys = [], publicKeyLoaded = false;
+const memory = new Map();
+function remember(t, value, ms = 30_000) { memory.set(t, { until: Date.now() + Math.max(1000, ms), value }); return value; }
+async function loadPublicKeys() { if (publicKeyLoaded)
+    return publicKeys; publicKeyLoaded = true; const values = []; try {
+    values.push(await readFile(fileURLToPath(new URL('../license-public.pem', import.meta.url)), 'utf8'));
+}
+catch (_) { } try {
+    values.push(await readFile(fileURLToPath(new URL('../license-public-central.pem', import.meta.url)), 'utf8'));
+}
+catch (_) { } for (const raw of String(process.env.ERP_LICENSE_PUBLIC_KEYS_B64 || process.env.ERP_LICENSE_PUBLIC_KEY_B64 || '').split(',').map(x => x.trim()).filter(Boolean)) {
+    try {
+        values.push(Buffer.from(raw, 'base64').toString('utf8'));
+    }
+    catch (_) { }
+} for (const pem of values) {
+    try {
+        publicKeys.push(createPublicKey(pem));
+    }
+    catch (_) { }
+} return publicKeys; }
+const unb64 = (s) => Buffer.from(s.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+export async function verifyLicenseToken(token) { try {
+    const [p, sig] = String(token || '').trim().split('.');
+    if (!p || !sig)
+        return null;
+    const keys = await loadPublicKeys();
+    if (!keys.length)
+        return null;
+    const ok = keys.some(key => { try {
+        return cryptoVerify(null, Buffer.from(p), key, unb64(sig));
+    }
+    catch {
+        return false;
+    } });
+    if (!ok)
+        return null;
+    const payload = JSON.parse(unb64(p).toString('utf8'));
+    if (!payload?.companyId || !payload?.edition)
+        return null;
+    return payload;
+}
+catch (_) {
+    return null;
+} }
+export async function ensureInstallation(t) { const r = await pool.query('select * from erp_installations where tenant_key=$1', [t]); if (r.rowCount)
+    return r.rows[0]; const id = randomUUID(); const x = await pool.query(`insert into erp_installations(tenant_key,installation_id,trial_expires_at) values($1,$2,now()+($3||' days')::interval) returning *`, [t, id, String(trialDays)]); return x.rows[0]; }
+function signedStatus(signed, inst, source) { const edition = String(signed.edition || 'professional').toLowerCase(), def = EDITIONS[edition] || EDITIONS.professional, expiresAt = String(signed.expiresAt || ''), expired = !!expiresAt && Date.now() > Date.parse(expiresAt + 'T23:59:59Z'), mode = String(signed.mode || 'full') === 'trial' ? 'trial' : 'full', remoteStatus = String(signed.status || '').toLowerCase(), blocked = remoteStatus === 'suspended' || remoteStatus === 'cancelled' || remoteStatus === 'expired', status = blocked || expired ? 'expired' : mode === 'trial' ? 'trial' : 'active', modules = Array.isArray(signed.modules) && signed.modules.length ? signed.modules : def.modules, maxUsers = Math.max(1, Number(signed.maxUsers || def.maxUsers)), maxBranches = Math.max(1, Number(signed.maxBranches || def.maxBranches)); return { mode, status, edition, companyId: String(signed.companyId), clientName: String(signed.clientName || ''), expiresAt, maxUsers, maxBranches, modules, licensed: mode === 'full' && status === 'active', installationId: inst.installation_id, source, centralStatus: remoteStatus || status, lastCheckedAt: String(inst.last_license_check_at || '') }; }
+function expiredCentral(inst, reason, cached = null) { const base = cached ? signedStatus(cached, inst, 'central-grace-expired') : { mode: 'trial', status: 'expired', edition: 'professional', companyId: erpCompanyId, clientName: '', expiresAt: '', maxUsers: 1, maxBranches: 1, modules: ['accounting'], licensed: false, installationId: inst.installation_id, source: 'central-unavailable' }; return { ...base, status: 'expired', licensed: false, centralError: reason }; }
+function safeCentralUrl() { if (!vendorLicenseUrl)
+    return ''; let u; try {
+    u = new URL(vendorLicenseUrl);
+}
+catch {
+    return '';
+} if (u.protocol !== 'https:' && !(u.protocol === 'http:' && (u.hostname === 'localhost' || u.hostname === '127.0.0.1')))
+    return ''; return u.origin + u.pathname.replace(/\/$/, ''); }
+async function refreshCentral(t, inst, force = false) {
+    const base = safeCentralUrl();
+    if (!base || !erpCompanyId || !vendorAgentKey)
+        return null;
+    const cachedToken = String(inst.cached_license_token || ''), cached = await verifyLicenseToken(cachedToken), last = inst.last_license_check_at ? Date.parse(inst.last_license_check_at) : 0, checkMs = vendorLicenseCheckMinutes * 60_000, graceMs = licenseGraceHours * 3600_000;
+    if (!force && cached && String(cached.companyId) === erpCompanyId && last && Date.now() - last < checkMs)
+        return signedStatus(cached, inst, 'central-cache');
+    try {
+        const r = await fetch(`${base}/api/vendor/entitlements/${encodeURIComponent(erpCompanyId)}`, { headers: { Accept: 'application/json', 'X-ERP-Vendor-Key': vendorAgentKey }, signal: AbortSignal.timeout(8000), cache: 'no-store' }), b = await r.json().catch(() => ({}));
+        if (!r.ok || !b?.token)
+            throw new Error(b?.error || `Vendor entitlement HTTP ${r.status}`);
+        const signed = await verifyLicenseToken(String(b.token));
+        if (!signed || String(signed.companyId) !== erpCompanyId)
+            throw new Error('بيانات الترخيص المركزي لا تطابق الشركة');
+        await pool.query(`update erp_installations set cached_license_token=$2,last_license_check_at=now(),last_license_error='' where tenant_key=$1`, [t, String(b.token)]);
+        return signedStatus(signed, { ...inst, cached_license_token: String(b.token), last_license_check_at: new Date().toISOString() }, 'central');
+    }
+    catch (e) {
+        const msg = String(e?.message || 'تعذر الوصول إلى مركز الترخيص').slice(0, 1000);
+        await pool.query(`update erp_installations set last_license_error=$2 where tenant_key=$1`, [t, msg]).catch(() => { });
+        if (cached && String(cached.companyId) === erpCompanyId && last && Date.now() - last <= graceMs)
+            return { ...signedStatus(cached, inst, 'central-offline-cache'), centralOffline: true, centralError: msg };
+        return expiredCentral(inst, msg, cached && String(cached.companyId) === erpCompanyId ? cached : null);
+    }
+}
+export async function acceptVendorEntitlement(t, token) {
+    if (vendorMode)
+        throw Object.assign(new Error('هذه النسخة لا تستقبل تراخيص العملاء'), { statusCode: 403 });
+    const inst = await ensureInstallation(t), signed = await verifyLicenseToken(String(token || '').trim()), expected = erpCompanyId;
+    if (!signed)
+        throw Object.assign(new Error('رمز الترخيص غير صالح أو غير موقّع'), { statusCode: 403 });
+    if (!expected || String(signed.companyId) !== expected)
+        throw Object.assign(new Error('رمز الترخيص يخص شركة مختلفة'), { statusCode: 403 });
+    const cached = await verifyLicenseToken(String(inst.cached_license_token || '')), incomingAt = Date.parse(String(signed.issuedAt || '')) || 0, cachedAt = Date.parse(String(cached?.issuedAt || '')) || 0;
+    if (cached && String(cached.companyId) === expected && cachedAt > incomingAt)
+        throw Object.assign(new Error('رمز الترخيص أقدم من الترخيص الحالي'), { statusCode: 409 });
+    await pool.query(`update erp_installations set cached_license_token=$2,last_license_check_at=now(),last_license_error='' where tenant_key=$1`, [t, String(token).trim()]);
+    memory.delete(t);
+    return signedStatus(signed, { ...inst, cached_license_token: String(token).trim(), last_license_check_at: new Date().toISOString() }, 'central-push');
+}
+export async function licenseStatus(t, force = false) {
+    if (force)
+        memory.delete(t);
+    const mem = memory.get(t);
+    if (!force && mem && mem.until > Date.now())
+        return mem.value;
+    const inst = await ensureInstallation(t);
+    if (vendorMode)
+        return remember(t, { mode: 'full', status: 'active', edition: 'enterprise', companyId: erpCompanyId || 'VENDOR-OWNER', clientName: 'Elhafez Technology', expiresAt: '', maxUsers: 999999, maxBranches: 999999, modules: EDITIONS.enterprise.modules, licensed: true, installationId: inst.installation_id, source: 'vendor-owner' }, 60_000);
+    if (vendorLicenseUrl && !vendorMode) {
+        const central = await refreshCentral(t, inst, force);
+        if (central) {
+            memory.set(t, { until: Date.now() + Math.min(60_000, vendorLicenseCheckMinutes * 60_000), value: central });
+            return central;
+        }
+        const fallbackToken = String(inst.cached_license_token || ''), fallback = await verifyLicenseToken(fallbackToken);
+        if (erpCompanyId && fallback && String(fallback.companyId) === erpCompanyId) {
+            const fallbackStatus = signedStatus(fallback, inst, 'central-push-cache');
+            memory.set(t, { until: Date.now() + 60_000, value: fallbackStatus });
+            return fallbackStatus;
+        }
+        const bad = expiredCentral(inst, 'إعدادات الترخيص المركزي غير مكتملة');
+        memory.set(t, { until: Date.now() + 30_000, value: bad });
+        return bad;
+    }
+    const pushedToken = String(inst.cached_license_token || ''), pushed = await verifyLicenseToken(pushedToken);
+    if (!vendorMode && erpCompanyId && pushed && String(pushed.companyId) === erpCompanyId) {
+        const pushedStatus = signedStatus(pushed, inst, 'central-push-cache');
+        memory.set(t, { until: Date.now() + 60_000, value: pushedStatus });
+        return pushedStatus;
+    }
+    const token = String(process.env.ERP_LICENSE_TOKEN || '').trim(), signed = await verifyLicenseToken(token), expected = erpCompanyId;
+    if (signed && expected && String(signed.companyId) !== expected)
+        return remember(t, { mode: 'invalid', status: 'expired', edition: 'professional', companyId: expected, clientName: '', expiresAt: '', maxUsers: 1, maxBranches: 1, modules: ['accounting'], licensed: false, installationId: inst.installation_id, source: 'company-mismatch' });
+    if (signed)
+        return remember(t, signedStatus(signed, inst, 'signed'));
+    const expiresAt = Date.parse(inst.trial_expires_at), expired = Date.now() > expiresAt, ttl = expired ? 15_000 : Math.min(30_000, Math.max(1000, expiresAt - Date.now() + 1000));
+    return remember(t, { mode: 'trial', status: expired ? 'expired' : 'trial', edition: 'professional', companyId: '', clientName: '', expiresAt: new Date(inst.trial_expires_at).toISOString().slice(0, 10), maxUsers: 5, maxBranches: 1, modules: EDITIONS.professional.modules, licensed: false, installationId: inst.installation_id, source: 'trial' }, ttl);
+}
+export function moduleAllowed(license, module) { return !module || license?.modules?.includes(module) || license?.edition === 'enterprise'; }
+export function writeAllowed(license) { return license?.status !== 'expired'; }
+export { EDITIONS };

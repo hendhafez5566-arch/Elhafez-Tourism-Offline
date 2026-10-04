@@ -1,3 +1,5 @@
+import { BusinessValues } from '../core/business-values';
+import type { BusinessJournalLine, JournalRuleDeps } from '../application/business-contracts';
 // Used by every posting path, including advanced accounting; no accounting policy change.
 const JournalRules = {
     normalize(d: JournalRuleDeps, lines: BusinessJournalLine[], date: string) {
@@ -53,3 +55,4 @@ const JournalRules = {
         });
     }
 };
+export { JournalRules };

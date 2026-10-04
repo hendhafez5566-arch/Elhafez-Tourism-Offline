@@ -1,3 +1,5 @@
+import { BusinessValues } from '../core/business-values';
+import type { BusinessJournalLine, TransferFields, TransferWorkflowDeps } from './business-contracts';
 const TransferWorkflows = {
     transfer(d: TransferWorkflowDeps, o: TransferFields) {
         return d.transactions.atomic('transfer', () => {
@@ -45,3 +47,4 @@ const TransferWorkflows = {
         d.accounting.reverse('transfer', tr.id, reason);
     }
 };
+export { TransferWorkflows };

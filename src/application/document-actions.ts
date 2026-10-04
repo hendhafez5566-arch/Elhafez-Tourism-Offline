@@ -1,3 +1,4 @@
+import type { ApplicationFields, DocumentWorkflowDeps, InvoiceDraftFields, WorkflowInvoice } from './contracts';
 const DocumentWorkflows={
  prepareRemoveProgram(deps:DocumentWorkflowDeps,id:string){
   deps.authorization.require('programs','delete');
@@ -258,3 +259,4 @@ const DocumentWorkflows={
   deps.domain.addPayment({...fields,partyType,partyId,forceSupplierAdvance:context.forceSupplierAdvance===true,sourceType:context.sourceType||'',sourceId:context.sourceId||'',sourceScheduleId:context.sourceScheduleId||'',sourceLabel:context.sourceLabel||''});
  }
 };
+export { DocumentWorkflows };

@@ -1,11 +1,13 @@
+import { uiText } from './lib/split-sources.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {compiledFilesText} from './lib/build-model.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const walk=dir=>fs.readdirSync(path.join(root,dir),{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(dir,e.name)):[path.join(dir,e.name)]);
 const srcTs=walk('src').filter(f=>f.endsWith('.ts'));
-const ui=read('src/ui/ui.ts'),nav=read('src/ui/navigation.ts'),css=read('src/styles.css'),prep=read('scripts/prepare-customer-build.mjs'),contracts=read('src/core/umrah/contracts.ts'),proc=read('src/core/umrah/procurement.ts'),ops=read('src/core/umrah/operations.ts'),exec=read('src/core/umrah/operations-execution.ts'),tc=read('tsconfig.json');
+const ui=uiText(),nav=read('src/ui/navigation.ts'),css=read('src/styles.css'),prep=read('scripts/prepare-customer-build.mjs'),contracts=read('src/core/umrah/contracts.ts'),proc=read('src/core/umrah/procurement.ts'),ops=read('src/core/umrah/operations.ts'),exec=read('src/core/umrah/operations-execution.ts'),tc=compiledFilesText();
 const checks=[
  ['frontend source has zero @ts-nocheck',srcTs.every(f=>!read(f).includes('@ts-nocheck'))],
  ['customer preparer does not reintroduce @ts-nocheck',!prep.includes('@ts-nocheck')],

@@ -7,7 +7,7 @@ async function walk(d){let out=[];for(const e of await readdir(d,{withFileTypes:
 const serverSrc=join(root,'server','src');
 const files=[...(await walk(src)),...(await walk(serverSrc))].filter(f=>f.endsWith('.ts'));
 const rows=[];let ok=true;
-const regularLimit=100000,focusedModuleLimits=new Map();
+const regularLimit=60000,focusedModuleLimits=new Map();
 for(const f of files){const s=await stat(f),r=relative(root,f).replaceAll('\\','/'),limit=r==='src/app.ts'?2048:(focusedModuleLimits.get(r)||regularLimit);rows.push({file:r,bytes:s.size,limit});if(s.size>limit)ok=false;}
 rows.sort((a,b)=>b.bytes-a.bytes);
 const app=await readFile(join(src,'app.ts'),'utf8');

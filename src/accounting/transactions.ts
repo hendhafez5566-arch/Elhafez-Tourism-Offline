@@ -1,3 +1,18 @@
+import { EPS, Money, N, S, byId, iid, live, money, now, today } from '../core/runtime';
+import { AdvancedAccountingRules } from './advanced-rules';
+import { VoucherRules } from './voucher-rules';
+import { VoucherWorkflows } from '../application/voucher-workflows';
+import { ApprovalWorkflows } from '../application/approval-workflows';
+import { TourismWorkflows } from '../application/tourism-workflows';
+import { TransferWorkflows } from '../application/transfer-workflows';
+import { ExpenseWorkflows } from '../application/expense-workflows';
+import { Numbering } from '../core/numbering';
+import { DB } from '../persistence/browser-store';
+import { Currency, Periods } from './currency-periods';
+import { Accounting } from './engine';
+import { Invoices, MasterData } from './invoices';
+import { TourismServiceInventory, composeLegacyApprovalDeps, composeLegacyExpenseDeps, composeLegacyTourismDeps, composeLegacyTransferDeps, composeLegacyVoucherDeps } from '../core/late-bindings';
+import { __set_Transactions } from '../core/late-bindings';
 const Transactions: any = {
  addCustomer(o){if(!S(o.name).trim())throw new Error('اسم العميل مطلوب');if(o.nationalId&&DB.data.customers.some(x=>x.nationalId===o.nationalId))throw new Error('الرقم القومي مستخدم');if(o.passport&&DB.data.customers.some(x=>x.passport===o.passport))throw new Error('رقم الجواز مستخدم');const x={id:iid(),no:Numbering.next('customer'),active:true,type:o.type||'individual',creditLimit:N(o.creditLimit),...o,createdAt:now()};DB.data.customers.unshift(x);DB.log('create','customer',x.id,x.no);return x},
  addSupplier(o){if(!S(o.name).trim())throw new Error('اسم المورد مطلوب');const x={id:iid(),no:Numbering.next('supplier'),active:true,creditDays:N(o.creditDays),currency:o.currency||DB.data.settings.baseCurrency,...o,createdAt:now()};DB.data.suppliers.unshift(x);DB.log('create','supplier',x.id,x.no);return x},
@@ -77,5 +92,7 @@ const Transactions: any = {
  cashCount(o){const t=byId(DB.data.treasuries,o.treasuryId);if(!t||t.type!=='cash')throw new Error('اختر خزنة نقدية');const date=o.date||today();Periods.assertOpen(date);const system=Accounting.treasuryBalance(t.id),actual=N(o.actual),diff=actual-system,postDifference=o.postDifference==='yes',differenceAccountId=diff>0?'4600':diff<0?'5600':'',x={id:iid(),no:Numbering.next('cashCount',date),date,treasuryId:t.id,system,actual,diff,currency:t.currency,note:o.note||'',differencePosted:false,differenceAccountId,status:'checked'};DB.data.cashCounts.unshift(x);if(Math.abs(diff)>0.01&&postDifference){const lines=diff>0?[{accountId:Accounting.ensureTreasuryAccount(t),debit:diff,currency:t.currency,treasuryId:t.id},{accountId:'4600',credit:diff,currency:t.currency}]:[{accountId:'5600',debit:-diff,currency:t.currency},{accountId:Accounting.ensureTreasuryAccount(t),credit:-diff,currency:t.currency,treasuryId:t.id}];Accounting.post({date:x.date,memo:`فرق جرد خزنة ${x.no}`,refType:'cash-count',refId:x.id,lines});x.differencePosted=true;x.status='posted'}DB.log('cash-count','treasury',t.id,`${x.no} • فرق ${money(diff,t.currency)}`);return x},
  reconcileBank(o){const t=byId(DB.data.treasuries,o.treasuryId);if(!t||t.type!=='bank')throw new Error('اختر حسابًا بنكيًا');const date=o.date||today(),system=Accounting.treasuryBalance(t.id,date),statement=N(o.statementBalance),diff=statement-system,x={id:iid(),no:Numbering.next('reconciliation',date),date,treasuryId:t.id,system,statement,diff,currency:t.currency,note:o.note||'',status:Math.abs(diff)<=0.01?'matched':'difference'};DB.data.bankReconciliations.unshift(x);DB.log('bank-compare','treasury',t.id,`${x.no} • فرق ${money(diff,t.currency)}`);return x}
 };
+__set_Transactions(Transactions);
 
 const Approvals={create(type,payload,baseAmount=0){return ApprovalWorkflows.create(composeLegacyApprovalDeps(),type,payload,baseAmount)},approve(id){return ApprovalWorkflows.approve(composeLegacyApprovalDeps(),id)},reject(id,reason){return ApprovalWorkflows.reject(composeLegacyApprovalDeps(),id,reason)}};
+export { Approvals, Transactions };

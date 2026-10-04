@@ -1,3 +1,6 @@
+import { BusinessValues } from '../core/business-values';
+import { CrmLeadRules } from '../crm/lead-rules';
+import type { CrmFollowupFields, CrmLeadFields, CrmWorkflowDeps } from './business-contracts';
 // Legacy order and return timing preserved; dependencies are supplied by composition.
 const CrmLeadWorkflows = {
     addLead(d: CrmWorkflowDeps, o: CrmLeadFields) {
@@ -56,3 +59,4 @@ const CrmLeadWorkflows = {
         d.repository.leads = d.repository.leads.filter(x => x.id !== id);
     }
 };
+export { CrmLeadWorkflows };

@@ -1,3 +1,6 @@
+import { EPS } from '../core/runtime';
+import { BusinessValues } from '../core/business-values';
+import type { FinancialQueryDeps } from '../application/business-contracts';
 const FinancialQueryRules = {
     balanceBase(d: FinancialQueryDeps, map: Record<string, number>, positiveOnly: boolean = false) {
         let total = 0;
@@ -99,3 +102,4 @@ const FinancialQueryRules = {
         }, 0);
     }
 };
+export { FinancialQueryRules };

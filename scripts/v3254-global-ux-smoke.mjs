@@ -1,6 +1,7 @@
 import fs from 'node:fs';
-const ui=fs.readFileSync('src/ui/ui.ts','utf8');
-const umrah=fs.readFileSync('src/core/umrah/ui.ts','utf8')+fs.readFileSync('src/core/umrah/ui-pages.ts','utf8');
+import { umrahPagesText, uiText } from './lib/split-sources.mjs';
+const ui=uiText();
+const umrah=fs.readFileSync('src/core/umrah/ui.ts','utf8')+umrahPagesText();
 const css=fs.readFileSync('src/styles.css','utf8');
 const delegated=fs.readFileSync('src/ui/delegated-actions.ts','utf8');
 const assert=(ok,msg)=>{if(!ok)throw new Error(msg)};

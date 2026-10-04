@@ -1,3 +1,4 @@
+import type { ApplicationFields, CommercialWorkflowDeps } from './contracts';
 const CommercialWorkflows={
  async serverAudit(deps:CommercialWorkflowDeps){
   const result=await deps.audit.read();
@@ -31,3 +32,4 @@ const CommercialWorkflows={
   }};
  }
 };
+export { CommercialWorkflows };

@@ -1,3 +1,6 @@
+import { N, S, icon, today } from '../core/runtime';
+import { Auth } from '../security/auth';
+import { UI } from './ui';
 // v32.5.5 — true lazy list rendering. Keep raw records in memory and only build HTML for the visible page.
 const _dataTableRenderBase=UI.renderTablePage.bind(UI);
 const _dataTableFilterBase=UI.filterTable.bind(UI);
@@ -72,3 +75,4 @@ UI.exportTable=function(btn){
   if(!rec||rec.kind!=='data')return _dataTableExportBase(btn);
   const table=card.querySelector('table'),include=[...table.tHead.rows[0].cells].map((c,i)=>c.dataset.export!=='0'?i:-1).filter(i=>i>=0),quote=v=>`"${S(v).replace(/"/g,'""').replace(/\n+/g,' ')}"`,head=include.map(i=>quote(table.tHead.rows[0].cells[i]?.innerText||'')).join(','),rows=rec.filtered.map(item=>{let cells;if(rec.exportValues){try{cells=rec.exportValues(item)||[]}catch{cells=[]}}else cells=this.tableRowCells(rec.rowRenderer(item));return include.map(i=>quote(cells[i]||'')).join(',')}),blob=new Blob(['﻿'+[head,...rows].join('\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=`${document.getElementById('pageTitle').textContent}_${today()}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);return true;
 };
+export { _dataTableExportBase, _dataTableFilterBase, _dataTableRenderBase, _dataTableSortBase };

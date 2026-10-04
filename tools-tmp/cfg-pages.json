@@ -1,0 +1,6 @@
+{"file":"src/ui/pages.ts","obj":"Pages","partType":"","groups":[
+{"file":"pages-shell","from":"umrah-dashboard","to":"row","inline":true},
+{"file":"operations-pages","name":"Pages_Operations","from":"dashboard","to":"payments"},
+{"file":"accounting-pages","name":"Pages_Accounting","from":"cheques","to":"costcenters"},
+{"file":"admin-pages","name":"Pages_Admin","from":"treasury","to":"activity"},
+{"file":"settings-pages","name":"Pages_Settings","from":"users","to":"notFound"}]}

@@ -1,3 +1,7 @@
+import { UmrahCore_N, UmrahCore_S, UmrahCore_dateAdd, UmrahCore_daysBetween, UmrahCore_iid, UmrahCore_monthsAdd, UmrahCore_now, UmrahCore_roomCap } from './runtime';
+import { UmrahCore_Bridge, UmrahCore_Cost, UmrahCore_DB } from './data';
+import { UmrahCore_Procurement } from './procurement';
+import { UmrahCore_Ops } from './operations';
 // Hajj & Umrah workflow completion layer.
 // Keeps the proven operational core intact while making package requirements configurable
 // and binding readiness, tasks, traveler checks and bundled services to one source of truth.
@@ -95,3 +99,4 @@ Object.assign(UmrahCore_Ops,{
   this.syncAutoTasks(p.id);UmrahCore_Bridge.audit('create','umrahServiceBundle',seg.id,`${p.no} — ${seg.title}`);return{segment:seg,cost}
  }
 });
+export { UmrahCore_CreateProgramBase, UmrahCore_EnsureBase, UmrahCore_RequirementLabels, UmrahCore_UpdateProgramBase, UmrahCore_UpdateTravelerBase, UmrahCore_defaultRequirements, UmrahCore_programReq, UmrahCore_reqSegmentType, UmrahCore_requirementsFromForm, UmrahCore_serviceCostCategory };

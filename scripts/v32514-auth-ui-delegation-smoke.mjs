@@ -1,7 +1,8 @@
+import { uiText } from './lib/split-sources.mjs';
 import {readFile,readdir} from 'node:fs/promises';
 const read=p=>readFile(new URL(`../${p}`,import.meta.url),'utf8');
 const assert=(ok,msg)=>{if(!ok)throw new Error(msg)};
-const [pkgText,auth,ui,delegated]=await Promise.all([read('package.json'),read('src/security/auth.ts'),read('src/ui/ui.ts'),read('src/ui/delegated-actions.ts')]);
+const [pkgText,auth,ui,delegated]=await Promise.all([read('package.json'),read('src/security/auth.ts'),uiText(),read('src/ui/delegated-actions.ts')]);
 const pkg=JSON.parse(pkgText),patch=Number(pkg.version.split('.').at(-1));
 const files=(await readdir(new URL('../src/',import.meta.url),{recursive:true})).filter(f=>f.endsWith('.ts'));
 const source=(await Promise.all(files.map(f=>read(`src/${f}`)))).join('\n');

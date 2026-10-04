@@ -1,3 +1,7 @@
+import { S, deep, iid } from '../core/runtime';
+import { DB } from '../persistence/browser-store';
+import { Auth } from '../core/late-bindings';
+import { AccessControl } from '../security/access-control';
 /* Central expense-category registry. Keeps expense classification configurable without changing posted history. */
 const ExpenseCategories={
  defaults:[
@@ -18,8 +22,9 @@ const ExpenseCategories={
  active(current=''){return this.ensure().filter(x=>x.active!==false||x.name===current)},
  get(id){return this.ensure().find(x=>x.id===id)},
  byName(name){return this.ensure().find(x=>x.name===name)},
- add(o){Auth.require('expenses','edit');const defs=this.ensure(),name=S(o.name).trim();if(!name)throw new Error('اكتب اسم تصنيف المصروف');if(defs.some(x=>x.name.toLowerCase()===name.toLowerCase()))throw new Error('يوجد تصنيف مصروف بنفس الاسم');const x={id:`EXP-${iid()}`,name,expenseAccountId:S(o.expenseAccountId||'5200'),taxId:S(o.taxId||'TAX0'),costCenterId:S(o.costCenterId||''),active:true};defs.push(x);DB.data.settings.expenseCategoryDefs=defs;DB.data.settings.expenseCategories=defs.map(v=>v.name);DB.log('add','expense-category',x.id,`إضافة تصنيف مصروف: ${name}`);return x},
- update(id,o){Auth.require('expenses','edit');const defs=this.ensure(),x=defs.find(v=>v.id===id);if(!x)throw new Error('تصنيف المصروف غير موجود');const name=S(o.name).trim();if(!name)throw new Error('اكتب اسم تصنيف المصروف');if(defs.some(v=>v.id!==id&&v.name.toLowerCase()===name.toLowerCase()))throw new Error('يوجد تصنيف مصروف بنفس الاسم');x.name=name;x.expenseAccountId=S(o.expenseAccountId||'5200');x.taxId=S(o.taxId||'TAX0');x.costCenterId=S(o.costCenterId||'');DB.data.settings.expenseCategoryDefs=defs;DB.data.settings.expenseCategories=defs.map(v=>v.name);DB.log('edit','expense-category',x.id,`تعديل تصنيف مصروف: ${name}`);return x},
- toggle(id){Auth.require('expenses','edit');const defs=this.ensure(),x=defs.find(v=>v.id===id);if(!x)throw new Error('تصنيف المصروف غير موجود');x.active=x.active===false;DB.data.settings.expenseCategoryDefs=defs;DB.log('edit','expense-category',x.id,`${x.active?'تشغيل':'إيقاف'} تصنيف مصروف: ${x.name}`);return x},
+ add(o){AccessControl.require('expenses','edit');const defs=this.ensure(),name=S(o.name).trim();if(!name)throw new Error('اكتب اسم تصنيف المصروف');if(defs.some(x=>x.name.toLowerCase()===name.toLowerCase()))throw new Error('يوجد تصنيف مصروف بنفس الاسم');const x={id:`EXP-${iid()}`,name,expenseAccountId:S(o.expenseAccountId||'5200'),taxId:S(o.taxId||'TAX0'),costCenterId:S(o.costCenterId||''),active:true};defs.push(x);DB.data.settings.expenseCategoryDefs=defs;DB.data.settings.expenseCategories=defs.map(v=>v.name);DB.log('add','expense-category',x.id,`إضافة تصنيف مصروف: ${name}`);return x},
+ update(id,o){AccessControl.require('expenses','edit');const defs=this.ensure(),x=defs.find(v=>v.id===id);if(!x)throw new Error('تصنيف المصروف غير موجود');const name=S(o.name).trim();if(!name)throw new Error('اكتب اسم تصنيف المصروف');if(defs.some(v=>v.id!==id&&v.name.toLowerCase()===name.toLowerCase()))throw new Error('يوجد تصنيف مصروف بنفس الاسم');x.name=name;x.expenseAccountId=S(o.expenseAccountId||'5200');x.taxId=S(o.taxId||'TAX0');x.costCenterId=S(o.costCenterId||'');DB.data.settings.expenseCategoryDefs=defs;DB.data.settings.expenseCategories=defs.map(v=>v.name);DB.log('edit','expense-category',x.id,`تعديل تصنيف مصروف: ${name}`);return x},
+ toggle(id){AccessControl.require('expenses','edit');const defs=this.ensure(),x=defs.find(v=>v.id===id);if(!x)throw new Error('تصنيف المصروف غير موجود');x.active=x.active===false;DB.data.settings.expenseCategoryDefs=defs;DB.log('edit','expense-category',x.id,`${x.active?'تشغيل':'إيقاف'} تصنيف مصروف: ${x.name}`);return x},
  items(current=''){const a=this.active(current).map(x=>({value:x.name,label:x.active===false?`${x.name} — موقوف`:x.name}));if(current&&!a.some(x=>x.value===current))a.unshift({value:current,label:`${current} — تصنيف تاريخي`});return a}
 };
+export { ExpenseCategories };

@@ -1,3 +1,4 @@
+import { pagesText } from './lib/split-sources.mjs';
 import fs from 'node:fs';
 import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -11,7 +12,7 @@ const checks=[
  ['HTML does not load HR runtime',!read('index.html').includes('core/hr.js')],
  ['PWA service worker does not precache deleted HR runtime',!read('pwa/sw.js').includes('core/hr.js')],
  ['navigation contains no HR route',!read('src/ui/navigation.ts').includes('hr-dashboard')&&!read('src/ui/navigation.ts').includes('hr-employees')],
- ['Pages registry contains no HR route',!read('src/ui/pages.ts').includes("'hr-")],
+ ['Pages registry contains no HR route',!pagesText().includes("'hr-")],
  ['core suite host is Umrah-only',!read('src/core/suites.ts').includes('HRCore_')&&!read('src/core/suites.ts').includes("hr:" )],
  ['seed has no HR workspace/license module',!read('src/core/seed.ts').includes("id:'hr'")&&!read('src/core/seed.ts').includes("'hr',")],
  ['commercial product no longer exposes HR',!read('src/commercial/product.ts').includes('hr-suite')&&!read('src/commercial/product.ts').includes("'hr':'hr")],

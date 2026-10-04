@@ -1,6 +1,7 @@
+import { pagesText } from './lib/split-sources.mjs';
 import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL(`../${p}`,import.meta.url),'utf8');
-const engine=read('src/accounting/engine.ts'),pages=read('src/ui/pages.ts'),store=read('src/persistence/browser-store.ts'),seed=read('src/core/seed.ts'),auth=read('src/security/auth.ts'),product=read('src/commercial/product.ts'),umrah=read('src/core/umrah/data.ts'),actions=read('src/ui/actions.ts');
+const engine=read('src/accounting/engine.ts'),pages=pagesText(),store=read('src/persistence/browser-store.ts'),seed=read('src/core/seed.ts'),auth=read('src/security/auth.ts'),product=read('src/commercial/product.ts'),umrah=read('src/core/umrah/data.ts'),actions=read('src/ui/actions.ts');
 const checks=[];const check=(name,pass)=>checks.push({name,pass:!!pass});
 check('existing financial control center owns the integrity checker',pages.includes("audit(){const report=Accounting.lastIntegrityReport()")&&pages.includes('فحص سلامة الدورة الآن'));
 check('integrity report covers accounting lifecycle summaries',engine.includes('integrityReport()')&&engine.includes('PO_STALE_CONVERTED')&&engine.includes('RECEIVED_NOT_INVOICED')&&engine.includes('VOID_INVOICE_BALANCE')&&engine.includes('PROGRAM_INVOICE_NO_COST_CENTER')&&engine.includes('MISSING_COST_CENTER'));

@@ -1,0 +1,52 @@
+{
+ "explicitAny": 730,
+ "tsSuppressions": 0,
+ "explicitAnyByFolder": {
+  "src/accounting": 19,
+  "src/commercial": 11,
+  "src/core": 76,
+  "src/crm": 5,
+  "src/documents": 15,
+  "src(root)": 37,
+  "src/persistence": 21,
+  "src/reports": 51,
+  "src/security": 1,
+  "src/ui": 102,
+  "server/src": 392
+ },
+ "noImplicitAny": {
+  "total": 4048,
+  "byFolder": {
+   "src/accounting": 438,
+   "src(root)": 3,
+   "src/commercial": 133,
+   "src/core": 1826,
+   "src/crm": 265,
+   "src/documents": 65,
+   "src/finance": 51,
+   "src/integrated": 60,
+   "src/persistence": 74,
+   "src/reports": 131,
+   "src/security": 32,
+   "src/ui": 970
+  }
+ },
+ "strictNullChecks": {
+  "total": 1351,
+  "byFolder": {
+   "src/accounting": 211,
+   "src/application": 158,
+   "src(root)": 24,
+   "src/commercial": 64,
+   "src/core": 358,
+   "src/crm": 77,
+   "src/documents": 8,
+   "src/finance": 34,
+   "src/integrated": 9,
+   "src/persistence": 5,
+   "src/reports": 170,
+   "src/security": 18,
+   "src/ui": 215
+  }
+ }
+}

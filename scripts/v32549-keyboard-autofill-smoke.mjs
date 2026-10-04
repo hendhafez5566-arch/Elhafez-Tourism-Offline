@@ -1,7 +1,8 @@
+import { uiText } from './lib/split-sources.mjs';
 import fs from 'node:fs';
 const read=p=>fs.readFileSync(p,'utf8');
 const cfg=JSON.parse(read('capacitor.config.json'));
-const html=read('index.html'),auth=read('src/security/auth.ts'),ui=read('src/ui/ui.ts'),java=read('android/app/src/main/java/com/elhafez/tourism/erp/customer/MainActivity.java');
+const html=read('index.html'),auth=read('src/security/auth.ts'),ui=uiText(),java=read('android/app/src/main/java/com/elhafez/tourism/erp/customer/MainActivity.java');
 const checks=[]; const ok=(name,cond)=>{checks.push([name,!!cond]);console.log(`${cond?'PASS':'FAIL'} ${name}`)};
 ok('Capacitor uses standard Android InputConnection',cfg.android?.captureInput===false);
 ok('Login exposes credential autofill semantics',html.includes('name="username" autocomplete="username"')&&html.includes('autocomplete="current-password"'));

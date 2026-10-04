@@ -1,6 +1,7 @@
 import fs from 'node:fs';
+import { umrahPagesText, uiText, pagesText } from './lib/split-sources.mjs';
 const read=p=>fs.readFileSync(p,'utf8');
-const ui=read('src/ui/ui.ts'), pages=read('src/ui/pages.ts'), clean=read('src/ui/clean-pages.ts'), umrah=(read('src/core/umrah/ui.ts')+read('src/core/umrah/ui-pages.ts')), ops=read('src/core/umrah/operations.ts'), del=read('src/core/delete-center.ts'), css=read('src/styles.css');
+const ui=uiText(), pages=pagesText(), clean=read('src/ui/clean-pages.ts'), umrah=(read('src/core/umrah/ui.ts')+umrahPagesText()), ops=['operations','operations-identity','operations-contracts','operations-programs','operations-schedule','operations-bookings','operations-travelers'].map(n=>read(`src/core/umrah/${n}.ts`)).join('\n'), del=read('src/core/delete-center.ts'), css=read('src/styles.css');
 const checks=[
  ['smart filter engine',ui.includes('smartFilterStrip(scope,cards=[]')&&ui.includes('applyListFilter(scope,items,rules={})')],
  ['smart filter CSS active state',css.includes('.smart-filter-kpi.filter-active')],

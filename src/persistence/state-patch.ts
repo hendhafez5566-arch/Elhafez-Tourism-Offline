@@ -20,3 +20,4 @@ const StatePatch={
  },
  empty(p:any){return !p||(!Object.keys(p.set||{}).length&&!Object.keys(p.arrays||{}).length&&!(p.unset||[]).length)}
 };
+export { StatePatch };

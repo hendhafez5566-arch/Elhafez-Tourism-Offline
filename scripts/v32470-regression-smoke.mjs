@@ -1,10 +1,11 @@
+import { uiText, pagesText } from './lib/split-sources.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const pkg=JSON.parse(read('package.json')),serverPkg=JSON.parse(read('server/package.json'));
-const runtime=read('src/core/runtime.ts'), store=read('src/persistence/server-store.ts'), party=read('src/crm/party360.ts'), del=read('src/core/delete-center.ts'), pages=read('src/ui/pages.ts'), product=read('src/commercial/product.ts'), browser=read('src/persistence/browser-store.ts'), sess=read('server/src/session.ts'), vendor=read('server/src/vendor.ts'), vo=read('src/commercial/vendor-owner.ts'), ui=read('src/ui/ui.ts'), css=read('src/styles.css'), server=read('server/src/server.ts'), mobile=read('src/mobile.ts');
+const runtime=read('src/core/runtime.ts'), store=read('src/persistence/server-store.ts'), party=read('src/ui/party360.ts'), del=read('src/core/delete-center.ts'), pages=pagesText(), product=read('src/commercial/product.ts'), browser=read('src/persistence/browser-store.ts'), sess=read('server/src/session.ts'), vendor=read('server/src/vendor.ts'), vo=read('src/commercial/vendor-owner.ts'), ui=uiText(), css=read('src/styles.css'), server=read('server/src/server.ts'), mobile=read('src/mobile.ts');
 const checks=[
  ['release is current and runtime-aligned',pkg.version===serverPkg.version&&runtime.includes(`version:'${pkg.version}'`)],
  ['normal save stays lean and 409 retry sends merge baseline',store.includes('baseRevision')&&store.includes('baseData')&&store.includes('r.status===409')&&!store.includes('baseData=this.baseData?deep(this.baseData):null')],

@@ -1,3 +1,4 @@
+import { Currency, DB } from './late-bindings';
 'use strict';
 const EPS=0.000001;
 const S=v=>String(v??'');
@@ -30,7 +31,8 @@ const FileNames={
  archive(company,through=''){const y=S(through||today()).slice(0,4)||S(today()).slice(0,4);return `أرشيف - ${this.clean(company||'Elhafez Tourism','Elhafez Tourism')} - ${y}.erparchive`}
 };
 const currencyFlag=code=>({EGP:'🇪🇬',SAR:'🇸🇦',USD:'🇺🇸',EUR:'🇪🇺',AED:'🇦🇪',KWD:'🇰🇼',QAR:'🇶🇦',BHD:'🇧🇭',OMR:'🇴🇲',GBP:'🇬🇧',TRY:'🇹🇷'})[S(code).toUpperCase()]||'💱';
-function toast(msg,type='ok'){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.className=`toast show ${type}`;clearTimeout((toast as any)._t);(toast as any)._t=setTimeout(()=>t.className='toast',2800)}
+let toastTimer:any;
+function toast(msg,type='ok'){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.className=`toast show ${type}`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className='toast',2800)}
 
 const ICONS={
  dashboard:'<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
@@ -91,3 +93,7 @@ const paymentMethodLabel=m=>({cash:'نقدي',bank:'تحويل بنكي',card:'�
 const approvalTypeLabel=t=>({payment:'سند صرف',expense:'مصروف',commission:'عمولة مندوب'})[t]||t||'-';
 const activityActionLabel=a=>({add:'إضافة',create:'إنشاء',update:'تعديل',edit:'تعديل',delete:'حذف',remove:'حذف',post:'ترحيل',void:'إلغاء / عكس',reverse:'عكس',approve:'اعتماد',reject:'رفض',login:'تسجيل دخول',logout:'تسجيل خروج',setup:'إعداد أول تشغيل',security:'أمان',permissions:'تعديل صلاحيات',branches:'تعديل فروع المستخدم',attach:'إرفاق',request:'طلب اعتماد',integrate:'تكامل',import:'استيراد',export:'تصدير','cash-count':'جرد خزنة','bank-compare':'مقارنة كشف بنك'})[a]||a||'-';
 const entityLabel=e=>({user:'مستخدم',branch:'فرع',customer:'عميل',supplier:'مورد',agent:'مندوب',lead:'عميل محتمل',quotation:'عرض سعر',purchaseOrder:'أمر شراء',program:'برنامج',booking:'حجز',traveler:'مسافر',service:'خدمة',invoice:'فاتورة',invoiceAdjustment:'إشعار فاتورة',receipt:'سند قبض',payment:'سند صرف',expense:'مصروف',journal:'قيد يومية',manualJournalDraft:'مسودة قيد',treasury:'خزنة / بنك',currency:'عملة',transfer:'تحويل',commission:'عمولة',costcenter:'مركز تكلفة',tax:'ضريبة',approval:'اعتماد',partyGroup:'طرف موحد',partyNetting:'مقاصة طرف',attachment:'مرفق',system:'النظام',umrahBooking:'حجز حج/عمرة',umrahProgram:'برنامج حج/عمرة',umrahTraveler:'مسافر حج/عمرة',programSegment:'قطاع برنامج',supplierCommitment:'التزام مورد حج/عمرة',umrahSupplier:'التزام مورد حج/عمرة'})[e]||e||'-';
+export { APP, DISPLAY_LOCALE, Device, EPS, FileNames, ICONS, MONTH_NAMES_AR, Money, N, PrefixDefaults, PrefixLabels, S, StatusCatalog, accountTypeLabel, activityActionLabel, amountWordsAr, approvalTypeLabel, byId, currencyFlag, dateAddMonthsClamped, daysBetween, deep, entityLabel, esc, expenseModeLabel, fmt, formatDate, formatDateTime, icon, iid, live, money, monthNameAr, natureLabel, now, numWordsAr, paymentMethodLabel, roleLabel, sc, sl, statusClass, statusLabel, toast, today, year2 };
+
+/* Native-shell surface injected into window by the Android wrapper. Declared once instead of casting window at every read. */
+declare global { interface Window { ERP_MOBILE?: any; NativeShell?: any; NativePrint?: any; Capacitor?: any } }

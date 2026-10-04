@@ -1,12 +1,13 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import { umrahPagesText, pagesText } from './lib/split-sources.mjs';
 const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
-const party=read('src/crm/party360.ts');
-const pages=read('src/ui/pages.ts');
+const party=read('src/ui/party360.ts');
+const pages=pagesText();
 const cleanPages=read('src/ui/clean-pages.ts');
 const umrahBridge=read('src/core/umrah/data.ts');
 const contracts=read('src/core/umrah/contracts.ts')+read('src/core/umrah/contracts-management.ts');
-const ui=(read('src/core/umrah/ui.ts')+read('src/core/umrah/ui-pages.ts'));
+const ui=(read('src/core/umrah/ui.ts')+umrahPagesText());
 const actions=read('src/core/umrah/actions-print.ts');
 const db=read('src/persistence/browser-store.ts');
 const umrah=read('src/core/umrah/data.ts');

@@ -1,3 +1,14 @@
+import { toast } from '../core/runtime';
+import { BrowserPlatform } from '../platform/browser-platform';
+import { Accounting } from '../accounting/engine';
+import { DeleteCenter } from '../core/delete-center';
+import { Attachments } from '../documents/attachments-backup';
+import { Auth } from '../security/auth';
+import { CommercialData } from '../commercial/data-exchange';
+import { UnifiedParty } from '../crm/unified-party';
+import { Party360 } from './party360';
+import { Print, Reports } from '../reports/printing';
+import { Actions, CleanPages, CommercialActions, CommercialUX, Forms, OutputCenter, UmrahCore_Actions, UmrahCore_Bridge, UmrahCore_ContractCenter, UmrahCore_DB, UmrahCore_Forms, UmrahCore_Guided, UmrahCore_Inventory, UmrahCore_PrintView, UmrahCore_ProgramWizard, UmrahCore_QuickCreate, UmrahCore_State, UmrahCore_UI, UmrahCore_Wizard, UmrahCore_vehicleCaps, WorkCenter } from '../core/late-bindings';
 const UIDelegatedActions:any={
  handle(target:Element|null,e:Event,ui:any){
   if(!target?.closest)return false;
@@ -185,3 +196,4 @@ const UIDelegatedActions:any={
   return false
  }
 };
+export { UIDelegatedActions };

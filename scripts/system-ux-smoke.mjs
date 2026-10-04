@@ -1,8 +1,10 @@
+import { pagesText } from './lib/split-sources.mjs';
 import {readFile} from 'node:fs/promises';
+import {compiledFilesText} from './lib/build-model.mjs';
 const read=p=>readFile(new URL(`../${p}`,import.meta.url),'utf8');
 const assert=(ok,msg)=>{if(!ok)throw new Error(msg)};
 const [party,ux,work,outputs,pages,nav,seed,auth,product,commercialPages,store,server,runtime,uruntime,uprint,uinsights,printing,index,tsconfig]=await Promise.all([
- read('src/crm/party360.ts'),read('src/ui/commercial-ux.ts'),read('src/ui/work-center.ts'),read('src/documents/output-center.ts'),read('src/ui/pages.ts'),read('src/ui/navigation.ts'),read('src/core/seed.ts'),read('src/security/auth.ts'),read('src/commercial/product.ts'),read('src/commercial/pages.ts'),read('src/persistence/browser-store.ts'),read('src/persistence/server-store.ts'),read('src/core/runtime.ts'),read('src/core/umrah/runtime.ts'),read('src/core/umrah/actions-print.ts'),read('src/core/umrah/insights.ts'),read('src/reports/printing.ts'),read('index.html'),read('tsconfig.json')]);
+ read('src/ui/party360.ts'),read('src/ui/commercial-ux.ts'),read('src/ui/work-center.ts'),read('src/documents/output-center.ts'),pagesText(),read('src/ui/navigation.ts'),read('src/core/seed.ts'),read('src/security/auth.ts'),read('src/commercial/product.ts'),read('src/commercial/pages.ts'),read('src/persistence/browser-store.ts'),read('src/persistence/server-store.ts'),read('src/core/runtime.ts'),read('src/core/umrah/runtime.ts'),read('src/core/umrah/actions-print.ts'),read('src/core/umrah/insights.ts'),read('src/reports/printing.ts'),read('index.html'),Promise.resolve(compiledFilesText())]);
 assert(party.includes('DB.data.umrahBookings'),'Customer 360 is not reading native Umrah bookings');
 assert(party.includes('umrahSupplierCommitments'),'Supplier 360 is missing native Umrah commitments');
 assert(party.includes('data-no-page-empty-action="1"'),'360 modal is not protected from page-level empty CTA injection');
@@ -36,7 +38,7 @@ assert(uinsights.includes('سعر بيع أقل من التكلفة')&&uinsights
 assert(work.includes('UmrahCore_Ops.programOpenGaps')&&work.includes('UmrahCore_Insights.warnings'),'Daily work center does not surface Umrah readiness and smart warnings');
 assert(!work.includes('hr-employees')&&!work.includes('hr-payroll'),'HR workflow was accidentally added to this change');
 assert(tsconfig.includes('src/ui/work-center.ts')&&tsconfig.includes('src/documents/output-center.ts')&&tsconfig.includes('src/core/umrah/insights.ts'),'New modules are not compiled into the central app bundle');
-const allUmrah=(await Promise.all(['runtime.ts','integration.ts','data.ts','contracts.ts','guided.ts','program-wizard.ts','operations.ts','operations-execution.ts','insights.ts','ui.ts','forms.ts','actions-print.ts'].map(f=>read(`src/core/umrah/${f}`)))).join('\n');
+const allUmrah=(await Promise.all(['runtime.ts','integration.ts','data.ts','contracts.ts','guided.ts','program-wizard.ts','program-wizard-validation.ts','program-wizard-finish.ts','operations.ts','operations-execution.ts','insights.ts','ui.ts','forms.ts','actions-print.ts'].map(f=>read(`src/core/umrah/${f}`)))).join('\n');
 for(const legacy of ['integratedModules.umrah','syncUmrah(','moduleStore.save(\'umrah\'','UmrahCore_Bridge.host'])assert(!allUmrah.includes(legacy),`Legacy Umrah residue returned: ${legacy}`);
 assert(!work.includes('hr-employees')&&!work.includes('hr-payroll'),'Removed HR routes resurfaced in Daily Work Center');
 console.log(JSON.stringify({ok:true,workCenter:true,party360:true,wrongEmptyCtaFixed:true,outputHub:true,auditDiff:true,transientSyncRetry:true,sharedStatuses:true,smartUmrahWarnings:true,hrRemoved:true},null,2));

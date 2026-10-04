@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { pbkdf2 } from 'node:crypto';
 import { promisify } from 'node:util';
 import { gzipSync } from 'node:zlib';
-import { pool, port, tenant, json, bodyJson, bodyBuffer, cookies, sha, safeEq, sessionCookie, sessionCookieName, securityHeaders, withTx, clientIp, userAgent, appVersion, vendorAgentKey, apiCorsHeaders, allowFactoryReset } from './context.js';
+import { pool, port, tenant, json, bodyJson, bodyBuffer, cookies, sha, safeEq, sessionCookie, sessionCookieName, securityHeaders, fileResponseHeaders, withTx, clientIp, userAgent, appVersion, vendorAgentKey, apiCorsHeaders, allowFactoryReset } from './context.js';
 import { runMigrations } from './migrations.js';
 import { licenseStatus, moduleAllowed, writeAllowed, acceptVendorEntitlement } from './license.js';
 import { auth, createSession, listSessions, requestSessionToken } from './session.js';
@@ -100,7 +100,7 @@ const server=http.createServer(async(req,res)=>{try{
  if(url==='/api/license'&&req.method==='POST')return json(res,405,{error:'يتم إدارة الترخيص من مركز المالك، ويمكن تحديث حالته من صفحة الترخيص داخل النظام'});
  if(url.startsWith('/api/vendor/')){if(!vendorOwnerAllowed(a.user))return json(res,404,{error:'vendor_not_available'});await hydrateState();if(await handleVendorApi(req,res,url,a))return}
  const fileMatch=url.match(/^\/api\/files\/([^/]+)$/);
- if(fileMatch&&req.method==='GET'){if(!hasPermission(a.user,'documents','view'))return json(res,403,{error:'forbidden'});const id=decodeURIComponent(fileMatch[1]),f=await readLiveFile(t,id);if(!f)return json(res,404,{error:'file_not_found'});const data=Buffer.from(f.data);res.writeHead(200,{...securityHeaders(),'Content-Type':f.mime||'application/octet-stream','Content-Length':String(data.length),'Content-Disposition':`inline; filename*=UTF-8''${encodeURIComponent(f.file_name||id)}`,'Cache-Control':'private, no-store'});return res.end(data)}
+ if(fileMatch&&req.method==='GET'){if(!hasPermission(a.user,'documents','view'))return json(res,403,{error:'forbidden'});const id=decodeURIComponent(fileMatch[1]),f=await readLiveFile(t,id);if(!f)return json(res,404,{error:'file_not_found'});const data=Buffer.from(f.data);res.writeHead(200,{...securityHeaders(),...fileResponseHeaders(f.mime||'',f.file_name||id),'Content-Length':String(data.length),'Cache-Control':'private, no-store'});return res.end(data)}
  if(fileMatch&&req.method==='PUT'){if(!writeAllowed(license))return json(res,402,{error:'الترخيص منتهي — الوضع قراءة فقط'});if(!hasPermission(a.user,'documents','add'))return json(res,403,{error:'forbidden'});const id=decodeURIComponent(fileMatch[1]),data=await bodyBuffer(req,21*1024*1024);if(!data.length)return json(res,400,{error:'empty_file'});const name=decodeURIComponent(String(req.headers['x-file-name']||id)).slice(0,500),mime=String(req.headers['content-type']||'application/octet-stream').slice(0,200),out=await storeLiveFile(t,id,name,mime,data);return json(res,200,{ok:true,size:data.length,sha256:out.sha256})}
  if(fileMatch&&req.method==='DELETE'){if(!writeAllowed(license))return json(res,402,{error:'الترخيص منتهي — الوضع قراءة فقط'});if(!hasPermission(a.user,'documents','delete'))return json(res,403,{error:'forbidden'});const id=decodeURIComponent(fileMatch[1]);await deleteLiveFile(t,id);return json(res,200,{ok:true})}
 

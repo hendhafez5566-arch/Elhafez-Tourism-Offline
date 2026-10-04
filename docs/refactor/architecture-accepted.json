@@ -1,0 +1,1149 @@
+{
+ "note": "Accepted architecture state. Matching is by (rule, normalised-AST signature) multiset, file-agnostic. Regenerate only with: node scripts/architecture-check.mjs --update (refuses any increase).",
+ "previousTotal": 205,
+ "counts": {
+  "ARCH001": 105,
+  "ARCH002": 9,
+  "ARCH003": 14,
+  "ARCH004": 39,
+  "ARCH005": 10,
+  "ARCH006": 12,
+  "TOTAL": 189
+ },
+ "findings": [
+  {
+   "rule": "ARCH001",
+   "file": "src/core/umrah/actions-print.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-crm.ts",
+   "signature": "9905ae42c74851306ec090388ab05e807cb12a0ddc97d4c1aa943bc981e29846",
+   "sample": "DB.atomicAsync"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-crm.ts",
+   "signature": "9905ae42c74851306ec090388ab05e807cb12a0ddc97d4c1aa943bc981e29846",
+   "sample": "DB.atomicAsync"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-crm.ts",
+   "signature": "ccc26bf2f240b90faa91b927159082f32831c301de0ae56aeaecc9281e176c4e",
+   "sample": "DB.log"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-crm.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-crm.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-crm.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-crm.ts",
+   "signature": "f7f6e25efd8915671a22f59551a740c803e94bbdb9e4f86f9b2f6ec683bb0062",
+   "sample": "DB.save"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "eed095a5ac05fc8fcd2d511f56581789852c7730935d254b9eaa2373e12c098f",
+   "sample": "DB.atomic"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "eed095a5ac05fc8fcd2d511f56581789852c7730935d254b9eaa2373e12c098f",
+   "sample": "DB.atomic"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "eed095a5ac05fc8fcd2d511f56581789852c7730935d254b9eaa2373e12c098f",
+   "sample": "DB.atomic"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "eed095a5ac05fc8fcd2d511f56581789852c7730935d254b9eaa2373e12c098f",
+   "sample": "DB.atomic"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-documents.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-finance.ts",
+   "signature": "9905ae42c74851306ec090388ab05e807cb12a0ddc97d4c1aa943bc981e29846",
+   "sample": "DB.atomicAsync"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-finance.ts",
+   "signature": "eed095a5ac05fc8fcd2d511f56581789852c7730935d254b9eaa2373e12c098f",
+   "sample": "DB.atomic"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-finance.ts",
+   "signature": "eed095a5ac05fc8fcd2d511f56581789852c7730935d254b9eaa2373e12c098f",
+   "sample": "DB.atomic"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-finance.ts",
+   "signature": "eed095a5ac05fc8fcd2d511f56581789852c7730935d254b9eaa2373e12c098f",
+   "sample": "DB.atomic"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-finance.ts",
+   "signature": "eed095a5ac05fc8fcd2d511f56581789852c7730935d254b9eaa2373e12c098f",
+   "sample": "DB.atomic"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-finance.ts",
+   "signature": "eed095a5ac05fc8fcd2d511f56581789852c7730935d254b9eaa2373e12c098f",
+   "sample": "DB.atomic"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-finance.ts",
+   "signature": "eed095a5ac05fc8fcd2d511f56581789852c7730935d254b9eaa2373e12c098f",
+   "sample": "DB.atomic"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-finance.ts",
+   "signature": "eed095a5ac05fc8fcd2d511f56581789852c7730935d254b9eaa2373e12c098f",
+   "sample": "DB.atomic"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-finance.ts",
+   "signature": "eed095a5ac05fc8fcd2d511f56581789852c7730935d254b9eaa2373e12c098f",
+   "sample": "DB.atomic"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-finance.ts",
+   "signature": "eed095a5ac05fc8fcd2d511f56581789852c7730935d254b9eaa2373e12c098f",
+   "sample": "DB.atomic"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-finance.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/actions-handlers-finance.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/admin-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "24a3f3f3cbb398359a918af28ac288db9261dba139d7ea4f48ae27672ff9937b",
+   "sample": "DB.lastSaveError"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "24a3f3f3cbb398359a918af28ac288db9261dba139d7ea4f48ae27672ff9937b",
+   "sample": "DB.lastSaveError"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "24a3f3f3cbb398359a918af28ac288db9261dba139d7ea4f48ae27672ff9937b",
+   "sample": "DB.lastSaveError"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "aa03dc41445594da5a2a3c7fad984a216127d7274fe8e6f0622ea8549cc0cd2f",
+   "sample": "DB.save.bind(DB)"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "f7f6e25efd8915671a22f59551a740c803e94bbdb9e4f86f9b2f6ec683bb0062",
+   "sample": "DB.save"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "f7f6e25efd8915671a22f59551a740c803e94bbdb9e4f86f9b2f6ec683bb0062",
+   "sample": "DB.save"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "f7f6e25efd8915671a22f59551a740c803e94bbdb9e4f86f9b2f6ec683bb0062",
+   "sample": "DB.save"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/navigation.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/navigation.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/navigation.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/navigation.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/navigation.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/navigation.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/navigation.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/navigation.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/navigation.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/settings-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/settings-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/settings-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/settings-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/settings-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/settings-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/settings-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/settings-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/settings-pages.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-menus-search.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-menus-search.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-menus-search.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-menus-search.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-menus-search.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-menus-search.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-menus-search.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-menus-search.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-menus-search.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-shell.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-shell.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-shell.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-shell.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-shell.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-workspace-nav.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-workspace-nav.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-workspace-nav.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/ui-workspace-nav.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/work-center.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/work-center.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/work-center.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/work-center.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/work-center.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/work-center.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/work-center.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/work-center.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/work-center.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH001",
+   "file": "src/ui/work-center.ts",
+   "signature": "f4f0e0a3f804add3e985ad23f4a56a59cf9512d04aa1697d4d02d5e403d9b878",
+   "sample": "DB.data"
+  },
+  {
+   "rule": "ARCH002",
+   "file": "src/commercial/data-exchange.ts",
+   "signature": "88fe3c9c99aca062a4737f4e8f8918a70b370f259a39f9efd6f6029c4b22c85a",
+   "sample": "UI.table"
+  },
+  {
+   "rule": "ARCH002",
+   "file": "src/commercial/data-exchange.ts",
+   "signature": "b03648892d1113c721d4d9257f4a43ba4ecec57d2b0fc2504f66279a9cde2ce3",
+   "sample": "toast(`تم استيراد ${result.added} وتخطي ${result.skipped}`)"
+  },
+  {
+   "rule": "ARCH002",
+   "file": "src/commercial/data-exchange.ts",
+   "signature": "b68c76899283065604bdcb6680a277c63914c7537e4835438d76a26bf8b0e11c",
+   "sample": "UI.closeModal"
+  },
+  {
+   "rule": "ARCH002",
+   "file": "src/commercial/data-exchange.ts",
+   "signature": "cd7e64ebcef02513a435d2eafcd40836379ebfd5898ccd373cdc8b92657574be",
+   "sample": "toast(err.message, 'error')"
+  },
+  {
+   "rule": "ARCH002",
+   "file": "src/core/umrah/data.ts",
+   "signature": "ae48a2267f4181da9e9720079863ba1686f898b0f21f8b78258485bbf4fbafc1",
+   "sample": "UI as any"
+  },
+  {
+   "rule": "ARCH002",
+   "file": "src/crm/unified-party.ts",
+   "signature": "88fe3c9c99aca062a4737f4e8f8918a70b370f259a39f9efd6f6029c4b22c85a",
+   "sample": "UI.table"
+  },
+  {
+   "rule": "ARCH002",
+   "file": "src/crm/unified-party.ts",
+   "signature": "8be950a85c37675bb93ce5d0ed693d350b191c3ffb6bdfc7c17db368465c611a",
+   "sample": "Print.showUnifiedStatement"
+  },
+  {
+   "rule": "ARCH002",
+   "file": "src/crm/unified-party.ts",
+   "signature": "b68c76899283065604bdcb6680a277c63914c7537e4835438d76a26bf8b0e11c",
+   "sample": "UI.closeModal"
+  },
+  {
+   "rule": "ARCH002",
+   "file": "src/crm/unified-party.ts",
+   "signature": "cbdac0a510c269144e507dc9f814242b8d0d1dcd4c8b3e575f3518db03a91536",
+   "sample": "UI.badge"
+  },
+  {
+   "rule": "ARCH003",
+   "file": "src/mobile.ts",
+   "signature": "56434a2303e05bfacc1bfcb6545695cb6178345b418c130f288ddd404b07fe1f",
+   "sample": "Auth.user"
+  },
+  {
+   "rule": "ARCH003",
+   "file": "src/mobile.ts",
+   "signature": "56434a2303e05bfacc1bfcb6545695cb6178345b418c130f288ddd404b07fe1f",
+   "sample": "Auth.user"
+  },
+  {
+   "rule": "ARCH003",
+   "file": "src/mobile.ts",
+   "signature": "7cfcc9727aa93ad15e2ff9e1597e883e9c6abadeb5571b38eed8a74442a0ea43",
+   "sample": "typeof Auth"
+  },
+  {
+   "rule": "ARCH003",
+   "file": "src/mobile.ts",
+   "signature": "7cfcc9727aa93ad15e2ff9e1597e883e9c6abadeb5571b38eed8a74442a0ea43",
+   "sample": "typeof Auth"
+  },
+  {
+   "rule": "ARCH003",
+   "file": "src/mobile.ts",
+   "signature": "7cfcc9727aa93ad15e2ff9e1597e883e9c6abadeb5571b38eed8a74442a0ea43",
+   "sample": "typeof Auth"
+  },
+  {
+   "rule": "ARCH003",
+   "file": "src/mobile.ts",
+   "signature": "7cfcc9727aa93ad15e2ff9e1597e883e9c6abadeb5571b38eed8a74442a0ea43",
+   "sample": "typeof Auth"
+  },
+  {
+   "rule": "ARCH003",
+   "file": "src/mobile.ts",
+   "signature": "7cfcc9727aa93ad15e2ff9e1597e883e9c6abadeb5571b38eed8a74442a0ea43",
+   "sample": "typeof Auth"
+  },
+  {
+   "rule": "ARCH003",
+   "file": "src/mobile.ts",
+   "signature": "7cfcc9727aa93ad15e2ff9e1597e883e9c6abadeb5571b38eed8a74442a0ea43",
+   "sample": "typeof Auth"
+  },
+  {
+   "rule": "ARCH003",
+   "file": "src/persistence/browser-store.ts",
+   "signature": "7cfcc9727aa93ad15e2ff9e1597e883e9c6abadeb5571b38eed8a74442a0ea43",
+   "sample": "typeof Auth"
+  },
+  {
+   "rule": "ARCH003",
+   "file": "src/persistence/browser-store.ts",
+   "signature": "7cfcc9727aa93ad15e2ff9e1597e883e9c6abadeb5571b38eed8a74442a0ea43",
+   "sample": "typeof Auth"
+  },
+  {
+   "rule": "ARCH003",
+   "file": "src/ui/data-table.ts",
+   "signature": "62983cc92763430c4b6ee45618ed0ad88e50e3cf77627ceb6dc772e750a6e277",
+   "sample": "Auth.can"
+  },
+  {
+   "rule": "ARCH003",
+   "file": "src/ui/delegated-actions.ts",
+   "signature": "8a905610e370f77ef114f54924d4b92a7989a674657520988cbbf6178c01eef9",
+   "sample": "Auth.passwordStrength"
+  },
+  {
+   "rule": "ARCH003",
+   "file": "src/ui/delegated-actions.ts",
+   "signature": "e75bcc7222452eb70ee8d92f8877117204a6693b937187958c42943aee8b07dd",
+   "sample": "Auth.logout"
+  },
+  {
+   "rule": "ARCH003",
+   "file": "src/ui/ui-workspace-nav.ts",
+   "signature": "7cfcc9727aa93ad15e2ff9e1597e883e9c6abadeb5571b38eed8a74442a0ea43",
+   "sample": "typeof Auth"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/documents/attachments-backup.ts",
+   "signature": "6e87fdde92eac41eee7f18c521be12d764b3d5a7f1de81c2e57bc4fe65df05ad",
+   "sample": "DB.data = d"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/mobile.ts",
+   "signature": "0e94e0b42e79923e7c5e8ff11e7bc58b9b124f5833a1a8da6283f931450c45e2",
+   "sample": "DB.syncBlocked = false"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/mobile.ts",
+   "signature": "0e94e0b42e79923e7c5e8ff11e7bc58b9b124f5833a1a8da6283f931450c45e2",
+   "sample": "DB.syncBlocked = false"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/mobile.ts",
+   "signature": "0e94e0b42e79923e7c5e8ff11e7bc58b9b124f5833a1a8da6283f931450c45e2",
+   "sample": "DB.syncBlocked = false"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/mobile.ts",
+   "signature": "160f5f453504d7927a148914ffc4684a528cd8d99004f5e75d0c0885fc88d2cb",
+   "sample": "DB.lastSaveError = ''"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/mobile.ts",
+   "signature": "160f5f453504d7927a148914ffc4684a528cd8d99004f5e75d0c0885fc88d2cb",
+   "sample": "DB.lastSaveError = ''"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/mobile.ts",
+   "signature": "160f5f453504d7927a148914ffc4684a528cd8d99004f5e75d0c0885fc88d2cb",
+   "sample": "DB.lastSaveError = ''"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/mobile.ts",
+   "signature": "1eb18e03f7f169c3ecc782a1a3afa969faa23073b7adad2659a7cdbf1a9b8492",
+   "sample": "Auth.user = byId(DB.data.users || [], uid) || Auth.user"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/mobile.ts",
+   "signature": "73b8cf777e08a53ebc920ef6c43606583b1bad72d8609bdbf45cb529d63b3b0d",
+   "sample": "UI.navHistory = Array.isArray(state.history) ? state.history.slice(-30) : []"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/mobile.ts",
+   "signature": "b4877eb7c2e350bd9c1450c935b546b2ed232e6d267120c049c4e6c988db903a",
+   "sample": "DB.data = remote.data"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/mobile.ts",
+   "signature": "db23bb824836f45a922e4df0d73da59e20dde6b2e2f34c85a166568b0236a4fa",
+   "sample": "UI.init = function (...args: any[]) { const result = initUi(...args); setTimeout(restoreNativeUiState, 0); return result; }"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/persistence/browser-store.ts",
+   "signature": "b1ea0fe5486349eff2514f05cb005c7f42627733db22b852be4c4720bb14a950",
+   "sample": "DB.ensure = function () { const legacyAppearance = this.data?.settings?.appearance, result = DBEnsureAccountingLifecycleBase(); if (this.data.meta.v32473AccountingSourceRepair !== "
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/security/auth.ts",
+   "signature": "655f7b88b26d80052ad1354265d36fcb60bb360b889f890f8d94bf20ef5c6337",
+   "sample": "DB.data = data"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/security/auth.ts",
+   "signature": "655f7b88b26d80052ad1354265d36fcb60bb360b889f890f8d94bf20ef5c6337",
+   "sample": "DB.data = data"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/security/auth.ts",
+   "signature": "b4877eb7c2e350bd9c1450c935b546b2ed232e6d267120c049c4e6c988db903a",
+   "sample": "DB.data = remote.data"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/actions-handlers-master.ts",
+   "signature": "24a933991d86beb6c9f468fb1d8cdc6b0356c7bcab6d38721e11361ae1b723ed",
+   "sample": "UI.workspaceId = ''"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "366621e2037b98d9aa38cbf6fa5a538453dc2bdd46717bf9a75a389717741e1c",
+   "sample": "UI.backHome = function (opts = {}) { if (!CommercialUX.canLeave()) return false; return uxHome(opts); }"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "50a883ee9e4d9b3b182f74c604f3b153066f47f3bcb359227cba2f2ec5564151",
+   "sample": "UI.renderCurrent = function () { uxRender(); CommercialUX.enhance(document); }"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "512385cc8bdd69d59532c53ef58b580425592c92955348750ae858e9f58a1ec0",
+   "sample": "UI.openWorkspace = function (id, opts = {}) { if (!CommercialUX.canLeave()) return false; return uxWorkspace(id, opts); }"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "52264b0819bc1add9d397e437a83ce718c4b1f5350f99dcc8edf6986424c4bc1",
+   "sample": "UI.updateTopbar = function () { uxTopbar(); const all = Commercial.notifications(), read = CommercialUX.readSet(), unread = all.filter(a => !read.has(CommercialUX.notificationId(a)"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "69f75be80e6c2e3f926be666fd4cc5460d3dea33c8685126a108e6d06d1909ab",
+   "sample": "DB.save = function (render = true, options: any = {}) { const silent = options?.silentUi === true, background = options?.background === true; if (silent) return uxSave(render, opti"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "8b7a7ada8ba219f01f5067b4b38a3b616dec1c4cadb65964ee40ce028f2e8866",
+   "sample": "UI.toggleNotifications = function (e) { e?.stopPropagation(); const p = document.getElementById('notificationPanel'), open = p.classList.contains('hidden'); this.closeMenus(); if ("
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "c09e73f4276b1d858f139660b913dde29f4e1f7d82e929c2f0edfff5faa0603b",
+   "sample": "UI.closeModal = function (force = false) { if (!force && !CommercialUX.canLeave()) return false; const modal = document.getElementById('modal'); if (modal?.dataset?.onboarding === "
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "c3a0bfdb83fa8e0b80dd614422d6aade85af3392de55df7a714e3729c28f7d76",
+   "sample": "(UI as any).renderNotificationPanel = function (p) { if (!p) return; const all = Commercial.notifications(), read = CommercialUX.readSet(), filter = CommercialUX.notificationFilter"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "f213508febb4537e64d63978967816ba3dd33ace5af0e85ec60c8ed608f7c9f9",
+   "sample": "UI.openPage = function (page, id = '', opts = {}) { if (page !== this.current && !CommercialUX.canLeave()) return false; return uxOpen(page, id, opts); }"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/commercial-ux.ts",
+   "signature": "fc8bb392498d59f35ce2b6baed881194e2c111c39a81ce2556c834bf3fec71da",
+   "sample": "UI.toggleUserMenu = function (e) { uxUserMenu(e); const p = document.getElementById('userMenu'); if (!p || p.classList.contains('hidden') || p.querySelector('[data-training-link]')"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/data-table.ts",
+   "signature": "301a86fd4ff321939ee2197c04053112faccf5dc263a34cabb1ab470515c18f4",
+   "sample": "UI.sortTable = function (th, index) { if (th.dataset.export === '0') return; const card = th.closest('.table-card'), key = card?.dataset?.lazyTable, rec = key ? this._lazyTables.ge"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/data-table.ts",
+   "signature": "3a047174264e5e72dd7f938e9958a62f261d3dfb8a7b85ad60240b845a921490",
+   "sample": "UI.renderTablePage = function (key, card) { const rec = this._lazyTables.get(key); if (!rec || rec.kind !== 'data') return _dataTableRenderBase(key, card); if (!card) return false;"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/data-table.ts",
+   "signature": "870a8ec41c757db28ed8a2379cda900aa78292a6c2d000c0dec2960f489b3333",
+   "sample": "(UI as any).dataTable = function (headers, items, rowRenderer, empty = 'لا توجد بيانات', opts: any = {}) { const list = Array.isArray(items) ? items : [], noSort = h => /إجراء|الإج"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/data-table.ts",
+   "signature": "98b9136532c9d8b2d3e5bdebf3917e60924752527297a566f4d1e0a885df7b85",
+   "sample": "UI.filterTable = function (input) { const card = input.closest('.table-card'), q = this.searchNormalize(input.value), key = card?.dataset?.lazyTable, rec = key ? this._lazyTables.g"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/data-table.ts",
+   "signature": "98f16d59d396669cd86a0fb66576364da7fec14c74a6b47f9f8e68797d76f4c0",
+   "sample": "UI.exportTable = function (btn) { const card = btn.closest('.table-card'), key = card?.dataset?.lazyTable, rec = key ? this._lazyTables.get(key) : null; if (!rec || rec.kind !== 'd"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/data-table.ts",
+   "signature": "becf2d0ec4bcd8240253ba9f71489ee7a9830c4b8c0f189ebd719ee6b8f89c06",
+   "sample": "(UI as any).dataTableSearchValue = function (rec, item) { if (rec.searchText) { try { return this.searchNormalize(rec.searchText(item)); } catch { return ''; } } return this.search"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/ui-modal-stack.ts",
+   "signature": "34807646bc0730f95948985cc2dd746ae4b3f207df7b10f254f94208b2b21eeb",
+   "sample": "UI.restoreModalControls = function (f, items = []) { if (!f || !items?.length) return; const els = [...f.querySelectorAll('input,select,textarea')]; for (const x of items) { let el"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/ui-modal-stack.ts",
+   "signature": "686e952c7abad5ca9ce1972d1590a60122779f9cdee74a1d75de3dfa6d83fd57",
+   "sample": "UI._modalStack = []"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/ui-modal-stack.ts",
+   "signature": "6b8487bf35ed55728f08b5a29bb792e143185cf601986edf7161bb6e1e25bfa8",
+   "sample": "UI.captureModalControls = function (f) { if (!f) return []; return [...f.querySelectorAll('input,select,textarea')].map((el, index) => ({ index, name: el.name || '', id: el.id || '"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/ui-modal-stack.ts",
+   "signature": "75ad52a23d4ab662543644fc9a7c631dd5f97f5e45558552f00f460aff9c10ac",
+   "sample": "UI.resetModalFooter = function (label = 'حفظ البيانات', { danger = false, hideSubmit = false, cancel = 'إلغاء' } = {}) { const foot = UIDocument.getElementById('modalFoot'); if (!f"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/ui-modal-stack.ts",
+   "signature": "92086baa85d773baf941beb8a0add42800bd44080542e7fcc57720c1831f50e0",
+   "sample": "UI.installGlobalModalStack = function () { if (this._modalStackInstalled) return; const m = UIDocument.getElementById('modal'), f = UIDocument.getElementById('modalForm'), title = "
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/ui-modal-stack.ts",
+   "signature": "b39379db740dda59a6c843c43bbc08435dac39a860fa8d737167b826151522d5",
+   "sample": "UI.restoreModal = function (s) { if (!s) return false; const m = UIDocument.getElementById('modal'), f = UIDocument.getElementById('modalForm'), body = UIDocument.getElementById('m"
+  },
+  {
+   "rule": "ARCH004",
+   "file": "src/ui/ui-modal-stack.ts",
+   "signature": "ff49e2ae12a1d30068d696456bdef0a76104a86714bbc40b352cb1b52bc831b3",
+   "sample": "UI.captureModal = function () { const m = UIDocument.getElementById('modal'), f = UIDocument.getElementById('modalForm'), body = UIDocument.getElementById('modalBody'), foot = UIDo"
+  },
+  {
+   "rule": "ARCH005",
+   "file": "src/mobile.ts",
+   "signature": "6b034af9873e7e79c3ceaeeb0fde61e603cc21356fab9ac01b562cad5d9eff8d",
+   "sample": "(window as any).ERP_MOBILE.checkConnection = () => checkServerHealth('manual')"
+  },
+  {
+   "rule": "ARCH005",
+   "file": "src/mobile.ts",
+   "signature": "6b70097b8f8b286b2a3d29b9b23681acb4568bc67a488cf48c617a4fd84605d4",
+   "sample": "(window as any).ERP_MOBILE.checkConnection = async () => true"
+  },
+  {
+   "rule": "ARCH005",
+   "file": "src/mobile.ts",
+   "signature": "9b02fb4abcb8f5d81b6bde314e4e1ee82774a4d5c6a018a327f34f69eac9de4d",
+   "sample": "(window as any).ERP_MOBILE.applyPendingRelease = applyPendingRelease"
+  },
+  {
+   "rule": "ARCH005",
+   "file": "src/mobile.ts",
+   "signature": "b84d2c1c87ae3d8e9d2adb8e786bd9bbed84929c0ff46b82eedc07a6b0a34d39",
+   "sample": "(window as any).ERP_MOBILE.checkAppRelease = () => checkLiveRelease('manual')"
+  },
+  {
+   "rule": "ARCH005",
+   "file": "src/mobile.ts",
+   "signature": "bcbea0cd051913a39cfcb81a269aaf5f61fbdb49c1f24b83050a19f9ed60fa49",
+   "sample": "(window as any).ERP_MOBILE = { apiBase: API_BASE, clearSession: () => { }, isNative: true, shell: shellNative ? 'native-shell' : 'capacitor' }"
+  },
+  {
+   "rule": "ARCH005",
+   "file": "src/mobile.ts",
+   "signature": "c55265d078e11ee31f9ec17088a7f7b7dc028eafcfbe7ad332e2c26c9a8a71c4",
+   "sample": "(window as any).ERP_MOBILE.refresh = () => refreshFromServer('api')"
+  },
+  {
+   "rule": "ARCH005",
+   "file": "src/mobile.ts",
+   "signature": "db0b01164c72358f3ddee202b75e5e75e1a607ffb15ce57ad4b09aa7026bec29",
+   "sample": "(window as any).ERP_MOBILE.applyPendingRelease = () => false"
+  },
+  {
+   "rule": "ARCH005",
+   "file": "src/mobile.ts",
+   "signature": "f1f9a01268d084a806ce7bf6f838a6651757b1a7e8f5b2dbb31ae0f8092217d9",
+   "sample": "(window as any).ERP_MOBILE.checkAppRelease = async () => false"
+  },
+  {
+   "rule": "ARCH005",
+   "file": "src/mobile.ts",
+   "signature": "fc6bdc2edff98d61277ef9c1994271a44ca19e6e2b0e239ddf413c54435b2635",
+   "sample": "window.fetch = (async (input: any, init: any = {}) => { const target = apiUrl(input); if (!target) return nativeFetch(input, init); const options: any = { ...init, headers: mergeHe"
+  },
+  {
+   "rule": "ARCH005",
+   "file": "src/mobile.ts",
+   "signature": "ff4907d0ddbe53891da6283fc11d0112e0b3b57efb0fd0f16e8826be65a4d3da",
+   "sample": "(window as any).ERP_MOBILE.refresh = async () => { try { await DataStore.localPut(DB.data); UI?.renderCurrent?.(); CommercialUX?.saveState?.('saved', 'محفوظ على الجهاز'); if (typeo"
+  },
+  {
+   "rule": "ARCH006",
+   "file": "src/commercial/data-exchange.ts",
+   "signature": "88fe3c9c99aca062a4737f4e8f8918a70b370f259a39f9efd6f6029c4b22c85a",
+   "sample": "UI.table"
+  },
+  {
+   "rule": "ARCH006",
+   "file": "src/commercial/data-exchange.ts",
+   "signature": "b03648892d1113c721d4d9257f4a43ba4ecec57d2b0fc2504f66279a9cde2ce3",
+   "sample": "toast(`تم استيراد ${result.added} وتخطي ${result.skipped}`)"
+  },
+  {
+   "rule": "ARCH006",
+   "file": "src/commercial/data-exchange.ts",
+   "signature": "b68c76899283065604bdcb6680a277c63914c7537e4835438d76a26bf8b0e11c",
+   "sample": "UI.closeModal"
+  },
+  {
+   "rule": "ARCH006",
+   "file": "src/commercial/data-exchange.ts",
+   "signature": "cd7e64ebcef02513a435d2eafcd40836379ebfd5898ccd373cdc8b92657574be",
+   "sample": "toast(err.message, 'error')"
+  },
+  {
+   "rule": "ARCH006",
+   "file": "src/core/umrah/data.ts",
+   "signature": "ae48a2267f4181da9e9720079863ba1686f898b0f21f8b78258485bbf4fbafc1",
+   "sample": "UI as any"
+  },
+  {
+   "rule": "ARCH006",
+   "file": "src/crm/unified-party.ts",
+   "signature": "45d78c5eedc6b93eafcb066673cde4d8f18022ef882ec3def50240d32221e9fd",
+   "sample": "Actions.statement"
+  },
+  {
+   "rule": "ARCH006",
+   "file": "src/crm/unified-party.ts",
+   "signature": "88fe3c9c99aca062a4737f4e8f8918a70b370f259a39f9efd6f6029c4b22c85a",
+   "sample": "UI.table"
+  },
+  {
+   "rule": "ARCH006",
+   "file": "src/crm/unified-party.ts",
+   "signature": "8be950a85c37675bb93ce5d0ed693d350b191c3ffb6bdfc7c17db368465c611a",
+   "sample": "Print.showUnifiedStatement"
+  },
+  {
+   "rule": "ARCH006",
+   "file": "src/crm/unified-party.ts",
+   "signature": "b68c76899283065604bdcb6680a277c63914c7537e4835438d76a26bf8b0e11c",
+   "sample": "UI.closeModal"
+  },
+  {
+   "rule": "ARCH006",
+   "file": "src/crm/unified-party.ts",
+   "signature": "cbdac0a510c269144e507dc9f814242b8d0d1dcd4c8b3e575f3518db03a91536",
+   "sample": "UI.badge"
+  },
+  {
+   "rule": "ARCH006",
+   "file": "src/persistence/browser-store.ts",
+   "signature": "5cbbdc010bf63254723ebf7fb25f19bbfd3104d00f2c94fd903a3f81f6355029",
+   "sample": "Commercial.beforeSave"
+  },
+  {
+   "rule": "ARCH006",
+   "file": "src/persistence/browser-store.ts",
+   "signature": "857d6a11b535ed98e548c12f0aae70a54e25c9f50303c74a264dd3ad46c761ad",
+   "sample": "typeof Commercial"
+  }
+ ]
+}

@@ -20,6 +20,7 @@ for(const file of sourceFiles){
     if(ts.isVariableDeclaration(node)&&ts.isIdentifier(node.name)&&node.initializer&&ts.isObjectLiteralExpression(node.initializer)){
       const rn=node.name.text;
       for(const p of node.initializer.properties){
+        if(ts.isSpreadAssignment(p)&&ts.isIdentifier(p.expression)) assignEdges.push([rn,p.expression.text]);/* facade objects assembled with ...Part spreads */
         if(ts.isMethodDeclaration(p)||ts.isPropertyAssignment(p)||ts.isShorthandPropertyAssignment(p)||ts.isGetAccessorDeclaration(p)||ts.isSetAccessorDeclaration(p)) add(rn,propName(p.name));
       }
     }

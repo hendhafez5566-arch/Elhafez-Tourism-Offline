@@ -1,3 +1,5 @@
+import { BusinessValues } from '../core/business-values';
+import type { BusinessActor, BusinessApproval, BusinessBranch, BusinessMoneyPort } from '../application/business-contracts';
 const AdministrationRules = {
     allowedBranchIds(branches: BusinessBranch[], user: BusinessActor | undefined) {
         const active = new Set((branches || []).filter(x => x.active !== false).map(x => x.id));
@@ -25,3 +27,4 @@ const AdministrationRules = {
             throw new Error(`قيمة الطلب تتجاوز حد اعتمادك ${moneyPort.format(BusinessValues.number(actor()?.approvalLimit), baseCurrency())}`);
     }
 };
+export { AdministrationRules };
