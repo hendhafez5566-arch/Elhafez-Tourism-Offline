@@ -1,7 +1,13 @@
-// Part 5 — single entry point for company-state persistence (NOT YET WIRED: server.ts and others still import ./state.js directly).
-// Purpose: give use-cases one interface so storage internals (JSON payload vs entity rows) can change behind it.
-// Today it only delegates to the existing, tested functions in ../state.ts; it adds no SQL and changes no behaviour.
+// Single production entry point for company-state persistence. Storage internals
+// remain private to state.ts; HTTP and backup use-cases depend on this boundary.
 import { currentState, currentStateForUpdate, persistStateRecord, insertStateRecord } from '../state.js';
+export {
+  clientPayload,
+  mergeUserSecrets,
+  assertUserDirectoryChangeAllowed,
+  mergeScopedPayload,
+  mergeConcurrentPayload
+} from '../state.js';
 export interface StoredState { payload: any; schema_version: string; revision: number; updated_at: Date | string; storageMode?: string }
 export interface StateSaveResult { revision: number; storageMode: string; updated_at?: Date | string }
 export interface CompanyStateRepository {
@@ -16,3 +22,7 @@ export const stateRepository: CompanyStateRepository = {
   save: (tx, tenant, payload, schemaVersion) => persistStateRecord(tx, tenant, payload, schemaVersion) as Promise<StateSaveResult>,
   create: (tx, tenant, payload, schemaVersion, revision = 1) => insertStateRecord(tx, tenant, payload, schemaVersion, revision) as Promise<StateSaveResult>
 };
+export const loadState = stateRepository.load;
+export const loadStateForUpdate = stateRepository.loadForUpdate;
+export const saveState = stateRepository.save;
+export const createState = stateRepository.create;

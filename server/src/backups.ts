@@ -1,7 +1,7 @@
 import { rebuildEntityMirror } from './entity-mirror.js';
 import { createHash } from 'node:crypto';
 import { pool, withTx } from './context.js';
-import { currentState, currentStateForUpdate, persistStateRecord } from './state.js';
+import { loadState as currentState, loadStateForUpdate as currentStateForUpdate, saveState as persistStateRecord } from './repository/state-repository.js';
 
 const canonical=(x:any):string=>x===null||typeof x!=='object'?JSON.stringify(x):Array.isArray(x)?`[${x.map(canonical).join(',')}]`:`{${Object.keys(x).sort().map(k=>`${JSON.stringify(k)}:${canonical(x[k])}`).join(',')}}`;
 const sha256=(v:any)=>createHash('sha256').update(Buffer.isBuffer(v)?v:canonical(v)).digest('hex');
