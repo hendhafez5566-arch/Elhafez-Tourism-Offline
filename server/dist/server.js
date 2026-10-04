@@ -5,11 +5,11 @@ import { fileURLToPath } from 'node:url';
 import { pbkdf2 } from 'node:crypto';
 import { promisify } from 'node:util';
 import { gzipSync } from 'node:zlib';
-import { pool, port, tenant, json, bodyJson, bodyBuffer, sha, safeEq, sessionCookie, securityHeaders, withTx, clientIp, userAgent, appVersion, vendorAgentKey, apiCorsHeaders, allowFactoryReset } from './context.js';
+import { pool, port, tenant, json, bodyJson, bodyBuffer, sha, safeEq, sessionCookie, securityHeaders, fileResponseHeaders, withTx, clientIp, userAgent, appVersion, vendorAgentKey, apiCorsHeaders, allowFactoryReset } from './context.js';
 import { runMigrations } from './migrations.js';
 import { licenseStatus, moduleAllowed, writeAllowed, acceptVendorEntitlement } from './license.js';
 import { auth, createSession, listSessions, requestSessionToken } from './session.js';
-import { currentState, currentStateForUpdate, clientPayload, mergeUserSecrets, assertUserDirectoryChangeAllowed, mergeScopedPayload, mergeConcurrentPayload, persistStateRecord, insertStateRecord } from './state.js';
+import { loadState as currentState, loadStateForUpdate as currentStateForUpdate, clientPayload, mergeUserSecrets, assertUserDirectoryChangeAllowed, mergeScopedPayload, mergeConcurrentPayload, saveState as persistStateRecord, createState as insertStateRecord } from './repository/state-repository.js';
 import { applyStatePatch } from './state-patch.js';
 import { syncEntityMirror, rebuildEntityMirror, initializeEntityMirrorMetadata, entityMirrorStatus } from './entity-mirror.js';
 import { assertStateChangeAllowed, assertBranchChangesAllowed, assertCommercialLimits, assertRecordLifecycle, assertFinancialImmutability, assertApprovalWorkflow, hasPermission, allowedBranches } from './authz.js';
@@ -241,6 +241,8 @@ const server = http.createServer(async (req, res) => {
                 st = restored;
                 resetRestored = true;
             }
+            if (!st)
+                throw Object.assign(new Error('company_not_initialized'), { statusCode: 409 });
             const activeBranches = (st.payload?.branches || []).filter((b) => b.active !== false);
             if (activeBranches.length && !admin(user)) {
                 const allowed = allowedBranches(user, st.payload);
@@ -284,7 +286,7 @@ const server = http.createServer(async (req, res) => {
             if (!f)
                 return json(res, 404, { error: 'file_not_found' });
             const data = Buffer.from(f.data);
-            res.writeHead(200, { ...securityHeaders(), 'Content-Type': f.mime || 'application/octet-stream', 'Content-Length': String(data.length), 'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(f.file_name || id)}`, 'Cache-Control': 'private, no-store' });
+            res.writeHead(200, { ...securityHeaders(), ...fileResponseHeaders(f.mime || '', f.file_name || id), 'Content-Length': String(data.length), 'Cache-Control': 'private, no-store' });
             return res.end(data);
         }
         if (fileMatch && req.method === 'PUT') {
