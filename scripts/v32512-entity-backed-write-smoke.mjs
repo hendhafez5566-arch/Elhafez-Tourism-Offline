@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const pkg=JSON.parse(read('package.json')),serverPkg=JSON.parse(read('server/package.json'));
-const state=read('server/src/state.ts'),mirror=read('server/src/entity-mirror.ts'),migration=read('database/migrations/013_entity_backed_state_storage.sql'),server=read('server/src/server.ts'),backups=read('server/src/backups.ts'),archives=read('server/src/archives.ts'),recovery=read('server/src/auth-recovery.ts');
+const state=read('server/src/repository/postgres-state-repository.ts'),mirror=read('server/src/entity-mirror.ts'),migration=read('database/migrations/013_entity_backed_state_storage.sql'),server=read('server/src/server.ts'),backups=read('server/src/backups.ts'),archives=read('server/src/archives.ts'),recovery=read('server/src/auth-recovery.ts');
 const directWrites=[server,backups,archives,recovery].flatMap((src,i)=>[...src.matchAll(/update erp_state set/gi)].map(m=>({i,pos:m.index})));
 const checks=[
  ['release remains at least 32.5.12',(()=>{const v=pkg.version.split('.').map(Number);return serverPkg.version===pkg.version&&(v[0]>32||v[0]===32&&(v[1]>5||v[1]===5&&v[2]>=12))})()],

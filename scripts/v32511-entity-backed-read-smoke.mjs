@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url';
 const root=fileURLToPath(new URL('../',import.meta.url));
 const read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const pkg=JSON.parse(read('package.json')),serverPkg=JSON.parse(read('server/package.json'));
-const state=read('server/src/state.ts'),mirror=read('server/src/entity-mirror.ts'),core=read('server/src/entity-mirror-core.ts'),migration=read('database/migrations/012_entity_mirror_read_source.sql'),server=read('server/src/server.ts'),backups=read('server/src/backups.ts');
+const state=read('server/src/repository/postgres-state-repository.ts'),mirror=read('server/src/entity-mirror.ts'),core=read('server/src/entity-mirror-core.ts'),migration=read('database/migrations/012_entity_mirror_read_source.sql'),server=read('server/src/server.ts'),backups=read('server/src/backups.ts');
 const checks=[
  ['release remains newer than the 32.5.11 read-source milestone',Number(pkg.version.split('.').at(-1))>=11&&serverPkg.version===pkg.version],
  ['mirror metadata migration exists',/create table if not exists erp_entity_mirror_meta/i.test(migration)],
