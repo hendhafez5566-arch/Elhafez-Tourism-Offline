@@ -3,7 +3,7 @@ create table if not exists erp_state (
   tenant_key text primary key,
   schema_version text not null default '',
   payload jsonb not null,
-  storage_mode text not null default 'legacy-full',
+  storage_mode text not null default 'entity-backed',
   entity_row_count bigint not null default 0,
   entity_present_keys text[] not null default '{}'::text[],
   revision bigint not null default 1,
