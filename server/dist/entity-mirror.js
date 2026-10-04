@@ -20,10 +20,10 @@ export function stripMirroredPayload(payload) { const out = structuredClone(payl
 export async function entityBackedWritePlan(c, t, payload) {
     const summary = mirrorPayloadSummary(payload);
     if (!summary.safe)
-        return { storageMode: 'legacy-full', payload, rowCount: 0, presentKeys: [] };
+        throw Object.assign(new Error('entity_storage_invalid'), { statusCode: 409 });
     const count = await c.query('select count(*)::bigint as count from erp_entity_records where tenant_key=$1', [t]), actual = Number(count.rows[0]?.count || 0);
     if (actual !== summary.rowCount)
-        return { storageMode: 'legacy-full', payload, rowCount: 0, presentKeys: [] };
+        throw Object.assign(new Error('entity_storage_incomplete'), { statusCode: 503 });
     return { storageMode: 'entity-backed', payload: stripMirroredPayload(payload), rowCount: summary.rowCount, presentKeys: summary.presentKeys };
 }
 export async function syncEntityMirror(c, t, before, after, changed) {

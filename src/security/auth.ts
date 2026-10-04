@@ -18,7 +18,7 @@ const RolePermissions={
 __set_RolePermissions(RolePermissions);
 const Security={iterations:210000,
  async hash(password,salt='',iterations=this.iterations){if(globalThis.crypto?.subtle){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(S(password)),'PBKDF2',false,['deriveBits']),buf=await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:new TextEncoder().encode(S(salt)),iterations:Math.max(100000,N(iterations)||this.iterations)},key,256);return[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('')}throw new Error('المتصفح لا يدعم تشفير كلمات المرور المطلوب')},
- salt(){if(globalThis.crypto?.getRandomValues){const a=new Uint8Array(24);crypto.getRandomValues(a);return[...a].map(b=>b.toString(16).padStart(2,'0')).join('')}return iid().replace(/-/g,'').slice(0,48)},
+ salt(){const a=new Uint8Array(24);crypto.getRandomValues(a);return[...a].map(b=>b.toString(16).padStart(2,'0')).join('')},
  async setPassword(user,password){const salt=this.salt(),iterations=this.iterations;user.passwordSalt=salt;user.passwordIterations=iterations;user.passwordAlgo='pbkdf2-sha256';user.passwordHash=await this.hash(password,salt,iterations);user.password=''},
  async verify(user,password){if(user.passwordAlgo==='pbkdf2-sha256'&&user.passwordHash)return(await this.hash(password,user.passwordSalt||'',user.passwordIterations||this.iterations))===user.passwordHash;if(user.passwordHash){const raw=`${user.passwordSalt||''}|${password}`;const data=new TextEncoder().encode(raw),buf=await crypto.subtle.digest('SHA-256',data),h=[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');return h===user.passwordHash}return user.password===password}
 };
