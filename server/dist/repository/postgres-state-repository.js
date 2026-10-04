@@ -1,8 +1,8 @@
-import { pool } from './context.js';
-import { allowedBranches, BRANCH_COLLECTIONS } from './authz.js';
-import { MIRRORED_COLLECTION_KEYS, hydrateMirroredPayload } from './entity-mirror-core.js';
-import { readEntityMirror, entityBackedWritePlan, markEntityMirrorRevision } from './entity-mirror.js';
-export { mergeConcurrentPayload } from './state-merge.js';
+import { pool, withTx } from '../context.js';
+import { allowedBranches, BRANCH_COLLECTIONS } from '../authz.js';
+import { MIRRORED_COLLECTION_KEYS, hydrateMirroredPayload } from '../entity-mirror-core.js';
+import { readEntityMirror, entityBackedWritePlan, markEntityMirrorRevision, rebuildEntityMirror } from '../entity-mirror.js';
+export { mergeConcurrentPayload } from '../state-merge.js';
 async function readState(c, t, lock = false) {
     const lockSql = lock ? ' for update of s' : '';
     const light = await c.query(`select s.schema_version,s.revision,s.updated_at,s.storage_mode,s.entity_row_count,s.entity_present_keys,s.payload-$2::text[] as payload,m.revision as mirror_revision,m.row_count,m.present_keys from erp_state s left join erp_entity_mirror_meta m on m.tenant_key=s.tenant_key where s.tenant_key=$1${lockSql}`, [t, [...MIRRORED_COLLECTION_KEYS]]);
@@ -56,3 +56,12 @@ export function mergeScopedPayload(server, submitted, user) { const allowed = al
 export async function persistStateRecord(c, t, payload, schemaVersion) { const plan = await entityBackedWritePlan(c, t, payload); const up = await c.query(`update erp_state set schema_version=coalesce($2,schema_version),payload=$3::jsonb,storage_mode=$4,entity_row_count=$5,entity_present_keys=$6::text[],revision=revision+1,updated_at=now() where tenant_key=$1 returning revision,updated_at,storage_mode`, [t, schemaVersion ?? null, JSON.stringify(plan.payload), plan.storageMode, plan.rowCount, plan.presentKeys]); if (!up.rowCount)
     throw Object.assign(new Error('company_not_initialized'), { statusCode: 409 }); const revision = Number(up.rows[0].revision); await markEntityMirrorRevision(c, t, revision, payload); return { revision, updated_at: up.rows[0].updated_at, storageMode: up.rows[0].storage_mode }; }
 export async function insertStateRecord(c, t, payload, schemaVersion, revision = 1) { const plan = await entityBackedWritePlan(c, t, payload); await c.query(`insert into erp_state(tenant_key,schema_version,payload,storage_mode,entity_row_count,entity_present_keys,revision,created_at,updated_at) values($1,$2,$3::jsonb,$4,$5,$6::text[],$7,now(),now())`, [t, schemaVersion, JSON.stringify(plan.payload), plan.storageMode, plan.rowCount, plan.presentKeys, revision]); await markEntityMirrorRevision(c, t, revision, payload); return { revision, storageMode: plan.storageMode }; }
+export async function migrateLegacyFullStates() {
+    const tenants = await pool.query("select tenant_key from erp_state where storage_mode='legacy-full' order by tenant_key");
+    let migrated = 0;
+    for (const item of tenants.rows)
+        await withTx(async (c) => { const tenant = String(item.tenant_key), state = await currentStateForUpdate(c, tenant); if (!state)
+            throw new Error('company_not_initialized'); await rebuildEntityMirror(c, tenant, state.payload); const saved = await persistStateRecord(c, tenant, state.payload, state.schema_version); if (saved.storageMode !== 'entity-backed')
+            throw new Error('entity_storage_migration_failed'); migrated++; });
+    return { migrated, total: tenants.rowCount || 0 };
+}

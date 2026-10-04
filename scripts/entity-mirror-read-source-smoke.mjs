@@ -19,7 +19,7 @@ const rows=[
 assert.deepEqual(hydrateMirroredPayload(base,rows,summary.presentKeys),payload);
 assert.equal(mirrorPayloadSummary({...payload,customers:[{id:'C1'},{id:'C1'}]}).safe,false);
 assert.equal(mirrorPayloadSummary({...payload,customers:[{name:'missing-id'}]}).safe,false);
-const stateSource=fs.readFileSync(path.join(root,'server/src/state.ts'),'utf8');
+const stateSource=fs.readFileSync(path.join(root,'server/src/repository/postgres-state-repository.ts'),'utf8');
 const migration=fs.readFileSync(path.join(root,'database/migrations/012_entity_mirror_read_source.sql'),'utf8');
 assert.match(stateSource,/mirrorRevision===revision/);
 assert.match(stateSource,/fallback=await c\.query\('select payload/);
