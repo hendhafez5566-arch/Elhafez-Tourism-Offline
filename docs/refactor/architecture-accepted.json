@@ -1,14 +1,14 @@
 {
  "note": "Accepted architecture state. Matching is by (rule, normalised-AST signature) multiset, file-agnostic. Regenerate only with: node scripts/architecture-check.mjs --update (refuses any increase).",
- "previousTotal": 205,
+ "previousTotal": 189,
  "counts": {
   "ARCH001": 105,
   "ARCH002": 9,
   "ARCH003": 14,
-  "ARCH004": 39,
+  "ARCH004": 37,
   "ARCH005": 10,
   "ARCH006": 12,
-  "TOTAL": 189
+  "TOTAL": 187
  },
  "findings": [
   {
@@ -908,20 +908,8 @@
   {
    "rule": "ARCH004",
    "file": "src/ui/commercial-ux.ts",
-   "signature": "8b7a7ada8ba219f01f5067b4b38a3b616dec1c4cadb65964ee40ce028f2e8866",
-   "sample": "UI.toggleNotifications = function (e) { e?.stopPropagation(); const p = document.getElementById('notificationPanel'), open = p.classList.contains('hidden'); this.closeMenus(); if ("
-  },
-  {
-   "rule": "ARCH004",
-   "file": "src/ui/commercial-ux.ts",
    "signature": "c09e73f4276b1d858f139660b913dde29f4e1f7d82e929c2f0edfff5faa0603b",
    "sample": "UI.closeModal = function (force = false) { if (!force && !CommercialUX.canLeave()) return false; const modal = document.getElementById('modal'); if (modal?.dataset?.onboarding === "
-  },
-  {
-   "rule": "ARCH004",
-   "file": "src/ui/commercial-ux.ts",
-   "signature": "c3a0bfdb83fa8e0b80dd614422d6aade85af3392de55df7a714e3729c28f7d76",
-   "sample": "(UI as any).renderNotificationPanel = function (p) { if (!p) return; const all = Commercial.notifications(), read = CommercialUX.readSet(), filter = CommercialUX.notificationFilter"
   },
   {
    "rule": "ARCH004",
