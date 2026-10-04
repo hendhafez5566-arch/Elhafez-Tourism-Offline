@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { pool, withTx } from './context.js';
-import { currentState, currentStateForUpdate, persistStateRecord } from './state.js';
+import { currentState, currentStateForUpdate, persistStateRecord } from './repository/state-repository.js';
 import { createBackup, liveFileManifest, fileBlobsForManifest, garbageCollectBlobs } from './backups.js';
 import { syncEntityMirror } from './entity-mirror.js';
 
