@@ -22,21 +22,21 @@ import { AccessControl } from './security/access-control';
  // The WebView-level NativeShell interface survives that navigation even when
  // Capacitor's injected object is not present on the remote page.
  try{
-  navigator.serviceWorker?.getRegistrations?.().then((rows:any[])=>rows.forEach(r=>r.unregister().catch?.(()=>{}))).catch(()=>{});
+  navigator.serviceWorker?.getRegistrations?.().then((rows:ServiceWorkerRegistration[])=>rows.forEach(r=>r.unregister().catch?.(()=>{}))).catch(()=>{});
   if(typeof caches!=='undefined')caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('erp-shell-')).map(k=>caches.delete(k)))).catch(()=>{});
  }catch(_){}
 
  const FALLBACK_API_BASE=offlineEdition?'':'https://zonal-charm-production.up.railway.app';
  const API_BASE=offlineEdition?'':(/^https?:$/.test(location.protocol)&&location.hostname&&!/^(localhost|127(?:\.\d+){3}|\[::1\])$/i.test(location.hostname)?location.origin:FALLBACK_API_BASE);
  const nativeFetch=window.fetch.bind(window);
- const apiUrl=(input:any)=>{
+ const apiUrl=(input:RequestInfo|URL)=>{
   const raw=typeof input==='string'?input:input instanceof URL?input.href:input instanceof Request?input.url:'';
   if(!raw)return'';
   if(raw.startsWith('/api/'))return API_BASE+raw;
   try{const u=new URL(raw,location.href);if(u.origin===location.origin&&u.pathname.startsWith('/api/'))return API_BASE+u.pathname+u.search+u.hash}catch(_){}
   return'';
  };
- const mergeHeaders=(input:any,init:any)=>{
+ const mergeHeaders=(input:RequestInfo|URL,init:RequestInit)=>{
   const h=new Headers(input instanceof Request?input.headers:undefined);
   if(init?.headers)new Headers(init.headers).forEach((v,k)=>h.set(k,v));
   h.set('X-ERP-Mobile','android');
@@ -110,7 +110,7 @@ import { AccessControl } from './security/access-control';
  window.addEventListener('pagehide',saveNativeUiState);
  const handleNativeState=(state:{isActive:boolean})=>{if(!state?.isActive){saveNativeUiState();ServerStore.invalidateConnection?.()}else clearSidebarLock()};
  app?.addListener?.('appStateChange',handleNativeState);
- window.addEventListener('erp:native-state',(e:any)=>handleNativeState(e?.detail||{isActive:document.visibilityState==='visible'}));
+ window.addEventListener('erp:native-state',(e:CustomEvent)=>handleNativeState(e?.detail||{isActive:document.visibilityState==='visible'}));
 
  let lastRootBack=0,lastBackEvent=0;
  const handleNativeBack=()=>{
@@ -125,7 +125,7 @@ import { AccessControl } from './security/access-control';
   if(sidebar){try{UI?.closeMobileSidebar?.()}catch(_){clearSidebarLock()}return}
   const openMenu=[...document.querySelectorAll('.dropdown-panel:not(.hidden)')];
   if(openMenu.length){try{UI?.closeMenus?.()}catch(_){openMenu.forEach(x=>x.classList.add('hidden'))}return}
-  const picker=[...document.querySelectorAll('.picker-results')].find((x:any)=>x.childElementCount>0);
+  const picker=[...document.querySelectorAll('.picker-results')].find((x:Element)=>x.childElementCount>0);
   if(picker){document.querySelectorAll('.picker-results').forEach(x=>{x.innerHTML='';x.classList.remove('picker-mobile','picker-up')});return}
   if(typeof UI!=='undefined'){
    if(Array.isArray(UI.navHistory)&&UI.navHistory.length){UI.goBack?.();saveNativeUiState();return}
@@ -149,7 +149,7 @@ import { AccessControl } from './security/access-control';
   return;
  }
 
- let networkConnected=true,deviceNetworkHint=true,healthBusy=false,refreshBusy=false,lastHealthAt=0,offlineConfirmTimer:any=null;
+ let networkConnected=true,deviceNetworkHint=true,healthBusy=false,refreshBusy=false,lastHealthAt=0,offlineConfirmTimer:ReturnType<typeof setTimeout>|null=null;
  const setOnline=(connected:boolean)=>{
   networkConnected=connected!==false;
   document.documentElement.classList.toggle('native-offline',!networkConnected);
@@ -225,24 +225,24 @@ import { AccessControl } from './security/access-control';
  (window as any).ERP_MOBILE.refresh=()=>refreshFromServer('api');
  (window as any).ERP_MOBILE.checkConnection=()=>checkServerHealth('manual');
  const installPullToRefresh=()=>{
-  ensureRefreshUi();let startY=0,startX=0,pulling=false,armed=false,scrollOwner:any=null;
+  ensureRefreshUi();let startY=0,startX=0,pulling=false,armed=false,scrollOwner:Element|null=null;
   const SHOW_THRESHOLD=34,ARM_THRESHOLD=92,HORIZONTAL_TOLERANCE=1.15;
   const pullEl=()=>document.getElementById('nativePullRefresh');
   const resetPull=()=>{pulling=false;armed=false;scrollOwner=null;const pull=pullEl();if(!pull)return;pull.classList.remove('show','ready');pull.style.removeProperty('--pull-distance')};
-  const blocked=(target:any)=>!!target?.closest?.('input,textarea,select,[contenteditable="true"],.quick-modal.show,.print-modal.show,.sidebar.open,.dropdown-panel:not(.hidden)');
-  const findScrollOwner=(target:any)=>{
-   let el=target?.nodeType===1?target:target?.parentElement;
+  const blocked=(target:EventTarget|null)=>!!(target instanceof Element&&target.closest('input,textarea,select,[contenteditable="true"],.quick-modal.show,.print-modal.show,.sidebar.open,.dropdown-panel:not(.hidden)'));
+  const findScrollOwner=(target:EventTarget|null)=>{
+   let el=target instanceof Element?target:null;
    while(el&&el!==document.body&&el!==document.documentElement){
     try{const st=getComputedStyle(el),oy=st.overflowY;if((oy==='auto'||oy==='scroll')&&el.scrollHeight>el.clientHeight+2)return el}catch(_){}
     el=el.parentElement;
    }
    return document.scrollingElement||document.documentElement;
   };
-  const atTop=(owner:any)=>{if(!owner||owner===document.scrollingElement||owner===document.documentElement||owner===document.body)return Math.max(window.scrollY||0,document.documentElement.scrollTop||0,document.body.scrollTop||0)<=1;return Number(owner.scrollTop||0)<=1};
+  const atTop=(owner:Element|null)=>{if(!owner||owner===document.scrollingElement||owner===document.documentElement||owner===document.body)return Math.max(window.scrollY||0,document.documentElement.scrollTop||0,document.body.scrollTop||0)<=1;return Number(owner.scrollTop||0)<=1};
   document.addEventListener('touchstart',(e:TouchEvent)=>{
    if(refreshBusy||e.touches.length!==1||blocked(e.target)){resetPull();return}
    // Editable modal forms keep their own scroll and must never be refreshed by a gesture.
-   const modal=(e.target as any)?.closest?.('.modal.show');if(modal&&document.getElementById('modalFoot')?.dataset?.mode!=='view'){resetPull();return}
+   const modal=(e.target instanceof Element?e.target.closest('.modal.show'):null);if(modal&&document.getElementById('modalFoot')?.dataset?.mode!=='view'){resetPull();return}
    scrollOwner=findScrollOwner(e.target);if(!atTop(scrollOwner)){resetPull();return}
    startY=e.touches[0].clientY;startX=e.touches[0].clientX;pulling=true;armed=false;
   },{passive:true,capture:true});
@@ -286,7 +286,7 @@ import { AccessControl } from './security/access-control';
  window.addEventListener('offline',()=>updateNetworkHint(false,'browser-offline'));
  const handleResumeHealth=(state:{isActive:boolean})=>{if(state?.isActive){ServerStore.invalidateConnection?.();clearSidebarLock();setTimeout(()=>checkServerHealth('resume'),0)}};
  app?.addListener?.('appStateChange',handleResumeHealth);
- window.addEventListener('erp:native-state',(e:any)=>handleResumeHealth(e?.detail||{isActive:document.visibilityState==='visible'}));
+ window.addEventListener('erp:native-state',(e:CustomEvent)=>handleResumeHealth(e?.detail||{isActive:document.visibilityState==='visible'}));
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){ServerStore.invalidateConnection?.();checkServerHealth('visible')}});
  setInterval(()=>{if(document.visibilityState==='visible')checkServerHealth('heartbeat')},60000);
 
@@ -323,6 +323,6 @@ import { AccessControl } from './security/access-control';
  setTimeout(()=>checkLiveRelease('startup'),2500);
  const handleResumeRelease=(state:{isActive:boolean})=>{if(state?.isActive)setTimeout(()=>checkLiveRelease('resume'),900)};
  app?.addListener?.('appStateChange',handleResumeRelease);
- window.addEventListener('erp:native-state',(e:any)=>handleResumeRelease(e?.detail||{isActive:document.visibilityState==='visible'}));
+ window.addEventListener('erp:native-state',(e:CustomEvent)=>handleResumeRelease(e?.detail||{isActive:document.visibilityState==='visible'}));
  setInterval(()=>checkLiveRelease('timer'),180000);
 })();
