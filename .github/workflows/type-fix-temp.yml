@@ -1,0 +1,47 @@
+name: TEMP Apply Type Fixes
+
+on:
+  push:
+    branches: [release-gate-fix-staging-temp]
+    paths: ['.github/workflows/type-fix-temp.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: codex/complete-architecture-and-storage-cleanup-f9jkh5
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - name: Apply surgical strict-null fixes
+        shell: python
+        run: |
+          from pathlib import Path
+          def replace(path, old, new):
+              p=Path(path); s=p.read_text(encoding='utf-8')
+              if old not in s: raise SystemExit(f'missing expected text in {path}: {old[:80]}')
+              p.write_text(s.replace(old,new,1),encoding='utf-8')
+          replace('src/application/master-actions-workflows.ts','status?: string; agentId?: string','status: string; agentId?: string')
+          replace('src/application/clean-page-queries.ts','active?: boolean; status?: string; date?: string','active?: boolean; status: string; date?: string')
+          replace('src/application/clean-page-queries.ts','system?: number; statement?: number; diff?: number','system?: number; statement?: number; diff: number')
+          replace('src/application/operations-page-queries.ts','active?: boolean; status?: string; capacity?: number','active?: boolean; status: string; capacity?: number')
+          replace('src/application/form-definition-workflows.ts','invoice: (d: FormDefinitionDeps, id: string) => BusinessValues.find(d.repository.invoices(), id),','invoice: (d: FormDefinitionDeps, id: string) => BusinessValues.find(d.repository.invoices(), id)!,')
+          replace('src/ui/forms.ts','let open=[],draft=[];','let open: ReturnType<typeof Invoices.openFor> = [],draft: ReturnType<typeof Invoices.openFor> = [];')
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Type ratchet
+        run: npm run types:ratchet
+      - name: Commit only after green type gates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/application/master-actions-workflows.ts src/application/clean-page-queries.ts src/application/operations-page-queries.ts src/application/form-definition-workflows.ts src/ui/forms.ts
+          git commit -m "fix: close strict-null release ratchet regressions"
+          git push origin HEAD:codex/complete-architecture-and-storage-cleanup-f9jkh5
