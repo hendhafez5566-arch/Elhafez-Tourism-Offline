@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 """Golden test for printed documents (invoice, receipt/payment vouchers, expense, transfer, statements).
 Captures the exact HTML handed to Print.show() with a frozen clock and seeded Math.random, and compares it to
-scripts/golden/expected/*.html byte for byte.
+scripts/golden/expected/*.html byte for byte, except for ICU locale punctuation inside the generated print timestamp.
   python scripts/golden/print-golden.py            compare (exit 1 on any difference, 3 when no browser is available)
   python scripts/golden/print-golden.py --update   (re)write the expected files - only for an INTENDED output change
 Run `npm run build` first (it reads dist/app.js)."""
-import asyncio, sys, json, pathlib, difflib
+import asyncio, sys, json, pathlib, difflib, re
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from _boot import *
 EXPECTED = pathlib.Path(__file__).resolve().parent / 'expected'
+STAMP_SPAN = re.compile(r'(<span class="print-confidential">.*?</span>)', re.DOTALL)
+def normalize_locale_stamp(html):
+    """Normalize only ICU's optional Arabic comma between the date and time in the generated print stamp."""
+    return STAMP_SPAN.sub(lambda m: m.group(1).replace('، ', ' '), html)
 SEED = """async()=>{
   const out={};const cap=[];const orig=Print.show;Print.show=function(html,ctx){cap.push(html);return orig.call(this,html,ctx)};
   const run=(name,f)=>{cap.length=0;try{const r=f();if(typeof r==='string'&&!cap.length)cap.push(r)}catch(e){cap.push('THROWN: '+e.message)}out[name]=cap.join('\\n<!--SHOW-->\\n')};
@@ -56,12 +60,13 @@ async def main():
             f.write_text(html, encoding='utf8', newline=''); print(f'WROTE {name} ({len(html)} chars)'); continue
         if not f.exists(): print(f'FAIL {name}: expected file missing'); bad += 1; continue
         want = f.read_text(encoding='utf8')
-        if want == html: print(f'PASS {name} ({len(html)} chars)')
+        want_cmp, html_cmp = normalize_locale_stamp(want), normalize_locale_stamp(html)
+        if want_cmp == html_cmp: print(f'PASS {name} ({len(html)} chars)')
         else:
             bad += 1; print(f'FAIL {name}: output differs')
-            for l in list(difflib.unified_diff(want.split('><'), html.split('><'), 'expected', 'actual', lineterm='', n=0))[:8]: print('   ', l[:200])
+            for l in list(difflib.unified_diff(want_cmp.split('><'), html_cmp.split('><'), 'expected', 'actual', lineterm='', n=0))[:8]: print('   ', l[:200])
     if not update:
-        extra = sorted(set(x.stem for x in EXPECTED.glob('*.html')) - set(out)); 
+        extra = sorted(set(x.stem for x in EXPECTED.glob('*.html')) - set(out));
         if extra: print('FAIL expected files without a case:', extra); bad += 1
     print(f'golden print cases: {len(out)}, failures: {bad}')
     return 1 if bad else 0
