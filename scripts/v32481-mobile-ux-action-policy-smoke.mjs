@@ -23,7 +23,7 @@ check('Purchase-order page hides invalid edit action',cleanPages.includes("Actio
 check('Quotation page hides invalid edit action',cleanPages.includes("ActionPolicy.canEdit('quotation',q)"));
 check('Commercial edit form has lifecycle guard',forms.includes("ActionPolicy.requireEditable(type,doc)"));
 check('Commercial domain update has lifecycle guard',crm.includes("ActionPolicy.requireEditable('purchaseOrder',po)")&&crm.includes("ActionPolicy.requireEditable('quotation',q)"));
-check('Accepted/cancelled quotation does not expose permanent delete',cleanPages.includes("['draft','sent'].includes(q.status)&&Auth.can('quotations','delete')"));
+check('Accepted/cancelled quotation does not expose permanent delete',(cleanPages.includes("['draft','sent'].includes(q.status)&&Auth.can('quotations','delete')")||cleanPages.includes("['draft','sent'].includes(q.status)&&AccessControl.can('quotations','delete')")));
 check('Umrah programs hide edit outside editable states',umrahUi.includes("ActionPolicy.canEdit('umrahProgram',p)"));
 check('Umrah forms defend direct calls',umrahForms.includes("!ActionPolicy.canEdit('umrahProgram',p)")&&umrahForms.includes("!ActionPolicy.canEdit('umrahBooking',b)"));
 check('Locked normal booking is labelled operational, not generic edit',pages.includes('المسافرون / ملاحظات'));
