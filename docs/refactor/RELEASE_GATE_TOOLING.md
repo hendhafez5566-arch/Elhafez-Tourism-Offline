@@ -15,3 +15,5 @@ ESLint/Prettier are installed once per `docs/refactor/PART3_TOOLING_SETUP.md`; `
 
 Differential checks read baseline sources with `git show <START_SHA>:<path>`. A file moved after the baseline is resolved through
 `movedSinceBaseline` in `scripts/application-workflow-check.mjs`; a path missing from both locations is a hard error.
+
+CI verification should be triggered from a normal repository commit after any guarded automation-generated fix so the pull-request jobs execute normally.
