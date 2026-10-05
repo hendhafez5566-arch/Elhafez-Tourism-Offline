@@ -16,8 +16,13 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: npm ci
       - run: npm --prefix server ci
+      - name: Install browser QA runtime for golden output
+        run: pip install -r qa-requirements.txt && python -m playwright install --with-deps chromium
       - name: Client typecheck
         run: npm run typecheck
       - name: Build client (esbuild) and server

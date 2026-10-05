@@ -12,7 +12,10 @@ const start='4b188965931d396f40b0b545b486e97da12462b8';
  if(!have(start)){console.error('ENVIRONMENT BLOCKED: original git history (Phase 1 start) is not available in this checkout; run with a full clone (fetch-depth: 0).');process.exit(3);}}
 
 const read=p=>fs.readFileSync(p,'utf8');
-const original=p=>execFileSync('git',['show',`${start}:${p}`],{encoding:'utf8'});
+// Files that were moved AFTER the baseline (Part 4) are read from their baseline path; a path that exists in neither place is a hard error (never silently skipped).
+const movedSinceBaseline={'src/ui/commercial-actions.ts':'src/commercial/actions.ts','src/ui/party360.ts':'src/crm/party360.ts'};
+const existsAtStart=p=>{try{execFileSync('git',['cat-file','-e',`${start}:${p}`],{stdio:'ignore'});return true;}catch{return false;}};
+const original=p=>{const at=existsAtStart(p)?p:movedSinceBaseline[p];if(!at||!existsAtStart(at))throw new Error(`baseline ${start.slice(0,7)} has neither ${p}${movedSinceBaseline[p]?' nor '+movedSinceBaseline[p]:''}`);return execFileSync('git',['show',`${start}:${at}`],{encoding:'utf8'});};
 const compile=s=>ts.transpileModule(s,{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.None}}).outputText;
 const currentBundle=await bundleForVm(`
  import {Actions} from './src/ui/actions.ts';
