@@ -1,14 +1,16 @@
 import { BusinessValues } from '../core/business-values';
-type Row = any;
+interface Row { id: string; name: string; active?: boolean; type?: string; amount?: number; paidAmount?: number; status?: string; agentId?: string; currency?: string; color?: string; icon?: string; pages?: string[]; phone?: string; whatsapp?: string; [field: string]: unknown; }
+interface MasterSettings { workspaces?: Row[]; sidebarMode?: string; whatsappCountryCode?: string; [field: string]: unknown }
+interface TransactionOptions { save?: boolean; render?: boolean; strict?: boolean; waitForSave?: boolean; rollback?: boolean }
 interface MasterActionsDeps {
     repository: {
         customers(): Row[]; suppliers(): Row[]; agents(): Row[]; services(): Row[]; commissions(): Row[]; serviceTypes(): Row[];
-        settings(): Row; setServiceTypes(value: Row[]): void;
+        settings(): MasterSettings; setServiceTypes(value: Row[]): void;
     };
     defaults: { workspaces(): Row[] };
     masterData: { toggle(list: string, id: string): unknown; remove(method: string, id: string): unknown };
     persistence: { log(action: string, type: string, id: string, detail: string): void; save(): unknown };
-    transactions: { atomic(label: string, work: () => any, options?: any): any };
+    transactions: { atomic<T>(label: string, work: () => T, options?: TransactionOptions): T };
     authorization: { require(page: string, action: string): void };
     clock: { id(): string };
     numbers: { N(value: unknown): number; EPS: number };
@@ -20,7 +22,7 @@ const MasterActionsQueries = {
     serviceType: (d: MasterActionsDeps, id: string) => BusinessValues.find(d.repository.serviceTypes(), id),
     serviceTypeNameTaken: (d: MasterActionsDeps, name: string, exceptId?: string) => d.repository.serviceTypes().some(x => (exceptId === undefined || x.id !== exceptId) && x.name.toLowerCase() === name.toLowerCase()),
     partyRecord: (d: MasterActionsDeps, type: string, id: string) => type === 'customer' ? BusinessValues.find(d.repository.customers(), id) : type === 'supplier' ? BusinessValues.find(d.repository.suppliers(), id) : type === 'agent' ? BusinessValues.find(d.repository.agents(), id) : null,
-    payableCommissionOf: (d: MasterActionsDeps, agentId: string) => d.repository.commissions().find(c => c.agentId === agentId && ['approved', 'partial'].includes(c.status) && d.numbers.N(c.amount) - d.numbers.N(c.paidAmount) > d.numbers.EPS)
+    payableCommissionOf: (d: MasterActionsDeps, agentId: string) => d.repository.commissions().find(c => c.agentId === agentId && ['approved', 'partial'].includes(c.status || '') && d.numbers.N(c.amount) - d.numbers.N(c.paidAmount) > d.numbers.EPS)
 };
 /* Write side: the atomic label, the order of checks and the log lines are exactly those of the original handlers. */
 const MasterActionsCommands = {

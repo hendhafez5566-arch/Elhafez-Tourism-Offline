@@ -5,7 +5,7 @@ const read=p=>readFile(new URL(`../${p}`,import.meta.url),'utf8');
 const assert=(ok,msg)=>{if(!ok)throw new Error(msg)};
 const [party,ux,work,outputs,pages,nav,seed,auth,product,commercialPages,store,server,runtime,uruntime,uprint,uinsights,printing,index,tsconfig]=await Promise.all([
  read('src/ui/party360.ts'),read('src/ui/commercial-ux.ts'),read('src/ui/work-center.ts'),read('src/documents/output-center.ts'),pagesText(),read('src/ui/navigation.ts'),read('src/core/seed.ts'),read('src/security/auth.ts'),read('src/commercial/product.ts'),read('src/commercial/pages.ts'),read('src/persistence/browser-store.ts'),read('src/persistence/server-store.ts'),read('src/core/runtime.ts'),read('src/core/umrah/runtime.ts'),read('src/core/umrah/actions-print.ts'),read('src/core/umrah/insights.ts'),read('src/reports/printing.ts'),read('index.html'),Promise.resolve(compiledFilesText())]);
-assert(party.includes('DB.data.umrahBookings'),'Customer 360 is not reading native Umrah bookings');
+assert(party.includes('DB.data.umrahBookings')||party.includes("Party360Queries.collection(p360(),'umrahBookings')"),'Customer 360 is not reading native Umrah bookings');
 assert(party.includes('umrahSupplierCommitments'),'Supplier 360 is missing native Umrah commitments');
 assert(party.includes('data-no-page-empty-action="1"'),'360 modal is not protected from page-level empty CTA injection');
 assert(party.includes("Commercial.moduleAllowed('whatsapp')")&&!party.includes('Commercial.moduleEnabled'),'360 view is calling a nonexistent commercial module API');

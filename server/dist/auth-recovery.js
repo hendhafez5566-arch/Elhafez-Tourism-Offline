@@ -1,6 +1,6 @@
 import { pbkdf2Sync, randomBytes } from 'node:crypto';
 import { pool, sha, randomToken, withTx, clientIp, userAgent, publicRuntimeUrl } from './context.js';
-import { currentStateForUpdate, persistStateRecord } from './state.js';
+import { currentStateForUpdate, persistStateRecord } from './repository/state-repository.js';
 const recoveryRequests = new Map();
 const normalizeEmail = (v) => String(v || '').trim().toLowerCase();
 const emailOk = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 254;

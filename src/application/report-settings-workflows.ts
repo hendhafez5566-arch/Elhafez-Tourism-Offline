@@ -1,9 +1,13 @@
 import { BusinessValues } from '../core/business-values';
-type Row = any;
+interface ReportRecord { id: string; name?: string; active?: boolean; posting?: boolean; status?: string; type?: string; refId?: string; code?: string; base?: boolean; [field: string]: unknown }
+interface CompanyRecord { name?: string; logo?: unknown; phone?: string; email?: string; taxNo?: string; commercialNo?: string; address?: string; [field: string]: unknown }
+interface SettingsRecord { baseCurrency: string; fiscalYearStartMonth?: number; passwordMin?: number; preventNegativeTreasury?: boolean; approvalPayments?: boolean; allowSelfApproval?: boolean; activityRetentionDays?: number; prefixes: Record<string, string>; appearance?: unknown; accentColor?: unknown; animations?: unknown; fontScale?: unknown; fontFamily?: unknown; printAmountWords?: unknown; printSignatures?: unknown; printFooter?: string; printPaper?: unknown; printOrientation?: unknown; [field: string]: unknown }
+interface NotificationPrefs { passportDays?: number; invoiceDueDays?: number; programDays?: number; lowTreasuryAmount?: number; [field: string]: unknown }
+interface AppearanceInput { appearance?: unknown; accentColor?: unknown; animations?: unknown; fontScale?: unknown; fontFamily?: unknown; printAmountWords?: unknown; printSignatures?: unknown; printFooter?: string; printPaper?: unknown; printOrientation?: unknown }
 interface ReportSettingsDeps {
     repository: {
-        customers(): Row[] | undefined; suppliers(): Row[] | undefined; agents(): Row[] | undefined; accounts(): Row[]; documents(): Row[];
-        journals(): Row[]; periods(): Row[]; currencies(): Row[]; company(): Row; settings(): Row; ensureNotificationPrefs(): Row;
+        customers(): ReportRecord[] | undefined; suppliers(): ReportRecord[] | undefined; agents(): ReportRecord[] | undefined; accounts(): ReportRecord[]; documents(): ReportRecord[];
+        journals(): ReportRecord[]; periods(): ReportRecord[]; currencies(): ReportRecord[]; company(): CompanyRecord; settings(): SettingsRecord; ensureNotificationPrefs(): NotificationPrefs;
     };
     calendar: { reset(): void; ensureDate(date: string): unknown };
     clock: { today(): string };
@@ -82,7 +86,7 @@ const ReportSettingsCommands = {
             d.repository.settings().prefixes[prefix] = value;
         d.persistence.save();
     },
-    saveAppearancePrint(d: ReportSettingsDeps, read: () => Row): void {
+    saveAppearancePrint(d: ReportSettingsDeps, read: () => AppearanceInput): void {
         d.authorization.require('settings', 'edit');
         const s = d.repository.settings(), v = read();
         s.appearance = v.appearance;

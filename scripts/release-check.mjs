@@ -52,8 +52,8 @@ step('BUILD MODEL (es-modules, no legacy)', () => {
 // ---- 2. Immutable inventory and sha256 pins (tests / baselines / gates cannot be weakened silently) -----------------
 step('TEST INVENTORY + PINS', () => {
   const baseline = JSON.parse(read('docs/refactor/refactor-baseline.json'));
-  check(JSON.stringify(discover()) === JSON.stringify(baseline.tests.map((t) => t.file)), 'Node inventory drifted from the pinned 60 tests');
-  check(baseline.tests.length === 60, 'Exactly 60 pinned Node tests');
+  check(JSON.stringify(discover()) === JSON.stringify(baseline.tests.map((t) => t.file)), 'Node inventory drifted from the pinned 65 tests');
+  check(baseline.tests.length === 65, 'Exactly 65 pinned Node tests');
   check(JSON.stringify(discover(root, '-browser-smoke.py')) === JSON.stringify(baseline.browser.map((t) => t.file)), 'Browser inventory drifted');
   check(baseline.browser.length === 6, 'Exactly six browser tests');
   const pins = JSON.parse(read('docs/refactor/part2-pins.json')).sha256;
@@ -62,7 +62,7 @@ step('TEST INVENTORY + PINS', () => {
   const missing = [...baseline.tests, ...baseline.browser].filter((t) => !(t.file in pins));
   check(missing.length === 0, `test not pinned: ${missing[0]?.file}`);
   check(read('.gitignore') === 'node_modules/\n.env\n.env.*\n!.env.example\n*SECRETS*.txt\n*.log\n.DS_Store\n', 'Exact .gitignore');
-  return { status: 'PASS', detail: `60 node + 6 browser tests, ${Object.keys(pins).length} pinned files` };
+  return { status: 'PASS', detail: `65 node + 6 browser tests, ${Object.keys(pins).length} pinned files` };
 });
 
 // ---- 3. Package scripts, pinned toolchain, lockfile sync, CI ----------------------------------------------------------
@@ -89,7 +89,12 @@ step('CI WORKFLOW', () => {
   const ci = read('.github/workflows/ci.yml').split('\n').filter((l) => !l.trim().startsWith('#')).join('\n'); // comments may mention the keyword; only real YAML keys count
   check(!/continue-on-error/.test(ci), 'ci.yml must not use continue-on-error');
   for (const cmd of ['npm ci', 'npm run typecheck', 'npm run build', 'npm run module:check', 'npm run architecture:check', 'npm run release:check']) check(ci.includes(cmd), `ci.yml does not run: ${cmd}`);
-  return { status: 'PASS', detail: 'no continue-on-error; all gates wired' };
+  const verifyStart = ci.indexOf('  verify:');
+  const browserStart = ci.indexOf('  browser:');
+  const verify = verifyStart >= 0 && browserStart > verifyStart ? ci.slice(verifyStart, browserStart) : '';
+  check(verify.includes('actions/setup-python@v5'), 'verify job must provision Python for golden print');
+  check(verify.includes('pip install -r qa-requirements.txt') && verify.includes('playwright install --with-deps chromium'), 'verify job must provision Playwright/Chromium before release:check');
+  return { status: 'PASS', detail: 'no continue-on-error; all gates wired; golden runtime provisioned in verify' };
 });
 
 // ---- 4. Executed gates ---------------------------------------------------------------------------------------------------
@@ -113,8 +118,15 @@ step('SERVER BUILD', () => {
 exec('MODULE GRAPH / ORDER', process.execPath, ['scripts/module-order-check.mjs']);
 exec('TYPE RATCHET (any / suppressions / noImplicitAny / strictNullChecks)', process.execPath, ['scripts/type-ratchet.mjs']);
 exec('GOLDEN PRINT OUTPUT', 'python3', ['scripts/golden/print-golden.py'], { blocked: [3] });
-// Style gates are optional until the one-time tooling install (docs/refactor/PART3_TOOLING_SETUP.md): reported, never faked as PASS.
-exec('LINT RATCHET', process.execPath, ['scripts/lint-ratchet.mjs'], { blocked: [2] });
+// Style is an explicitly dormant optional gate until ESLint is committed to the toolchain.
+// Do not call a missing tool and turn an intentionally-disabled optional gate into a release blocker;
+// once eslint is declared, the ratchet becomes mandatory and any blocked/failing run remains non-PASS.
+{
+  const pkg = JSON.parse(read('package.json'));
+  const lintDeclared = Boolean(pkg.devDependencies?.eslint || pkg.dependencies?.eslint);
+  if (lintDeclared) exec('LINT RATCHET', process.execPath, ['scripts/lint-ratchet.mjs'], { blocked: [2] });
+  else record('LINT RATCHET', 'NOT EXECUTED', 'optional style gate dormant until ESLint is committed; CI style job remains opt-in');
+}
 step('ARCHITECTURE RATCHET', () => {
   const baseline = JSON.parse(read('docs/refactor/architecture-accepted.json')), expected = {};
   for (const f of baseline.findings) expected[f.rule] = (expected[f.rule] || 0) + 1;

@@ -16,7 +16,7 @@ const checks=[
  ['release checker does not force timer reload',mobile.includes('A new Railway release is applied once')&&mobile.includes("source!=='timer'")&&mobile.includes('applyPendingRelease')],
  ['release reload guarded once per server version',mobile.includes("RELEASE_APPLY_KEY='erp_native_release_apply_v2'")&&mobile.includes('if(last===remote)return false')],
  ['pull refresh finds page or nested scroll owner',mobile.includes('findScrollOwner')&&mobile.includes('atTop(scrollOwner)')&&mobile.includes('capture:true')],
- ['pull refresh available on view modals while edit forms protected',mobile.includes("closest?.('.modal.show')")&&mobile.includes("dataset?.mode!=='view'")],
+ ['pull refresh available on view modals while edit forms protected',(mobile.includes("closest?.('.modal.show')")||mobile.includes("closest('.modal.show')"))&&mobile.includes("dataset?.mode!=='view'")],
  ['compact unified smart filter renderer',ui.includes('filterOption(label,count,on,action')&&ui.includes('simple-filter-option')&&ui.includes('simple-filter-count')],
  ['compact filter dimensions',css.includes('.simple-filter-option.smart-filter-kpi')&&css.includes('min-height:36px')&&css.includes('.simple-list-filter.smart-filter-grid')&&css.includes('@media(max-width:780px)')],
  ['Umrah history tabs use same smart-filter style',umrah.includes("UI.filterOption(label,count,mode===value,{type:'umrahHistory',kind,value}")],

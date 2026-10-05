@@ -16,8 +16,13 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: npm ci
       - run: npm --prefix server ci
+      - name: Install browser QA runtime for golden output
+        run: pip install -r qa-requirements.txt && python -m playwright install --with-deps chromium
       - name: Client typecheck
         run: npm run typecheck
       - name: Build client (esbuild) and server
@@ -28,6 +33,8 @@ jobs:
         run: npm run architecture:check
       - name: Type ratchet (any, suppressions, noImplicitAny, strictNullChecks may only go down)
         run: npm run types:ratchet
+      - name: Presentation gate integrity hash
+        run: sha256sum scripts/presentation-platform-check.mjs
       # Known baseline failures are allowed ONLY as recorded in docs/refactor/refactor-baseline.json.
       # Any new failure, test-inventory drift or pinned-file drift fails this job. No continue-on-error anywhere.
       - name: Release gate (aggregate)
