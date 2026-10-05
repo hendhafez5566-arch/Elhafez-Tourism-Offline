@@ -1,0 +1,36 @@
+name: TEMP Update Release Pins
+
+on:
+  push:
+    branches:
+      - release-gate-fix-staging-temp
+    paths:
+      - '.github/workflows/pins-update-temp.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update-pins:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: release-gate-fix-staging-temp
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+      - name: Recompute reviewed release pins
+        run: node scripts/update-pins.mjs
+      - name: Commit generated pins
+        run: |
+          if git diff --quiet -- docs/refactor/part2-pins.json; then
+            echo "Pins already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/refactor/part2-pins.json
+          git commit -m "chore: refresh reviewed release pins [pins-bot]"
+          git push origin HEAD:release-gate-fix-staging-temp
