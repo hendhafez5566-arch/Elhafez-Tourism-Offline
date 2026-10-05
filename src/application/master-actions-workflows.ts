@@ -1,14 +1,16 @@
 import { BusinessValues } from '../core/business-values';
-type Row = any;
+interface Row { id: string; name: string; active?: boolean; type?: string; amount?: number; paidAmount?: number; status?: string; agentId?: string; currency?: string; color?: string; icon?: string; pages?: string[]; phone?: string; whatsapp?: string; [field: string]: unknown; }
+interface MasterSettings { workspaces?: Row[]; sidebarMode?: string; whatsappCountryCode?: string; [field: string]: unknown }
+interface TransactionOptions { save?: boolean; render?: boolean; strict?: boolean; waitForSave?: boolean; rollback?: boolean }
 interface MasterActionsDeps {
     repository: {
         customers(): Row[]; suppliers(): Row[]; agents(): Row[]; services(): Row[]; commissions(): Row[]; serviceTypes(): Row[];
-        settings(): Row; setServiceTypes(value: Row[]): void;
+        settings(): MasterSettings; setServiceTypes(value: Row[]): void;
     };
     defaults: { workspaces(): Row[] };
     masterData: { toggle(list: string, id: string): unknown; remove(method: string, id: string): unknown };
     persistence: { log(action: string, type: string, id: string, detail: string): void; save(): unknown };
-    transactions: { atomic(label: string, work: () => any, options?: any): any };
+    transactions: { atomic<T>(label: string, work: () => T, options?: TransactionOptions): T };
     authorization: { require(page: string, action: string): void };
     clock: { id(): string };
     numbers: { N(value: unknown): number; EPS: number };
