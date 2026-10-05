@@ -16,15 +16,10 @@ jobs:
         with:
           node-version-file: .nvmrc
       - run: npm ci
-      - name: Compare strict-null diagnostics against last green type-ratchet head
+      - name: Print exact new strict-null diagnostics
         shell: bash
         run: |
           set +e
-          git checkout --detach 5b6312369107fcf742e4a89cc61ca14b39ac893d
-          node node_modules/typescript/bin/tsc -p tsconfig.json --strictNullChecks --pretty false 2>&1 | grep -E '^(src/application|src/ui)/' | sed -E 's/\([0-9]+,[0-9]+\): /: /' | sort -u > /tmp/base.txt
           git checkout --detach 8c677ebba7ceb09ab64bd5ed133d72b52adf670e
-          node node_modules/typescript/bin/tsc -p tsconfig.json --strictNullChecks --pretty false 2>&1 | grep -E '^(src/application|src/ui)/' | sed -E 's/\([0-9]+,[0-9]+\): /: /' | sort -u > /tmp/current.txt
-          echo '=== NEW STRICT-NULL DIAGNOSTICS ==='
-          comm -13 /tmp/base.txt /tmp/current.txt
-          echo '=== END ==='
+          node node_modules/typescript/bin/tsc -p tsconfig.json --strictNullChecks --pretty false 2>&1 | grep -E '^(src/application/master-actions-workflows.ts|src/ui/clean-pages.ts|src/ui/forms-definitions.ts|src/ui/forms.ts|src/ui/operations-pages.ts)'
           exit 0
