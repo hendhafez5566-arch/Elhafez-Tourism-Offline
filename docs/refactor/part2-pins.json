@@ -36,7 +36,7 @@
   "scripts/offline-copy-smoke.mjs": "f81b92ce93e4d5fa4f487b3068ca1e1a79d2fb0ff480ba383fe791f4f521d944",
   "scripts/party-controls-browser-smoke.py": "22e7d2699f99ebc785036d4da017e648bf85bff6bf7970231311f706f68475ea",
   "scripts/party360-browser-smoke.py": "4a274a4a92650b34ffb65d4742872959f1338f1df2a4c5e2c98a14091c2bdba7",
-  "scripts/presentation-platform-check.mjs": "5c0e72d5f30e3dcab2d659f3e5b09e67652808dea6760fc13c58315894713f07",
+  "scripts/presentation-platform-check.mjs": "52321aaee55cf8754b48217b7995cac97ef9515f695ed47e0965eef8c232d97d",
   "scripts/refactor-check.mjs": "ed480904fd47b5345adbe96e5477ea73bd41309eadecb2adb3b53c2b7c8a15f8",
   "scripts/reset-entry-smoke.mjs": "ff496c5ff7ab13f8b544f9e0f5bcacbc4575f59b6fe6ea106ceb8bdfa121d47a",
   "scripts/rocket-360-performance-smoke.mjs": "18dc4a096475f75e63b9221588023e0f393ff93f34548f48decaa92cec672565",
