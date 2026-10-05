@@ -22,7 +22,7 @@ const MasterActionsQueries = {
     serviceType: (d: MasterActionsDeps, id: string) => BusinessValues.find(d.repository.serviceTypes(), id),
     serviceTypeNameTaken: (d: MasterActionsDeps, name: string, exceptId?: string) => d.repository.serviceTypes().some(x => (exceptId === undefined || x.id !== exceptId) && x.name.toLowerCase() === name.toLowerCase()),
     partyRecord: (d: MasterActionsDeps, type: string, id: string) => type === 'customer' ? BusinessValues.find(d.repository.customers(), id) : type === 'supplier' ? BusinessValues.find(d.repository.suppliers(), id) : type === 'agent' ? BusinessValues.find(d.repository.agents(), id) : null,
-    payableCommissionOf: (d: MasterActionsDeps, agentId: string) => d.repository.commissions().find(c => c.agentId === agentId && ['approved', 'partial'].includes(c.status) && d.numbers.N(c.amount) - d.numbers.N(c.paidAmount) > d.numbers.EPS)
+    payableCommissionOf: (d: MasterActionsDeps, agentId: string) => d.repository.commissions().find(c => c.agentId === agentId && ['approved', 'partial'].includes(c.status || '') && d.numbers.N(c.amount) - d.numbers.N(c.paidAmount) > d.numbers.EPS)
 };
 /* Write side: the atomic label, the order of checks and the log lines are exactly those of the original handlers. */
 const MasterActionsCommands = {

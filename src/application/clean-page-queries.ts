@@ -1,5 +1,5 @@
 interface CleanRecord {
-    id: string; no?: string; name?: string; active?: boolean; status?: string; date?: string; kind?: string; partyType?: string; partyId?: string; amount?: number; currency?: string; paymentMethod?: string; allocations?: unknown[]; commissionId?: string; supplierId?: string; invoiceId?: string; category?: string; mode?: string; type?: string; sourceCurrency?: string; targetCurrency?: string; from?: string; to?: string; received?: number; treasuryId?: string; system?: number; statement?: number; diff?: number; posting?: boolean; control?: boolean; customerId?: string; programId?: string; total?: number; [field: string]: unknown;
+    id: string; no?: string; name?: string; active?: boolean; status: string; date?: string; kind?: string; partyType?: string; partyId?: string; amount?: number; currency?: string; paymentMethod?: string; allocations?: unknown[]; commissionId?: string; supplierId?: string; invoiceId?: string; category?: string; mode?: string; type?: string; sourceCurrency?: string; targetCurrency?: string; from?: string; to?: string; received?: number; treasuryId?: string; system?: number; statement?: number; diff: number; posting?: boolean; control?: boolean; customerId?: string; programId?: string; total?: number; [field: string]: unknown;
 }
 interface CleanPageDeps {
     repository: {
