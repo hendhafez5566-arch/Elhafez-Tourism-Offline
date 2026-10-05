@@ -28,7 +28,7 @@ jobs:
               p=Path(path); s=p.read_text(encoding='utf-8')
               if old not in s: raise SystemExit(f'missing expected text in {path}: {old[:80]}')
               p.write_text(s.replace(old,new,1),encoding='utf-8')
-          replace('src/application/master-actions-workflows.ts','status?: string; agentId?: string','status: string; agentId?: string')
+          replace('src/application/master-actions-workflows.ts',"['approved', 'partial'].includes(c.status)","['approved', 'partial'].includes(c.status || '')")
           replace('src/application/clean-page-queries.ts','active?: boolean; status?: string; date?: string','active?: boolean; status: string; date?: string')
           replace('src/application/clean-page-queries.ts','system?: number; statement?: number; diff?: number','system?: number; statement?: number; diff: number')
           replace('src/application/operations-page-queries.ts','active?: boolean; status?: string; capacity?: number','active?: boolean; status: string; capacity?: number')
