@@ -1,0 +1,30 @@
+name: TEMP Strict Null Diff
+
+on:
+  push:
+    branches: [release-gate-fix-staging-temp]
+    paths: ['.github/workflows/strict-diff-temp.yml']
+
+jobs:
+  diff:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - name: Compare strict-null diagnostics against last green type-ratchet head
+        shell: bash
+        run: |
+          set +e
+          git checkout --detach 5b6312369107fcf742e4a89cc61ca14b39ac893d
+          node node_modules/typescript/bin/tsc -p tsconfig.json --strictNullChecks --pretty false 2>&1 | grep -E '^(src/application|src/ui)/' | sed -E 's/\([0-9]+,[0-9]+\): /: /' | sort -u > /tmp/base.txt
+          git checkout --detach 8c677ebba7ceb09ab64bd5ed133d72b52adf670e
+          node node_modules/typescript/bin/tsc -p tsconfig.json --strictNullChecks --pretty false 2>&1 | grep -E '^(src/application|src/ui)/' | sed -E 's/\([0-9]+,[0-9]+\): /: /' | sort -u > /tmp/current.txt
+          echo '=== NEW STRICT-NULL DIAGNOSTICS ==='
+          comm -13 /tmp/base.txt /tmp/current.txt
+          echo '=== END ==='
+          exit 0
